@@ -63,6 +63,7 @@ let audioCtx = null;
 let lastBeepTime = 0;
 let currentAvgXYZ = 0;
 let tpsHistory = [];
+let lastPacket = "";
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -114,14 +115,32 @@ btn.onclick=async()=>{
         setTimeout(() => { beep(523, 0.1); }, 1000);
 
         characteristic.addEventListener('characteristicvaluechanged', (event) => {
-            const now = performance.now();
-            
-            // KALIBRACE: Ignoruj duplicitní signály vyslané během 45 milisekund od jednoho tahu
-            if (now - lastMoveTime > 45) {
-                handleMove(now);
-                lastMoveTime = now;
-            }
-        });
+
+    const now = performance.now();
+
+    // přečti skutečná data paketu
+    const data = new Uint8Array(event.target.value.buffer);
+
+    // vytvoř podpis paketu
+    const packetKey = Array.from(data).join(",");
+
+    // ignoruj stejné pakety
+    if(packetKey === window.lastPacket){
+        return;
+    }
+
+    window.lastPacket = packetKey;
+
+    // minimální rozestup mezi tahy
+    if(now - lastMoveTime < 110){
+        return;
+    }
+
+    handleMove(now);
+
+    lastMoveTime = now;
+
+});
 
         setInterval(() => {
             const now = performance.now();
