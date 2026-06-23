@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>MG3i RAW Bluetooth Monitor</title>
+<title>MG3i RAW Analyzer v3.0</title>
 <style>
 body{
 margin:0;
@@ -18,6 +18,17 @@ min-height:100vh;
 padding:20px;
 box-sizing:border-box;
 }
+#version-tag {
+font-family: sans-serif;
+font-size: 14px;
+font-weight: bold;
+color: #ff1744;
+background: rgba(255,23,68,0.1);
+padding: 4px 12px;
+border-radius: 20px;
+border: 1px solid #ff1744;
+margin-bottom: 15px;
+}
 button{
 padding:15px 30px;
 font-size:18px;
@@ -29,6 +40,7 @@ color:black;
 margin-bottom:20px;
 cursor:pointer;
 font-family:sans-serif;
+box-shadow: 0 4px 15px rgba(255,145,0,0.3);
 }
 #status{
 color:#a0aec0;
@@ -55,7 +67,7 @@ font-size:14px;
 .index{ color:#ff9100; font-weight:bold; }
 .hex{ color:#00e5ff; font-weight:bold; }
 .changed { background: rgba(0, 229, 255, 0.15); }
-#packet-len {
+#packet-info {
 font-size: 16px;
 color: #00e676;
 margin-bottom: 10px;
@@ -66,18 +78,20 @@ font-weight: bold;
 </head>
 <body>
 
+<div id="version-tag">VERZE APLIKACE: v3.0 (RAW MONITOR)</div>
+
 <button id="btn">MONITOROVAT SUROVÁ DATA</button>
 <div id="status">Odpojeno</div>
-<div id="packet-len">Velikost balíčku: Čekám...</div>
+<div id="packet-info">Velikost balíčku: Čekám...</div>
 
 <div class="console" id="console-box">
-    <div style="text-align:center;color:#4a5568;">Připoj kostku a otoč libovolnou stěnou.</div>
+    <div style="text-align:center;color:#4a5568;">Připoj kostku (v klidu v ruce) a udělej jeden tah stěnou U.</div>
 </div>
 
 <script>
 const btn=document.getElementById("btn");
 const status=document.getElementById("status");
-const packetLen=document.getElementById("packet-len");
+const packetInfo=document.getElementById("packet-info");
 const consoleBox=document.getElementById("console-box");
 
 let previousRawBytes = [];
@@ -97,13 +111,13 @@ btn.onclick=async()=>{
         await characteristic.startNotifications();
 
         btn.style.display="none";
-        status.innerText="Surový přenos ze zařízení: " + device.name;
+        status.innerText="Čtu data ze zařízení: " + device.name;
 
         characteristic.addEventListener("characteristicvaluechanged",event=>{
             const value=event.target.value;
             let len = value.byteLength;
             
-            packetLen.innerText = "Velikost balíčku: " + len + " bajtů";
+            packetInfo.innerText = "Délka balíčku: " + len + " bajtů";
 
             let rawBytes = [];
             for (let i = 0; i < len; i++) {
@@ -115,7 +129,7 @@ btn.onclick=async()=>{
                 let currentByte = rawBytes[i];
                 let hexVal = currentByte.toString(16).toUpperCase().padStart(2, '0');
                 
-                // Zvýrazníme změnu v surových datech
+                // Modré zvýraznění řádku, pokud se surová hodnota změnila
                 let changeClass = (previousRawBytes.length > i && currentByte !== previousRawBytes[i]) ? "changed" : "";
 
                 html += `<div class="row ${changeClass}">`;
