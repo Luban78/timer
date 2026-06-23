@@ -3,106 +3,98 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>MG3i Battery & System Decoder v5.2</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<title>MG3i Deep Scanner v5.3</title>
 <style>
-body { margin:0; background:#090d16; color:#eceff1; font-family:'Courier New',monospace; padding:15px; }
-#header { background:#151c28; padding:15px; border-radius:6px; border:1px solid #00e5ff; margin-bottom:15px; display:flex; justify-content:between; align-items:center; flex-wrap:wrap; gap:10px; }
-button { background:#00e5ff; color:#000; border:none; padding:12px 24px; font-weight:bold; border-radius:4px; cursor:pointer; }
-.panel { background:#101622; border:1px solid #223147; border-radius:6px; padding:15px; margin-bottom:15px; }
-.title { color:#ff9100; font-family:sans-serif; font-size:14px; font-weight:bold; text-transform:uppercase; margin-bottom:10px; }
-.stat-box { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin-bottom:10px; }
-.stat-card { background:#070a10; padding:10px; border-radius:4px; text-align:center; border:1px solid #1a2636; }
-.stat-val { font-size:20px; color:#00e5ff; font-weight:bold; margin-top:5px; }
-.raw-box { background:#070a10; padding:10px; border-radius:4px; font-size:13px; color:#ffeb3b; overflow-x:auto; white-space:nowrap; }
+body { margin:0; background:#070a0e; color:#eceff1; font-family:'Courier New',monospace; padding:15px; }
+#header { background:#111a24; padding:15px; border-radius:6px; border:1px solid #ff007f; margin-bottom:15px; }
+button { background:#ff007f; color:#fff; border:none; padding:12px 24px; font-weight:bold; border-radius:4px; cursor:pointer; box-shadow: 0 0 10px rgba(255,0,127,0.4); }
+.panel { background:#0f1620; border:1px solid #1f2c3d; border-radius:6px; padding:15px; margin-bottom:15px; }
+.title { color:#ff007f; font-family:sans-serif; font-size:14px; font-weight:bold; text-transform:uppercase; margin-bottom:10px; }
+.log-box { background:#03060a; padding:12px; border-radius:4px; font-size:12px; line-height:1.6; color:#00ffcc; max-height:400px; overflow-y:auto; }
+.err { color:#ff1744; }
+.succ { color:#00e676; }
 </style>
 </head>
 <body>
 
 <div id="header">
-    <div style="flex-grow:1;">
-        <strong style="color:#00e5ff;">SYSTEM & BATTERY DECODER v5.2</strong><br>
-        <span id="status" style="font-size:12px; color:#b0bec5;">Odpojeno</span>
+    <div style="margin-bottom:10px;">
+        <strong style="color:#ff007f;">HARDWARE DEEP SCANNER v5.3</strong><br>
+        <span id="status" style="font-size:12px; color:#b0bec5;">Připraveno k hloubkovému testu služeb</span>
     </div>
-    <button id="conn-btn">PŘIPOJIT KOSTKU</button>
+    <button id="conn-btn">PROSKENOVAT KOSTKU</button>
 </div>
 
 <div class="panel">
-    <div class="title">🔋 Monitorování napájení a systémového stavu</div>
-    <div class="stat-box">
-        <div class="stat-card">
-            <div style="font-size:11px;color:#78909c;">Zachycené pakety</div>
-            <div class="stat-val" id="pkt-count">0</div>
-        </div>
-        <div class="stat-card">
-            <div style="font-size:11px;color:#78909c;">Poslední stabilní Bajt 12</div>
-            <div class="stat-val" id="bat-b12">--</div>
-        </div>
-        <div class="stat-card">
-            <div style="font-size:11px;color:#78909c;">Surový konec [19]</div>
-            <div class="stat-val" id="raw-b19">--</div>
-        </div>
-    </div>
-</div>
-
-<div class="panel">
-    <div class="title">👁️ Poslední zachycený kompletní balíček (Surová data)</div>
-    <div class="raw-box" id="raw-packet">Čekám na první stabilní signál z kostky...</div>
+    <div class="title">📡 Výpis nalezených hardwarových registrů</div>
+    <div class="log-box" id="scan-log">Zde se objeví kompletní výpis vnitřních služeb po připojení...</div>
 </div>
 
 <script>
-const AES_KEY_HEX = "2d565c3412ab00000000000000000000"; 
-const key = CryptoJS.enc.Hex.parse(AES_KEY_HEX);
-let counter = 0;
+const logBox = document.getElementById("scan-log");
+
+function log(msg, type="") {
+    let div = document.createElement("div");
+    if(type === "err") div.className = "err";
+    if(type === "succ") div.className = "succ";
+    div.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    logBox.appendChild(div);
+    logBox.scrollTop = logBox.scrollHeight;
+}
 
 document.getElementById("conn-btn").onclick = async () => {
     try {
-        document.getElementById("status").innerText = "Hledám zařízení...";
+        logBox.innerHTML = "";
+        log("Spouštím hloubkový sken zařízení...");
+        
+        // Požádáme o zařízení a povolíme všechny dostupné služby v okolí
         const device = await navigator.bluetooth.requestDevice({
             filters: [{namePrefix:"MG"}, {namePrefix:"GAN"}],
-            optionalServices: ["6e400001-b5a3-f393-e0a9-e50e24dc4179"]
+            optionalServices: [
+                "6e400001-b5a3-f393-e0a9-e50e24dc4179", // Pohybová služba
+                "0000180f-0000-1000-8000-00805f9b34fb", // Standardní BLE Battery Service
+                "0000180a-0000-1000-8000-00805f9b34fb"  // Standardní Device Information
+            ]
         });
 
+        log(`Nalezeno zařízení: ${device.name}`, "succ");
         const server = await device.gatt.connect();
-        const service = await server.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dc4179");
-        const characteristic = await service.getCharacteristic("28be4cb6-cd67-11e9-a32f-2a2ae2dbcce4");
+        log("Spojení s GATT serverem úspěšné. Mapuji vnitřní služby...", "succ");
 
-        await characteristic.startNotifications();
-        document.getElementById("conn-btn").style.display = "none";
-        document.getElementById("status").innerText = "Přijímám signály z: " + device.name;
+        // Pokus 1: Standardní bateriová služba BLE
+        try {
+            const batService = await server.getPrimaryService("0000180f-0000-1000-8000-00805f9b34fb");
+            const batChar = await batService.getCharacteristic("00002a19-0000-1000-8000-00805f9b34fb");
+            const batVal = await batChar.readValue();
+            log(`🔋 KLASICKÁ BLE BATERIE DETEKOVÁNA: ${batVal.getUint8(0)}%`, "succ");
+        } catch(e) {
+            log("Kostka nevyužívá standardní samostatnou BLE Battery službu, jdu prohledat privátní registry...", "err");
+        }
 
-        characteristic.addEventListener("characteristicvaluechanged", event => {
-            const value = event.target.value;
-            if (value.byteLength < 16) return;
-
-            counter++;
-            document.getElementById("pkt-count").innerText = counter;
-
-            // Sběr surových a dešifrovaných dat dohromady
-            let cleanBytes = new Uint8Array(16);
-            for(let i=0; i<16; i++) cleanBytes[i] = value.getUint8(i);
-            let wordArray = CryptoJS.lib.WordArray.create(cleanBytes);
-            let decrypted = CryptoJS.AES.decrypt({ ciphertext: wordArray }, key, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding });
-
-            let bytes = [];
-            for (let i = 0; i < 16; i++) {
-                bytes.push((decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff);
+        // Pokus 2: Výpis charakteristik v hlavní privátní službě GAN
+        try {
+            const mainService = await server.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dc4179");
+            log("Hlavní pohybová služba nalezena. Pokouším se vyčíst sekundární charakteristiky...");
+            
+            // Zkusíme přečíst data z druhé známé charakteristiky, která často slouží pro konfiguraci/baterii
+            try {
+                const configChar = await mainService.getCharacteristic("28be4cb7-cd67-11e9-a32f-2a2ae2dbcce4");
+                const confVal = await configChar.readValue();
+                let rawHex = [];
+                for(let i=0; i<confVal.byteLength; i++) rawHex.push("0x" + confVal.getUint8(i).toString(16).toUpperCase());
+                log(`📦 Konfigurační registr [4cb7] vrátil: ${rawHex.join(" ")}`, "succ");
+            } catch(errChar) {
+                log("Sekundární charakteristika [4cb7] neodpovídá na přímé čtení.", "err");
             }
-            for(let i=16; i<value.byteLength; i++) {
-                bytes.push(value.getUint8(i));
-            }
+            
+        } catch(e) {
+            log("Nepodařilo se mapovat vnitřní privátní charakteristiky.", "err");
+        }
 
-            // Výpis klíčových hodnot pro baterii
-            document.getElementById("bat-b12").innerText = `0x${bytes[12].toString(16).toUpperCase()} (${bytes[12]})`;
-            document.getElementById("raw-b19").innerText = `0x${bytes[19].toString(16).toUpperCase()} (${bytes[19]})`;
-
-            // Zobrazení celého řetězce pro kontrolu fixních hodnot
-            let hexString = bytes.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
-            document.getElementById("raw-packet").innerText = hexString;
-        });
+        log("Skenování dokončeno. Pokud se nahoře neobjevila zelená řádka s procenty, baterie je natvrdo zakódovaná přímo uvnitř startovacího balíčku tahů.");
 
     } catch (e) {
-        document.getElementById("status").innerText = "Chyba dekodéru: " + e.message;
+        log("Chyba skeneru: " + e.message, "err");
     }
 };
 </script>
