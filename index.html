@@ -2,13 +2,11 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 
-<title>MG3i Trainer</title>
+<title>MG3i Trainer - Calibrated</title>
 
 <style>
-
 body{
 margin:0;
 background:#121212;
@@ -89,75 +87,46 @@ width:100%;
 height:30%;
 pointer-events:none;
 }
-
 </style>
 </head>
 
 <body>
 
-<button id="btn">
-PŘIPOJIT KOSTKU
-</button>
-
-<div id="status">
-Odpojeno
-</div>
-
-<div id="state-msg">
-Připoj kostku
-</div>
-
-<div id="tps">
-0.0
-</div>
+<button id="btn">PŘIPOJIT KOSTKU</button>
+<div id="status">Odpojeno</div>
+<div id="state-msg">Připoj kostku</div>
+<div id="tps">0.0</div>
 
 <div class="stats-grid">
+    <div class="stat-box">
+        <div class="stat-label">ČAS</div>
+        <div id="time-val" class="stat-val">0.00s</div>
+    </div>
 
-<div class="stat-box">
-<div class="stat-label">ČAS</div>
-<div id="time-val" class="stat-val">0.00s</div>
-</div>
+    <div class="stat-box">
+        <div class="stat-label">TAHY</div>
+        <div id="moves-val" class="stat-val">0</div>
+    </div>
 
-<div class="stat-box">
-<div class="stat-label">TAHY</div>
-<div id="moves-val" class="stat-val">0</div>
-</div>
+    <div class="stat-box">
+        <div class="stat-label">PRŮMĚRNÉ TPS</div>
+        <div id="avg-val" class="stat-val" style="color:#00e676">0.0</div>
+    </div>
 
-<div class="stat-box">
-<div class="stat-label">PRŮMĚRNÉ TPS</div>
-<div id="avg-val"
-class="stat-val"
-style="color:#00e676">
-0.0
-</div>
-</div>
+    <div class="stat-box">
+        <div class="stat-label">MAX TPS</div>
+        <div id="max-val" class="stat-val">0.0</div>
+    </div>
 
-<div class="stat-box">
-<div class="stat-label">MAX TPS</div>
-<div id="max-val"
-class="stat-val">
-0
-</div>
-</div>
-
-<div class="stat-box"
-style="grid-column:span 2">
-<div class="stat-label">
-NEJDELŠÍ PAUZA
-</div>
-<div id="pause-val"
-class="stat-val"
-style="color:#ff1744">
-0.00s
-</div>
-</div>
-
+    <div class="stat-box" style="grid-column:span 2">
+        <div class="stat-label">NEJDELŠÍ PAUZA</div>
+        <div id="pause-val" class="stat-val" style="color:#ff1744">0.00s</div>
+    </div>
 </div>
 
 <canvas id="graph"></canvas>
 
 <script>
-
 const btn=document.getElementById("btn");
 const status=document.getElementById("status");
 const state=document.getElementById("state-msg");
@@ -181,7 +150,7 @@ let maxTPS=0;
 let longestPause=0;
 
 let lastMoveTime=0;
-let lastMoveHash="";
+let lastDecodedMove = ""; 
 
 let solving=false;
 let startTime=0;
@@ -192,267 +161,142 @@ let stopTimer=null;
 let graph=[];
 
 btn.onclick=async()=>{
+    try{
+        status.innerText="Vyber MG3i";
 
-try{
+        const device=await navigator.bluetooth.requestDevice({
+            filters:[{namePrefix:"MG"}],
+            optionalServices:["6e400001-b5a3-f393-e0a9-e50e24dc4179"]
+        });
 
-status.innerText=
-"Vyber MG3i";
+        const server=await device.gatt.connect();
+        const service=await server.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dc4179");
+        const characteristic=await service.getCharacteristic("28be4cb6-cd67-11e9-a32f-2a2ae2dbcce4");
 
-const device=
-await navigator.bluetooth.requestDevice({
+        await characteristic.startNotifications();
 
-filters:[
-{namePrefix:"MG"}
-],
+        btn.style.display="none";
+        status.innerText="Připojeno: "+device.name;
+        state.innerText="PŘIPRAVEN";
 
-optionalServices:[
-"6e400001-b5a3-f393-e0a9-e50e24dc4179"
-]
+        characteristic.addEventListener("characteristicvaluechanged",event=>{
+            const now=performance.now();
+            const value=event.target.value;
 
-});
+            if(value.byteLength<6) return;
 
-const server=
-await device.gatt.connect();
+            // Vytáhneme počítadlo tahů a kód pohybu z hardwaru kostky
+            const moveCounter=value.getUint8(2);
+            const moveCode=value.getUint8(4);
+            const moveDirection=value.getUint8(5);
 
-const service=
-await server.getPrimaryService(
-"6e400001-b5a3-f393-e0a9-e50e24dc4179"
-);
+            const currentMoveSignature=moveCounter+"-"+moveCode+"-"+moveDirection;
 
-const characteristic=
-await service.getCharacteristic(
-"28be4cb6-cd67-11e9-a32f-2a2ae2dbcce4"
-);
+            // Ignorujeme balíčky se stejným podpisem (hardwarové duplicity jedné otočky)
+            if(currentMoveSignature===lastDecodedMove){
+                return;
+            }
 
-await characteristic.startNotifications();
+            // Pojistný mikro-filtr pro extrémní případy
+            if(now-lastMoveTime<40){
+                return;
+            }
 
-btn.style.display="none";
+            lastDecodedMove=currentMoveSignature;
+            lastMoveTime=now;
 
-status.innerText=
-"Připojeno: "+
-device.name;
+            handleMove(now);
+        });
 
-state.innerText=
-"PŘIPRAVEN";
+        setInterval(updateTPS,100);
 
-characteristic.addEventListener(
-"characteristicvaluechanged",
-event=>{
-
-    const now=performance.now();
-    const data=new Uint8Array(event.target.value.buffer);
-    const hash=data.slice(0,4).join(",");
-
-    // 1. Kontrola, zda nejde o stejný paket jako minule
-    if(hash===lastMoveHash){
-        return;
+    }catch(e){
+        status.innerText=e.message;
     }
-
-    // 2. Kontrola, zda od POSLEDNÍHO ÚSPĚŠNÉHO tahu uteklo dost času (dáme poctivých 150ms)
-    if(now-lastMoveTime<150){
-        return;
-    }
-
-    // Teprve když tah prošel oběma filtry, zapíšeme si ho jako poslední platný tah!
-    lastMoveHash=hash;
-    lastMoveTime=now;
-
-    handleMove(now);
-
-});
-
-
-setInterval(updateTPS,100);
-
-}
-catch(e){
-
-status.innerText=
-e.message;
-
-}
-
 };
 
 function handleMove(now){
+    if(!solving){
+        solving=true;
+        startTime=now;
+        totalMoves=0;
+        maxTPS=0;
+        longestPause=0;
+        moveTimes=[];
+        graph=[];
 
-if(!solving){
+        state.innerText="SKLÁDÁŠ";
 
-solving=true;
+        timer=setInterval(()=>{
+            let t=(performance.now()-startTime)/1000;
+            timeVal.innerText=t.toFixed(2)+"s";
+        },50);
+    }else{
+        let pause=(now-lastMoveTime)/1000;
+        if(pause>longestPause){
+            longestPause=pause;
+            pauseVal.innerText=pause.toFixed(2)+"s";
+        }
+    }
 
-startTime=now;
+    moveTimes.push(now);
+    totalMoves++;
+    movesVal.innerText=totalMoves;
 
-totalMoves=0;
-maxTPS=0;
-longestPause=0;
-moveTimes=[];
-graph=[];
-
-state.innerText=
-"SKLÁDÁŠ";
-
-timer=setInterval(()=>{
-
-let t=
-(performance.now()-startTime)
-/1000;
-
-timeVal.innerText=
-t.toFixed(2)+"s";
-
-},50);
-
-}
-else{
-
-let pause=
-(now-lastMoveTime)
-/1000;
-
-if(
-pause>longestPause
-){
-
-longestPause=
-pause;
-
-pauseVal.innerText=
-pause.toFixed(2)+"s";
-
-}
-
-}
-
-moveTimes.push(now);
-
-totalMoves++;
-
-movesVal.innerText=
-totalMoves;
-
-clearTimeout(stopTimer);
-
-stopTimer=
-setTimeout(
-finishSolve,
-2500
-);
-
+    clearTimeout(stopTimer);
+    stopTimer=setTimeout(finishSolve,2500);
 }
 
 function updateTPS(){
+    const now=performance.now();
+    moveTimes=moveTimes.filter(t=>now-t<1000);
+    const current=moveTimes.length;
 
-const now=
-performance.now();
+    tps.innerText=current.toFixed(1);
 
-moveTimes=
-moveTimes.filter(
-t=>now-t<1000
-);
+    if(solving){
+        let elapsed=(now-startTime)/1000;
+        let avg=totalMoves/elapsed;
+        avgVal.innerText=avg.toFixed(1);
 
-const current=
-moveTimes.length;
+        if(current>maxTPS){
+            maxTPS=current;
+            maxVal.innerText=maxTPS.toFixed(1);
+        }
 
-tps.innerText=
-current.toFixed(1);
-
-if(solving){
-
-let elapsed=
-(now-startTime)
-/1000;
-
-let avg=
-totalMoves/
-elapsed;
-
-avgVal.innerText=
-avg.toFixed(1);
-
-if(current>maxTPS){
-
-maxTPS=current;
-
-maxVal.innerText=
-maxTPS.toFixed(1);
-
-}
-
-graph.push(current);
-
-if(graph.length>100){
-graph.shift();
-}
-
-drawGraph();
-
-}
-
+        graph.push(current);
+        if(graph.length>100){
+            graph.shift();
+        }
+        drawGraph();
+    }
 }
 
 function finishSolve(){
-
-solving=false;
-
-clearInterval(timer);
-
-state.innerText=
-"SOLVE DOKONČEN!";
-
-state.style.color=
-"yellow";
-
+    solving=false;
+    clearInterval(timer);
+    state.innerText="SOLVE DOKONČEN!";
 }
 
 function drawGraph(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if(graph.length<2) return;
 
-ctx.clearRect(
-0,
-0,
-canvas.width,
-canvas.height
-);
+    ctx.beginPath();
+    ctx.strokeStyle="#00e676";
+    ctx.lineWidth=4;
 
-if(graph.length<2)
-return;
+    let step=canvas.width/100;
 
-ctx.beginPath();
+    for(let i=0;i<graph.length;i++){
+        let x=i*step;
+        let y=canvas.height-(graph[i]/10)*canvas.height;
 
-ctx.strokeStyle=
-"#00e676";
-
-ctx.lineWidth=4;
-
-let step=
-canvas.width/100;
-
-for(
-let i=0;
-i<graph.length;
-i++
-){
-
-let x=
-i*step;
-
-let y=
-canvas.height-
-(graph[i]/10)
-*
-canvas.height;
-
-if(i===0)
-ctx.moveTo(x,y);
-
-else
-ctx.lineTo(x,y);
-
+        if(i===0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
 }
-
-ctx.stroke();
-
-}
-
 </script>
 
 </body>
