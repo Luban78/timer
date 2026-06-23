@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>MG3i Full Packet Analyzer</title>
+<title>MG3i Pro Trainer v2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
 body{
@@ -13,9 +13,11 @@ color:white;
 font-family:Arial,sans-serif;
 display:flex;
 flex-direction:column;
-justify-content:center;
+justify-content:flex-start;
 align-items:center;
 min-height:100vh;
+padding-top:20px;
+box-sizing:border-box;
 }
 button{
 padding:15px 30px;
@@ -25,34 +27,95 @@ border:none;
 border-radius:50px;
 background:#00e676;
 color:black;
-margin-bottom:15px;
+margin-bottom:10px;
 cursor:pointer;
+box-shadow: 0 4px 15px rgba(0,230,118,0.4);
 }
 #status{
 color:#999;
 font-size:13px;
+height:20px;
 margin-bottom:5px;
+text-align:center;
 }
-#packet-display{
-font-size:18px;
-font-family:monospace;
+#state-msg{
+font-size:24px;
+font-weight:bold;
+height:30px;
+color:yellow;
+letter-spacing:1px;
+}
+#detected-move{
+font-size:55px;
+font-weight:bold;
 color:#ffeb3b;
-background:#222;
-padding:15px;
-border-radius:10px;
-border:1px solid #444;
-width:90%;
-max-width:450px;
-word-break:break-all;
-text-align:center;
-margin-top:20px;
+height:65px;
+margin:5px 0;
+text-shadow: 0 0 10px rgba(255,235,59,0.5);
 }
-.info{
+#tps{
+font-size:75px;
+font-weight:bold;
 color:#00e5ff;
-font-size:14px;
-margin-top:10px;
-text-align:center;
+line-height:1;
+margin:5px;
+}
+.stats-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
 width:90%;
+max-width:400px;
+margin-bottom:15px;
+}
+.stat-box{
+background:#1e1e1e;
+padding:10px;
+border-radius:12px;
+text-align:center;
+border:1px solid #333;
+}
+.stat-label{
+font-size:11px;
+color:#999;
+margin-bottom:3px;
+}
+.stat-val{
+font-size:20px;
+font-weight:bold;
+}
+#history-container {
+width:90%;
+max-width:400px;
+background:#1e1e1e;
+border:1px solid #333;
+border-radius:12px;
+padding:12px;
+margin-top:10px;
+box-sizing:border-box;
+}
+.history-title {
+font-size:14px;
+color:#999;
+font-weight:bold;
+border-bottom:1px solid #333;
+padding-bottom:5px;
+margin-bottom:8px;
+text-align:center;
+}
+.history-item {
+display:flex;
+justify-content:space-between;
+font-size:14px;
+padding:4px 0;
+border-bottom:1px dashed #222;
+}
+canvas{
+width:100%;
+height:120px;
+background:#151515;
+margin-top:auto;
+border-top:1px solid #333;
 }
 </style>
 </head>
@@ -60,24 +123,78 @@ width:90%;
 
 <button id="btn">PŘIPOJIT KOSTKU</button>
 <div id="status">Odpojeno</div>
+<div id="state-msg">PŘIPRAV SE</div>
 
-<div style="font-size:24px;font-weight:bold;color:white;">DEŠIFROVANÝ BALÍČEK:</div>
-<div id="packet-display">ČEKÁM NA TAH...</div>
+<div id="detected-move">READY</div>
 
-<div class="info">Otoč stěnou a aplikace ti ukáže všech 16 dešifrovaných bajtů za sebou.</div>
+<div id="tps">0.0</div>
+
+<div class="stats-grid">
+    <div class="stat-box">
+        <div class="stat-label">ČAS</div>
+        <div id="time-val" class="stat-val">0.00s</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-label">POČET TAHŮ</div>
+        <div id="moves-val" class="stat-val">0</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-label">PRŮMĚRNÉ TPS</div>
+        <div id="avg-val" class="stat-val" style="color:#00e676">0.0</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-label">MAX TPS</div>
+        <div id="max-val" class="stat-val">0.0</div>
+    </div>
+</div>
+
+<div id="history-container">
+    <div class="history-title">HISTORIE SOLVES</div>
+    <div id="history-list">
+        <div style="color:#666;text-align:center;font-size:13px;">Žádné uložené pokusy</div>
+    </div>
+</div>
+
+<canvas id="graph"></canvas>
 
 <script>
 const btn=document.getElementById("btn");
 const status=document.getElementById("status");
-const packetDisplay=document.getElementById("packet-display");
+const state=document.getElementById("state-msg");
+const tps=document.getElementById("tps");
+const detectedMoveDisplay=document.getElementById("detected-move");
 
-// Tvůj ověřený klíč pro MAC: AB:12:34:5C:56:2D
+const timeVal=document.getElementById("time-val");
+const movesVal=document.getElementById("moves-val");
+const avgVal=document.getElementById("avg-val");
+const maxVal=document.getElementById("max-val");
+const historyList=document.getElementById("history-list");
+
+const canvas=document.getElementById("graph");
+const ctx=canvas.getContext("2d");
+
+canvas.width=window.innerWidth;
+canvas.height=120;
+
+let moveTimes=[];
+let totalMoves=0;
+let maxTPS=0;
+let lastMoveTime=0;
+let lastPacketString = "";
+let solveHistory=[];
+
+let solving=false;
+let startTime=0;
+let timer=null;
+let stopTimer=null;
+let graph=[];
+
 const AES_KEY_HEX = "2d565c3412ab00000000000000000000"; 
 const key = CryptoJS.enc.Hex.parse(AES_KEY_HEX);
 
 btn.onclick=async()=>{
     try{
-        status.innerText="Vyber MG3i";
+        status.innerText="Hledám kostku...";
         const device=await navigator.bluetooth.requestDevice({
             filters:[{namePrefix:"MG"}, {namePrefix:"GAN"}],
             optionalServices:["6e400001-b5a3-f393-e0a9-e50e24dc4179"]
@@ -90,10 +207,11 @@ btn.onclick=async()=>{
         await characteristic.startNotifications();
 
         btn.style.display="none";
-        status.innerText="Připojeno ke kostce: "+device.name;
-        packetDisplay.innerText="OTOČ KOSTKOU!";
+        status.innerText="Připojeno: "+device.name;
+        state.innerText="PŘIPRAVEN";
 
         characteristic.addEventListener("characteristicvaluechanged",event=>{
+            const now=performance.now();
             const value=event.target.value;
 
             if(value.byteLength < 16) return;
@@ -101,32 +219,140 @@ btn.onclick=async()=>{
             let uint8Array = new Uint8Array(value.buffer);
             let wordArray = CryptoJS.lib.WordArray.create(uint8Array);
 
-            // 🔓 Dekódování kompletního bloku
             let decrypted = CryptoJS.AES.decrypt(
                 { ciphertext: wordArray },
                 key,
                 { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding }
             );
 
-            let decBytes = [];
-            for (let i = 0; i < 16; i++) {
-                decBytes.push((decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff);
-            }
+            // Sledujeme změnu v dešifrovaném bloku
+            let currentString = decrypted.toString();
+            if(currentString === lastPacketString) return;
+            lastPacketString = currentString;
 
-            // Spojíme všech 16 bajtů s popiskem indexů pro snadné čtení
-            let output = "";
-            for(let i=0; i<16; i++) {
-                output += "[" + i + "]:" + decBytes[i] + " ";
-                if(i === 7) output += "<br>"; // Rozdělení na dva řádky, ať se to vejde na mobil
-            }
+            // Chytrý hardwarový filtr (75ms) odsekne vibrace a falešné signály
+            if(now - lastMoveTime < 75) return;
+            lastMoveTime = now;
 
-            packetDisplay.innerHTML = output;
+            handleMove(now);
         });
+
+        setInterval(updateTPS,100);
 
     }catch(e){
         status.innerText=e.message;
     }
 };
+
+function handleMove(now){
+    if(!solving){
+        solving=true;
+        startTime=now;
+        totalMoves=0;
+        maxTPS=0;
+        moveTimes=[];
+        graph=[];
+        state.innerText="SKLÁDÁŠ";
+    }
+
+    totalMoves++;
+    detectedMoveDisplay.innerText = "TAH " + totalMoves;
+    movesVal.innerText=totalMoves;
+    moveTimes.push(now);
+
+    if(!timer) {
+        timer=setInterval(()=>{
+            let t=(performance.now()-startTime)/1000;
+            timeVal.innerText=t.toFixed(2)+"s";
+        },50);
+    }
+
+    clearTimeout(stopTimer);
+    // Automatické ukončení po 2.2 sekundách klidu
+    stopTimer=setTimeout(finishSolve,2200);
+}
+
+function updateTPS(){
+    const now=performance.now();
+    moveTimes=moveTimes.filter(t=>now-t<1000);
+    const current=moveTimes.length;
+
+    tps.innerText=current.toFixed(1);
+
+    if(solving){
+        let elapsed=(now-startTime)/1000;
+        if(elapsed > 0) {
+            let avg=totalMoves/elapsed;
+            avgVal.innerText=avg.toFixed(1);
+        }
+
+        if(current>maxTPS){
+            maxTPS=current;
+            maxVal.innerText=maxTPS.toFixed(1);
+        }
+
+        graph.push(current);
+        if(graph.length>100) graph.shift();
+        drawGraph();
+    }
+}
+
+function finishSolve(){
+    solving=false;
+    clearInterval(timer);
+    timer = null;
+    
+    let finalTime = (performance.now() - startTime - 2200) / 1000;
+    if(finalTime < 0) finalTime = 0;
+    
+    timeVal.innerText = finalTime.toFixed(2) + "s";
+    state.innerText="SOLVE DOKONČEN!";
+    
+    // Přidání do historie
+    solveHistory.unshift({
+        time: finalTime.toFixed(2) + "s",
+        moves: totalMoves,
+        tps: (totalMoves / finalTime).toFixed(1)
+    });
+    
+    if(solveHistory.length > 5) solveHistory.pop();
+    updateHistoryUI();
+}
+
+function updateHistoryUI(){
+    historyList.innerHTML = "";
+    solveHistory.forEach((item, index) => {
+        historyList.innerHTML += `
+            <div class="history-item">
+                <span>#${solveHistory.length - index}</span>
+                <span style="font-weight:bold;color:#00e676">${item.time}</span>
+                <span>${item.moves} tahů</span>
+                <span style="color:#00e5ff">${item.tps} TPS</span>
+            </div>
+        `;
+    });
+}
+
+function drawGraph(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if(graph.length<2) return;
+
+    ctx.beginPath();
+    ctx.strokeStyle="#00e676";
+    ctx.lineWidth=3;
+
+    let step=canvas.width/100;
+
+    for(let i=0;i<graph.length;i++){
+        let x=i*step;
+        let y=canvas.height-(graph[i]/12)*canvas.height;
+
+        if(i===0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+}
 </script>
+
 </body>
 </html>
