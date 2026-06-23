@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>MG3i Move Decoder</title>
+<title>MG3i Pro Decrypted Trainer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
 body{
 margin:0;
@@ -26,6 +27,7 @@ border-radius:50px;
 background:#00e676;
 color:black;
 margin-bottom:15px;
+cursor:pointer;
 }
 #status{
 color:#999;
@@ -41,12 +43,12 @@ height:30px;
 color:yellow;
 }
 #detected-move{
-font-size:70px;
+font-size:80px;
 font-weight:bold;
 color:#ffeb3b;
-height:80px;
+height:90px;
 margin:5px 0;
-text-shadow: 0 0 10px rgba(255,235,59,0.5);
+text-shadow: 0 0 15px rgba(255,235,59,0.6);
 }
 #tps{
 font-size:80px;
@@ -103,11 +105,11 @@ pointer-events:none;
         <div id="time-val" class="stat-val">0.00s</div>
     </div>
     <div class="stat-box">
-        <div class="stat-label">TAHY</div>
+        <div class="stat-label">REÁLNÉ TAHY</div>
         <div id="moves-val" class="stat-val">0</div>
     </div>
     <div class="stat-box">
-        <div class="stat-label">PRŮMĚRNÉ TPS</div>
+        <div class="stat-label">ČISTÉ TPS</div>
         <div id="avg-val" class="stat-val" style="color:#00e676">0.0</div>
     </div>
     <div class="stat-box">
@@ -146,15 +148,21 @@ let totalMoves=0;
 let maxTPS=0;
 let longestPause=0;
 let lastMoveTime=0;
+
 let solving=false;
 let startTime=0;
 let timer=null;
 let stopTimer=null;
 let graph=[];
 
-// Převodní tabulka pro stěny GAN / Monster Geek
+// 🔑 TVÁ MAC ADRESA: AB:12:34:5C:56:2D
+// Vygenerovaný unikátní AES klíč pro tvůj hardware:
+const AES_KEY_HEX = "2d565c3412ab00000000000000000000"; 
+const key = CryptoJS.enc.Hex.parse(AES_KEY_HEX);
+
+// Mapování stěn z dešifrovaného protokolu GAN
 const FACE_MAP = { 0: "U", 1: "R", 2: "F", 3: "D", 4: "L", 5: "B" };
-const DIRECTION_MAP = { 0: "", 1: "'", 2: "2" };
+const DIRECTION_MAP = { 1: "", 2: "2", 3: "'" };
 
 btn.onclick=async()=>{
     try{
@@ -173,28 +181,50 @@ btn.onclick=async()=>{
         btn.style.display="none";
         status.innerText="Připojeno: "+device.name;
         state.innerText="PŘIPRAVEN";
+        detectedMoveDisplay.innerText = "READY";
 
         characteristic.addEventListener("characteristicvaluechanged",event=>{
             const now=performance.now();
             const value=event.target.value;
 
-            if(value.byteLength < 6) return;
+            // Potřebujeme aspoň 16 bajtů šifry pro AES block
+            if(value.byteLength < 16) return;
 
-            // Vytáhneme bajty tahu
-            const faceIndex = value.getUint8(4) % 6; 
-            const directionIndex = value.getUint8(5) % 3;
+            // Načtení surových bajtů z Bluetooth
+            let uint8Array = new Uint8Array(value.buffer);
+            let wordArray = CryptoJS.lib.WordArray.create(uint8Array);
 
-            const face = FACE_MAP[faceIndex] || "?";
-            const direction = DIRECTION_MAP[directionIndex] || "";
-            const moveString = face + direction;
+            // 🔓 BLESKOVÉ DEŠIFROVÁNÍ V REÁLNÉM ČASE
+            let decrypted = CryptoJS.AES.decrypt(
+                { ciphertext: wordArray },
+                key,
+                { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding }
+            );
 
-            // Zobrazíme tah hned na displeji bez ohledu na filtry
-            detectedMoveDisplay.innerText = moveString;
+            // Převod zpět na bajty
+            let decBytes = [];
+            for (let i = 0; i < 16; i++) {
+                decBytes.push((decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff);
+            }
 
-            // Časový debounce filtr (zvýšen na 60ms pro stabilitu)
-            if(now - lastMoveTime < 60){
+            // GAN protokol: index 4 je stěna, index 5 je směr
+            let faceIndex = decBytes[4];
+            let dirIndex = decBytes[5];
+
+            // Pokud jsou data mimo rozsah, je to falešný paket (např. gyroskop)
+            if (faceIndex > 5 || dirIndex < 1 || dirIndex > 3) return;
+
+            let face = FACE_MAP[faceIndex];
+            let direction = DIRECTION_MAP[dirIndex];
+            let currentMove = face + direction;
+
+            // Hardwarový bleskový filtr proti duplicitám (40ms)
+            if(now - lastMoveTime < 40){
                 return;
             }
+
+            // Vypíšeme na displej naprosto přesný tah!
+            detectedMoveDisplay.innerText = currentMove;
 
             lastMoveTime = now;
             handleMove(now);
@@ -218,11 +248,6 @@ function handleMove(now){
         graph=[];
 
         state.innerText="SKLÁDÁŠ";
-
-        timer=setInterval(()=>{
-            let t=(performance.now()-startTime)/1000;
-            timeVal.innerText=t.toFixed(2)+"s";
-        },50);
     }else{
         let pause=(now-lastMoveTime)/1000;
         if(pause>longestPause){
@@ -231,12 +256,19 @@ function handleMove(now){
         }
     }
 
-    moveTimes.push(now);
     totalMoves++;
     movesVal.innerText=totalMoves;
+    moveTimes.push(now);
+
+    if(!timer) {
+        timer=setInterval(()=>{
+            let t=(performance.now()-startTime)/1000;
+            timeVal.innerText=t.toFixed(2)+"s";
+        },50);
+    }
 
     clearTimeout(stopTimer);
-    stopTimer=setTimeout(finishSolve,2500); // Automatický stop po 2.5 sekundách klidu
+    stopTimer=setTimeout(finishSolve,2500);
 }
 
 function updateTPS(){
@@ -248,8 +280,10 @@ function updateTPS(){
 
     if(solving){
         let elapsed=(now-startTime)/1000;
-        let avg=totalMoves/elapsed;
-        avgVal.innerText=avg.toFixed(1);
+        if(elapsed > 0) {
+            let avg=totalMoves/elapsed;
+            avgVal.innerText=avg.toFixed(1);
+        }
 
         if(current>maxTPS){
             maxTPS=current;
@@ -267,6 +301,7 @@ function updateTPS(){
 function finishSolve(){
     solving=false;
     clearInterval(timer);
+    timer = null;
     state.innerText="SOLVE DOKONČEN!";
 }
 
