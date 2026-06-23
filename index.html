@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>MG3i Ultimate Decoded</title>
+<title>MG3i Full Packet Analyzer</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
 body{
@@ -16,7 +16,6 @@ flex-direction:column;
 justify-content:center;
 align-items:center;
 min-height:100vh;
-overflow:hidden;
 }
 button{
 padding:15px 30px;
@@ -32,60 +31,28 @@ cursor:pointer;
 #status{
 color:#999;
 font-size:13px;
-height:20px;
 margin-bottom:5px;
-text-align:center;
 }
-#state-msg{
-font-size:22px;
-font-weight:bold;
-height:30px;
-color:yellow;
-}
-#detected-move{
-font-size:80px;
-font-weight:bold;
+#packet-display{
+font-size:18px;
+font-family:monospace;
 color:#ffeb3b;
-height:95px;
-margin:5px 0;
-text-shadow: 0 0 15px rgba(255,235,59,0.6);
-}
-#tps{
-font-size:80px;
-font-weight:bold;
-color:#00e5ff;
-line-height:1;
-margin:5px;
-}
-.stats-grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:12px;
+background:#222;
+padding:15px;
+border-radius:10px;
+border:1px solid #444;
 width:90%;
-max-width:400px;
-}
-.stat-box{
-background:#1e1e1e;
-padding:10px;
-border-radius:12px;
+max-width:450px;
+word-break:break-all;
 text-align:center;
-border:1px solid #333;
+margin-top:20px;
 }
-.stat-label{
-font-size:11px;
-color:#999;
-}
-.stat-val{
-font-size:20px;
-font-weight:bold;
-}
-canvas{
-position:absolute;
-bottom:0;
-left:0;
-width:100%;
-height:25%;
-pointer-events:none;
+.info{
+color:#00e5ff;
+font-size:14px;
+margin-top:10px;
+text-align:center;
+width:90%;
 }
 </style>
 </head>
@@ -93,76 +60,20 @@ pointer-events:none;
 
 <button id="btn">PŘIPOJIT KOSTKU</button>
 <div id="status">Odpojeno</div>
-<div id="state-msg">Připoj kostku</div>
 
-<div id="detected-move">READY</div>
+<div style="font-size:24px;font-weight:bold;color:white;">DEŠIFROVANÝ BALÍČEK:</div>
+<div id="packet-display">ČEKÁM NA TAH...</div>
 
-<div id="tps">0.0</div>
-
-<div class="stats-grid">
-    <div class="stat-box">
-        <div class="stat-label">ČAS</div>
-        <div id="time-val" class="stat-val">0.00s</div>
-    </div>
-    <div class="stat-box">
-        <div class="stat-label">REÁLNÉ TAHY</div>
-        <div id="moves-val" class="stat-val">0</div>
-    </div>
-    <div class="stat-box">
-        <div class="stat-label">ČISTÉ TPS</div>
-        <div id="avg-val" class="stat-val" style="color:#00e676">0.0</div>
-    </div>
-    <div class="stat-box">
-        <div class="stat-label">MAX TPS</div>
-        <div id="max-val" class="stat-val">0.0</div>
-    </div>
-    <div class="stat-box" style="grid-column:span 2">
-        <div class="stat-label">NEJDELŠÍ PAUZA</div>
-        <div id="pause-val" class="stat-val" style="color:#ff1744">0.00s</div>
-    </div>
-</div>
-
-<canvas id="graph"></canvas>
+<div class="info">Otoč stěnou a aplikace ti ukáže všech 16 dešifrovaných bajtů za sebou.</div>
 
 <script>
 const btn=document.getElementById("btn");
 const status=document.getElementById("status");
-const state=document.getElementById("state-msg");
-const tps=document.getElementById("tps");
-const detectedMoveDisplay=document.getElementById("detected-move");
+const packetDisplay=document.getElementById("packet-display");
 
-const timeVal=document.getElementById("time-val");
-const movesVal=document.getElementById("moves-val");
-const avgVal=document.getElementById("avg-val");
-const maxVal=document.getElementById("max-val");
-const pauseVal=document.getElementById("pause-val");
-
-const canvas=document.getElementById("graph");
-const ctx=canvas.getContext("2d");
-
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight*.25;
-
-let moveTimes=[];
-let totalMoves=0;
-let maxTPS=0;
-let longestPause=0;
-let lastMoveTime=0;
-let lastMoveString = "";
-
-let solving=false;
-let startTime=0;
-let timer=null;
-let stopTimer=null;
-let graph=[];
-
-// Klíč pro MAC: AB:12:34:5C:56:2D
+// Tvůj ověřený klíč pro MAC: AB:12:34:5C:56:2D
 const AES_KEY_HEX = "2d565c3412ab00000000000000000000"; 
 const key = CryptoJS.enc.Hex.parse(AES_KEY_HEX);
-
-// Správné mapování stěn pro GAN/Monster v novém firmwaru
-const FACE_MAP = { 0: "U", 1: "R", 2: "F", 3: "D", 4: "L", 5: "B" };
-const DIRECTION_MAP = { 1: "", 2: "2", 3: "'" };
 
 btn.onclick=async()=>{
     try{
@@ -179,11 +90,10 @@ btn.onclick=async()=>{
         await characteristic.startNotifications();
 
         btn.style.display="none";
-        status.innerText="Připojeno: "+device.name;
-        state.innerText="PŘIPRAVEN";
+        status.innerText="Připojeno ke kostce: "+device.name;
+        packetDisplay.innerText="OTOČ KOSTKOU!";
 
         characteristic.addEventListener("characteristicvaluechanged",event=>{
-            const now=performance.now();
             const value=event.target.value;
 
             if(value.byteLength < 16) return;
@@ -191,7 +101,7 @@ btn.onclick=async()=>{
             let uint8Array = new Uint8Array(value.buffer);
             let wordArray = CryptoJS.lib.WordArray.create(uint8Array);
 
-            // Dešifrování bloku
+            // 🔓 Dekódování kompletního bloku
             let decrypted = CryptoJS.AES.decrypt(
                 { ciphertext: wordArray },
                 key,
@@ -203,111 +113,20 @@ btn.onclick=async()=>{
                 decBytes.push((decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff);
             }
 
-            // Čtení nového umístění tahu (index 12 a 13)
-            let faceIndex = decBytes[12] % 6;
-            let dirIndex = decBytes[13];
+            // Spojíme všech 16 bajtů s popiskem indexů pro snadné čtení
+            let output = "";
+            for(let i=0; i<16; i++) {
+                output += "[" + i + "]:" + decBytes[i] + " ";
+                if(i === 7) output += "<br>"; // Rozdělení na dva řádky, ať se to vejde na mobil
+            }
 
-            if (dirIndex < 1 || dirIndex > 3) return;
-
-            let face = FACE_MAP[faceIndex];
-            let direction = DIRECTION_MAP[dirIndex];
-            let currentMove = face + direction;
-
-            // Kontrola duplicity stejného balíčku
-            if (currentMove === lastMoveString && (now - lastMoveTime < 120)) return;
-            lastMoveString = currentMove;
-
-            // Zobrazení čistého tahu na displeji
-            detectedMoveDisplay.innerText = currentMove;
-
-            lastMoveTime = now;
-            handleMove(now);
+            packetDisplay.innerHTML = output;
         });
-
-        setInterval(updateTPS,100);
 
     }catch(e){
         status.innerText=e.message;
     }
 };
-
-function handleMove(now){
-    if(!solving){
-        solving=true;
-        startTime=now;
-        totalMoves=0;
-        maxTPS=0;
-        longestPause=0;
-        moveTimes=[];
-        graph=[];
-        state.innerText="SKLÁDÁŠ";
-    }else{
-        let pause=(now-lastMoveTime)/1000;
-        if(pause>longestPause){
-            longestPause=pause;
-            pauseVal.innerText=pause.toFixed(2)+"s";
-        }
-    }
-
-    totalMoves++;
-    movesVal.innerText=totalMoves;
-    moveTimes.push(now);
-
-    if(!timer) {
-        timer=setInterval(()=>{
-            let t=(performance.now()-startTime)/1000;
-            timeVal.innerText=t.toFixed(2)+"s";
-        },50);
-    }
-
-    clearTimeout(stopTimer);
-    stopTimer=setTimeout(finishSolve,2500);
-}
-
-function updateTPS(){
-    const now=performance.now();
-    moveTimes=moveTimes.filter(t=>now-t<1000);
-    const current=moveTimes.length;
-    tps.innerText=current.toFixed(1);
-
-    if(solving){
-        let elapsed=(now-startTime)/1000;
-        if(elapsed > 0) {
-            let avg=totalMoves/elapsed;
-            avgVal.innerText=avg.toFixed(1);
-        }
-        if(current>maxTPS){
-            maxTPS=current;
-            maxVal.innerText=maxTPS.toFixed(1);
-        }
-        graph.push(current);
-        if(graph.length>100) graph.shift();
-        drawGraph();
-    }
-}
-
-function finishSolve(){
-    solving=false;
-    clearInterval(timer);
-    timer = null;
-    state.innerText="SOLVE DOKONČEN!";
-}
-
-function drawGraph(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    if(graph.length<2) return;
-    ctx.beginPath();
-    ctx.strokeStyle="#00e676";
-    ctx.lineWidth=4;
-    let step=canvas.width/100;
-    for(let i=0;i<graph.length;i++){
-        let x=i*step;
-        let y=canvas.height-(graph[i]/10)*canvas.height;
-        if(i===0) ctx.moveTo(x,y);
-        else ctx.lineTo(x,y);
-    }
-    ctx.stroke();
-}
 </script>
 </body>
 </html>
