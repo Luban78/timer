@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>MG3i Signal Analyzer</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<title>MG3i RAW Bluetooth Monitor</title>
 <style>
 body{
 margin:0;
-background:#0c0f12;
+background:#090d10;
 color:#e2e8f0;
 font-family:'Courier New',monospace;
 display:flex;
@@ -25,7 +24,7 @@ font-size:18px;
 font-weight:bold;
 border:none;
 border-radius:8px;
-background:#00b0ff;
+background:#ff9100;
 color:black;
 margin-bottom:20px;
 cursor:pointer;
@@ -38,51 +37,54 @@ margin-bottom:20px;
 font-family:sans-serif;
 }
 .console{
-background:#1a202c;
-border:2px solid #4a5568;
+background:#141b24;
+border:2px solid #2d3748;
 border-radius:10px;
 padding:15px;
 width:100%;
 max-width:500px;
 box-sizing:border-box;
-box-shadow:0 10px 25px rgba(0,0,0,0.5);
 }
 .row{
 display:flex;
 justify-content:space-between;
 padding:6px 0;
-border-bottom:1px solid #2d3748;
+border-bottom:1px solid #1a202c;
 font-size:14px;
 }
-.index{ color:#ecc94b; font-weight:bold; }
-.dec{ color:#63b3ed; }
-.hex{ color:#48bb78; font-weight:bold; }
-.changed{ background: rgba(245, 158, 11, 0.2); }
+.index{ color:#ff9100; font-weight:bold; }
+.hex{ color:#00e5ff; font-weight:bold; }
+.changed { background: rgba(0, 229, 255, 0.15); }
+#packet-len {
+font-size: 16px;
+color: #00e676;
+margin-bottom: 10px;
+font-family: sans-serif;
+font-weight: bold;
+}
 </style>
 </head>
 <body>
 
-<button id="btn">PŘIPOJIT PRO ANALÝZU</button>
-<div id="status">Odpojeno – Čeká na spuštění</div>
+<button id="btn">MONITOROVAT SUROVÁ DATA</button>
+<div id="status">Odpojeno</div>
+<div id="packet-len">Velikost balíčku: Čekám...</div>
 
-<div style="font-size:18px;font-weight:bold;margin-bottom:10px;color:#f7fafc;font-family:sans-serif;">HARDWAROVÝ MONITOR BALÍČKŮ</div>
 <div class="console" id="console-box">
-    <div style="text-align:center;color:#718096;">Zatím žádná data. Připoj kostku a otoč stěnou.</div>
+    <div style="text-align:center;color:#4a5568;">Připoj kostku a otoč libovolnou stěnou.</div>
 </div>
 
 <script>
 const btn=document.getElementById("btn");
 const status=document.getElementById("status");
+const packetLen=document.getElementById("packet-len");
 const consoleBox=document.getElementById("console-box");
 
-const AES_KEY_HEX = "2d565c3412ab00000000000000000000"; 
-const key = CryptoJS.enc.Hex.parse(AES_KEY_HEX);
-
-let previousBytes = new Array(16).fill(0);
+let previousRawBytes = [];
 
 btn.onclick=async()=>{
     try{
-        status.innerText="Hledám Bluetooth zařízení...";
+        status.innerText="Hledám kostku...";
         const device=await navigator.bluetooth.requestDevice({
             filters:[{namePrefix:"MG"}, {namePrefix:"GAN"}],
             optionalServices:["6e400001-b5a3-f393-e0a9-e50e24dc4179"]
@@ -95,44 +97,35 @@ btn.onclick=async()=>{
         await characteristic.startNotifications();
 
         btn.style.display="none";
-        status.innerText="Sleduji zařízení: " + device.name;
+        status.innerText="Surový přenos ze zařízení: " + device.name;
 
         characteristic.addEventListener("characteristicvaluechanged",event=>{
             const value=event.target.value;
-            if(value.byteLength < 16) return;
+            let len = value.byteLength;
+            
+            packetLen.innerText = "Velikost balíčku: " + len + " bajtů";
 
-            let uint8Array = new Uint8Array(value.buffer);
-            let wordArray = CryptoJS.lib.WordArray.create(uint8Array);
-
-            let decrypted = CryptoJS.AES.decrypt(
-                { ciphertext: wordArray },
-                key,
-                { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding }
-            );
-
-            let decBytes = [];
-            for (let i = 0; i < 16; i++) {
-                decBytes.push((decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff);
+            let rawBytes = [];
+            for (let i = 0; i < len; i++) {
+                rawBytes.push(value.getUint8(i));
             }
 
-            // Vygenerování přehledné tabulky bajtů
             let html = "";
-            for(let i=0; i<16; i++) {
-                let decVal = decBytes[i];
-                let hexVal = decVal.toString(16).toUpperCase().padStart(2, '0');
+            for(let i=0; i<len; i++) {
+                let currentByte = rawBytes[i];
+                let hexVal = currentByte.toString(16).toUpperCase().padStart(2, '0');
                 
-                // Pokud se bajt změnil od minule, zvýrazníme ho
-                let changeClass = (decVal !== previousBytes[i]) ? "changed" : "";
+                // Zvýrazníme změnu v surových datech
+                let changeClass = (previousRawBytes.length > i && currentByte !== previousRawBytes[i]) ? "changed" : "";
 
                 html += `<div class="row ${changeClass}">`;
-                html += `  <span class="index">Bajt [${String(i).padStart(2, '0')}]</span>`;
-                html += `  <span class="dec">DEC: ${String(decVal).padStart(3, ' ')}</span>`;
-                html += `  <span class="hex">HEX: 0x${hexVal}</span>`;
+                html += `  <span class="index">RAW Bajt [${String(i).padStart(2, '0')}]</span>`;
+                html += `  <span class="hex">HEX: 0x${hexVal} (DEC: ${currentByte})</span>`;
                 html += `</div>`;
             }
 
             consoleBox.innerHTML = html;
-            previousBytes = [...decBytes]; // Uložení pro další porovnání
+            previousRawBytes = [...rawBytes];
         });
 
     }catch(e){
