@@ -239,31 +239,28 @@ characteristic.addEventListener(
 "characteristicvaluechanged",
 event=>{
 
-const now=performance.now();
+    const now=performance.now();
+    const data=new Uint8Array(event.target.value.buffer);
+    const hash=data.slice(0,4).join(",");
 
-const data=
-new Uint8Array(
-event.target.value.buffer
-);
+    // 1. Kontrola, zda nejde o stejný paket jako minule
+    if(hash===lastMoveHash){
+        return;
+    }
 
-const hash=
-data.slice(0,4).join(",");
+    // 2. Kontrola, zda od POSLEDNÍHO ÚSPĚŠNÉHO tahu uteklo dost času (dáme poctivých 150ms)
+    if(now-lastMoveTime<150){
+        return;
+    }
 
-if(hash===lastMoveHash){
-return;
-}
+    // Teprve když tah prošel oběma filtry, zapíšeme si ho jako poslední platný tah!
+    lastMoveHash=hash;
+    lastMoveTime=now;
 
-lastMoveHash=hash;
-
-if(now-lastMoveTime<140){
-return;
-}
-
-handleMove(now);
-
-lastMoveTime=now;
+    handleMove(now);
 
 });
+
 
 setInterval(updateTPS,100);
 
