@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>MG3i RAW Analyzer v3.0</title>
+<title>MG3i RAW Analyzer v3.1</title>
 <style>
 body{
 margin:0;
@@ -22,11 +22,11 @@ box-sizing:border-box;
 font-family: sans-serif;
 font-size: 14px;
 font-weight: bold;
-color: #ff1744;
-background: rgba(255,23,68,0.1);
+color: #00e676;
+background: rgba(0,230,118,0.1);
 padding: 4px 12px;
 border-radius: 20px;
-border: 1px solid #ff1744;
+border: 1px solid #00e676;
 margin-bottom: 15px;
 }
 button{
@@ -35,12 +35,12 @@ font-size:18px;
 font-weight:bold;
 border:none;
 border-radius:8px;
-background:#ff9100;
+background:#00e5ff;
 color:black;
 margin-bottom:20px;
 cursor:pointer;
 font-family:sans-serif;
-box-shadow: 0 4px 15px rgba(255,145,0,0.3);
+box-shadow: 0 4px 15px rgba(0,229,255,0.3);
 }
 #status{
 color:#a0aec0;
@@ -64,12 +64,12 @@ padding:6px 0;
 border-bottom:1px solid #1a202c;
 font-size:14px;
 }
-.index{ color:#ff9100; font-weight:bold; }
-.hex{ color:#00e5ff; font-weight:bold; }
-.changed { background: rgba(0, 229, 255, 0.15); }
+.index{ color:#00e5ff; font-weight:bold; }
+.hex{ color:#ffeb3b; font-weight:bold; }
+.changed { background: rgba(255, 235, 59, 0.15); }
 #packet-info {
 font-size: 16px;
-color: #00e676;
+color: #ff9100;
 margin-bottom: 10px;
 font-family: sans-serif;
 font-weight: bold;
@@ -78,14 +78,14 @@ font-weight: bold;
 </head>
 <body>
 
-<div id="version-tag">VERZE APLIKACE: v3.0 (RAW MONITOR)</div>
+<div id="version-tag">VERZE APLIKACE: v3.1 (20-BYTE MONITOR)</div>
 
-<button id="btn">MONITOROVAT SUROVÁ DATA</button>
+<button id="btn">SLEDY 20-BAJTOVÝCH BLOKŮ</button>
 <div id="status">Odpojeno</div>
 <div id="packet-info">Velikost balíčku: Čekám...</div>
 
 <div class="console" id="console-box">
-    <div style="text-align:center;color:#4a5568;">Připoj kostku (v klidu v ruce) a udělej jeden tah stěnou U.</div>
+    <div style="text-align:center;color:#4a5568;">Otoč stěnou U o 90° a podrž ji. Sleduj změny.</div>
 </div>
 
 <script>
@@ -98,7 +98,7 @@ let previousRawBytes = [];
 
 btn.onclick=async()=>{
     try{
-        status.innerText="Hledám kostku...";
+        status.innerText="Vyhledávám Bluetooth zařízení...";
         const device=await navigator.bluetooth.requestDevice({
             filters:[{namePrefix:"MG"}, {namePrefix:"GAN"}],
             optionalServices:["6e400001-b5a3-f393-e0a9-e50e24dc4179"]
@@ -111,7 +111,7 @@ btn.onclick=async()=>{
         await characteristic.startNotifications();
 
         btn.style.display="none";
-        status.innerText="Čtu data ze zařízení: " + device.name;
+        status.innerText="Připojen 20-bajtový stream z: " + device.name;
 
         characteristic.addEventListener("characteristicvaluechanged",event=>{
             const value=event.target.value;
@@ -129,7 +129,6 @@ btn.onclick=async()=>{
                 let currentByte = rawBytes[i];
                 let hexVal = currentByte.toString(16).toUpperCase().padStart(2, '0');
                 
-                // Modré zvýraznění řádku, pokud se surová hodnota změnila
                 let changeClass = (previousRawBytes.length > i && currentByte !== previousRawBytes[i]) ? "changed" : "";
 
                 html += `<div class="row ${changeClass}">`;
