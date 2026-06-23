@@ -3,69 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>MG3i Signal Analyzer v5.1</title>
+<title>MG3i Battery & System Decoder v5.2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
-body { margin:0; background:#0a0d14; color:#cfd8dc; font-family:'Courier New',monospace; padding:15px; box-sizing:border-box; }
-#header { font-family:sans-serif; background:#1a2332; padding:12px; border-radius:6px; border:1px solid #00e5ff; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; }
-button { background:#00e5ff; color:#000; border:none; padding:12px 24px; font-weight:bold; border-radius:4px; cursor:pointer; font-size:14px; }
-.grid { display:grid; grid-template-columns:1fr; gap:15px; }
-@media(min-width:768px) { .grid { grid-template-columns: 1fr 1fr; } }
-.card { background:#101622; border:1px solid #232f44; border-radius:6px; padding:15px; }
-.card-title { font-family:sans-serif; color:#00e5ff; font-weight:bold; margin-top:0; margin-bottom:10px; font-size:14px; text-transform:uppercase; }
-.log-entry { background:#070a10; padding:8px; border-radius:4px; margin-bottom:8px; border-left:3px solid #ff9100; font-size:12px; }
-.changed-byte { color:#ff9100; font-weight:bold; }
-.table-dump { width:100%; border-collapse:collapse; font-size:12px; }
-.table-dump th, .table-dump td { text-align:left; padding:4px; border-bottom:1px solid #1a2332; }
-.table-dump tr.delta { background:rgba(0,229,255,0.05); }
+body { margin:0; background:#090d16; color:#eceff1; font-family:'Courier New',monospace; padding:15px; }
+#header { background:#151c28; padding:15px; border-radius:6px; border:1px solid #00e5ff; margin-bottom:15px; display:flex; justify-content:between; align-items:center; flex-wrap:wrap; gap:10px; }
+button { background:#00e5ff; color:#000; border:none; padding:12px 24px; font-weight:bold; border-radius:4px; cursor:pointer; }
+.panel { background:#101622; border:1px solid #223147; border-radius:6px; padding:15px; margin-bottom:15px; }
+.title { color:#ff9100; font-family:sans-serif; font-size:14px; font-weight:bold; text-transform:uppercase; margin-bottom:10px; }
+.stat-box { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin-bottom:10px; }
+.stat-card { background:#070a10; padding:10px; border-radius:4px; text-align:center; border:1px solid #1a2636; }
+.stat-val { font-size:20px; color:#00e5ff; font-weight:bold; margin-top:5px; }
+.raw-box { background:#070a10; padding:10px; border-radius:4px; font-size:13px; color:#ffeb3b; overflow-x:auto; white-space:nowrap; }
 </style>
 </head>
 <body>
 
 <div id="header">
-    <div>
-        <strong style="color:#ff9100;">LOGOVACÍ JÁDRO v5.1 (OPRAVENÉ)</strong><br>
-        <span id="status" style="font-size:12px; color:#90a4ae;">Odpojeno - Připravte kostku</span>
+    <div style="flex-grow:1;">
+        <strong style="color:#00e5ff;">SYSTEM & BATTERY DECODER v5.2</strong><br>
+        <span id="status" style="font-size:12px; color:#b0bec5;">Odpojeno</span>
     </div>
-    <button id="conn-btn">PŘIPOJIT</button>
+    <button id="conn-btn">PŘIPOJIT KOSTKU</button>
 </div>
 
-<div class="grid">
-    <div class="card">
-        <div class="card-title">⚠️ Detekované změny v reálném čase</div>
-        <div id="change-log">
-            <div style="color:#546e7a; text-align:center; padding:20px;">Proveďte tah na kostce pro analýzu...</div>
+<div class="panel">
+    <div class="title">🔋 Monitorování napájení a systémového stavu</div>
+    <div class="stat-box">
+        <div class="stat-card">
+            <div style="font-size:11px;color:#78909c;">Zachycené pakety</div>
+            <div class="stat-val" id="pkt-count">0</div>
+        </div>
+        <div class="stat-card">
+            <div style="font-size:11px;color:#78909c;">Poslední stabilní Bajt 12</div>
+            <div class="stat-val" id="bat-b12">--</div>
+        </div>
+        <div class="stat-card">
+            <div style="font-size:11px;color:#78909c;">Surový konec [19]</div>
+            <div class="stat-val" id="raw-b19">--</div>
         </div>
     </div>
+</div>
 
-    <div class="card">
-        <div class="card-title">📊 Kompletní mapa registrů (00-19)</div>
-        <table class="table-dump">
-            <thead>
-                <tr>
-                    <th>Bajt</th>
-                    <th>HEX</th>
-                    <th>DEC</th>
-                    <th>Binární mapa (Bity 7-0)</th>
-                </tr>
-            </thead>
-            <tbody id="registry-body">
-                <tr><td colspan="4" style="color:#546e7a; text-align:center; padding:20px;">Čeká se na data...</td></tr>
-            </tbody>
-        </table>
-    </div>
+<div class="panel">
+    <div class="title">👁️ Poslední zachycený kompletní balíček (Surová data)</div>
+    <div class="raw-box" id="raw-packet">Čekám na první stabilní signál z kostky...</div>
 </div>
 
 <script>
 const AES_KEY_HEX = "2d565c3412ab00000000000000000000"; 
 const key = CryptoJS.enc.Hex.parse(AES_KEY_HEX);
-let lastBytes = new Array(20).fill(0);
-let logCounter = 0;
+let counter = 0;
 
-// Zde bylo opraveno ID z "btn" na "conn-btn"
 document.getElementById("conn-btn").onclick = async () => {
     try {
-        document.getElementById("status").innerText = "Skenuji BLE okolí...";
+        document.getElementById("status").innerText = "Hledám zařízení...";
         const device = await navigator.bluetooth.requestDevice({
             filters: [{namePrefix:"MG"}, {namePrefix:"GAN"}],
             optionalServices: ["6e400001-b5a3-f393-e0a9-e50e24dc4179"]
@@ -77,70 +69,40 @@ document.getElementById("conn-btn").onclick = async () => {
 
         await characteristic.startNotifications();
         document.getElementById("conn-btn").style.display = "none";
-        document.getElementById("status").innerText = "Propojeno se streamem: " + device.name;
+        document.getElementById("status").innerText = "Přijímám signály z: " + device.name;
 
         characteristic.addEventListener("characteristicvaluechanged", event => {
             const value = event.target.value;
             if (value.byteLength < 16) return;
 
-            // Dešifrování AES bloku (00-15)
+            counter++;
+            document.getElementById("pkt-count").innerText = counter;
+
+            // Sběr surových a dešifrovaných dat dohromady
             let cleanBytes = new Uint8Array(16);
             for(let i=0; i<16; i++) cleanBytes[i] = value.getUint8(i);
             let wordArray = CryptoJS.lib.WordArray.create(cleanBytes);
             let decrypted = CryptoJS.AES.decrypt({ ciphertext: wordArray }, key, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding });
 
-            let currentBytes = [];
+            let bytes = [];
             for (let i = 0; i < 16; i++) {
-                currentBytes.push((decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff);
+                bytes.push((decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff);
             }
-
-            // Přidání surového konce (16-19)
             for(let i=16; i<value.byteLength; i++) {
-                currentBytes.push(value.getUint8(i));
+                bytes.push(value.getUint8(i));
             }
 
-            // Hledání změn oproti minulému stavu
-            let diffs = [];
-            for(let i=0; i<currentBytes.length; i++) {
-                if(currentBytes[i] !== lastBytes[i] && logCounter > 0) {
-                    diffs.push(`<b>B[${String(i).padStart(2,'0')}]</b>: 0x${lastBytes[i].toString(16).toUpperCase()}→<span class="changed-byte">0x${currentBytes[i].toString(16).toUpperCase()}</span>`);
-                }
-            }
+            // Výpis klíčových hodnot pro baterii
+            document.getElementById("bat-b12").innerText = `0x${bytes[12].toString(16).toUpperCase()} (${bytes[12]})`;
+            document.getElementById("raw-b19").innerText = `0x${bytes[19].toString(16).toUpperCase()} (${bytes[19]})`;
 
-            // Zápis do logu změn
-            if(diffs.length > 0) {
-                const logBox = document.getElementById("change-log");
-                if(logCounter === 1) logBox.innerHTML = ""; // smazat placeholder
-                
-                let logEntry = document.createElement("div");
-                logEntry.className = "log-entry";
-                logEntry.innerHTML = `<strong>Změna #${logCounter}</strong> (Bajt 04: ${currentBytes[4]}, Bajt 05: ${currentBytes[5]})<br>${diffs.join(" | ")}`;
-                logBox.insertBefore(logEntry, logBox.firstChild);
-            }
-
-            // Aktualizace pravé tabulky registrů
-            let tableHtml = "";
-            for(let i=0; i<currentBytes.length; i++) {
-                let isChanged = currentBytes[i] !== lastBytes[i] && logCounter > 0;
-                let rowClass = isChanged ? 'class="delta"' : '';
-                let hexStr = "0x" + currentBytes[i].toString(16).toUpperCase().padStart(2, '0');
-                let binStr = currentBytes[i].toString(2).padStart(8, '0');
-                
-                tableHtml += `<tr ${rowClass}>
-                    <td>[${String(i).padStart(2,'0')}]</td>
-                    <td style="color:#ffeb3b;">${hexStr}</td>
-                    <td>${currentBytes[i]}</td>
-                    <td style="color:#00e5ff;">${binStr}</td>
-                </tr>`;
-            }
-            document.getElementById("registry-body").innerHTML = tableHtml;
-
-            lastBytes = [...currentBytes];
-            logCounter++;
+            // Zobrazení celého řetězce pro kontrolu fixních hodnot
+            let hexString = bytes.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+            document.getElementById("raw-packet").innerText = hexString;
         });
 
     } catch (e) {
-        document.getElementById("status").innerText = "Chyba laboratoře: " + e.message;
+        document.getElementById("status").innerText = "Chyba dekodéru: " + e.message;
     }
 };
 </script>
