@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 
-<title>MG3i Trainer - Advanced Decoder</title>
+<title>MG3i Pro Trainer</title>
 
 <style>
 body{
@@ -32,13 +32,10 @@ margin-bottom:15px;
 }
 
 #status{
-color:#ffeb3b;
-font-size:12px;
-height:auto;
+color:#aaa;
+font-size:14px;
+height:20px;
 margin-bottom:5px;
-text-align:center;
-word-break:break-all;
-max-width:90%;
 }
 
 #state-msg{
@@ -179,36 +176,25 @@ btn.onclick=async()=>{
         await characteristic.startNotifications();
 
         btn.style.display="none";
-        status.innerText="Připojeno. Otoč libovolnou stěnou...";
+        status.innerText="Připojeno: " + device.name;
         state.innerText="PŘIPRAVEN";
 
         characteristic.addEventListener("characteristicvaluechanged",event=>{
             const now=performance.now();
             const value=event.target.value;
 
-            if(value.byteLength < 6) return;
+            if(value.byteLength < 3) return;
 
-            // Přečteme bajty pro analýzu
-            const bytes = [];
-            for(let i=0; i<value.byteLength; i++) {
-                bytes.push(value.getUint8(i));
-            }
+            // Vytáhneme hardwarové počítadlo tahů (bajt index 2)
+            const currentCounter = value.getUint8(2);
 
-            // Zobrazíme surové bajty žlutě nahoře na displeji, abychom viděli, co kostka posílá
-            status.innerText = "Bytes: " + bytes.slice(0, 8).join(",");
-
-            // GAN/MG standard: Počítadlo tahů bývá na bajtu 2 nebo se posílá stav v bajtu 1
-            // Vyzkoušíme bezpečné sledování změny v poli pohybů (bajt 1 a bajt 2)
-            const currentCounter = bytes[2];
-            const moveInfo = bytes[1];
-
-            // Pokud se nezměnilo počítadlo ani stav, je to duplicita
+            // Blokace duplicitního paketu ze stejného tahu
             if(currentCounter === lastMoveCounter) {
                 return;
             }
 
-            // Časová pojistka - lidské maximum je pod 15 TPS (cca 70ms mezi tahy)
-            if(now - lastMoveTime < 65){
+            // Bezpečnostní bleskový filtr (50ms), aby to nebralo otřesy gyroskopu
+            if(now - lastMoveTime < 50){
                 return;
             }
 
