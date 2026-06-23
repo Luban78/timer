@@ -3,148 +3,157 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>MG3i Smart Timer v4.0</title>
+<title>MG3i Lab Console v5.0</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
-:root { --bg: #0c0f12; --card: #141b22; --accent: #00e5ff; --text: #e2e8f0; }
-body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:20px; box-sizing:border-box; }
-#version-tag { font-size:12px; font-weight:bold; color:var(--accent); background:rgba(0,229,255,0.1); padding:4px 12px; border-radius:20px; border:1px solid var(--accent); margin-bottom:15px; font-family:monospace; }
-#conn-btn { padding:12px 24px; font-size:16px; font-weight:bold; border:none; border-radius:8px; background:var(--accent); color:#000; cursor:pointer; box-shadow:0 4px 15px rgba(0,229,255,0.3); margin-bottom:15px; }
-#status { font-size:14px; color:#a0aec0; margin-bottom:20px; }
-.main-timer { font-size:75px; font-weight:bold; color:var(--accent); font-family:monospace; margin:20px 0; text-shadow:0 0 10px rgba(0,229,255,0.2); }
-.grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%; max-width:440px; margin-bottom:15px; }
-.stat-card { background:var(--card); border:1px solid #232d38; padding:12px; border-radius:8px; text-align:center; }
-.stat-label { font-size:11px; text-transform:uppercase; color:#718096; letter-spacing:1px; margin-bottom:4px; }
-.stat-value { font-size:20px; font-weight:bold; font-family:monospace; }
-.history-box { background:var(--card); border:1px solid #232d38; border-radius:8px; width:100%; max-width:440px; padding:15px; box-sizing:border-box; }
-.history-title { font-size:14px; font-weight:bold; color:#718096; margin-bottom:10px; text-transform:uppercase; border-bottom:1px solid #232d38; padding-bottom:5px; }
-.history-item { display:flex; justify-content:space-between; font-family:monospace; font-size:14px; padding:4px 0; border-bottom:1px solid #1a232d; }
-.last-moves { font-family:monospace; color:#ffeb3b; font-size:18px; margin:10px 0; min-height:24px; font-weight:bold; }
+body{
+margin:0;
+background:#06090c;
+color:#d1d5db;
+font-family:'Courier New',monospace;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding:20px;
+box-sizing:border-box;
+min-height:100vh;
+}
+#version-tag {
+font-family: sans-serif;
+font-size: 12px;
+font-weight: bold;
+color: #ff9100;
+background: rgba(255,145,0,0.1);
+padding: 4px 12px;
+border-radius: 20px;
+border: 1px solid #ff9100;
+margin-bottom: 15px;
+}
+button{
+padding:15px 30px;
+font-size:18px;
+font-weight:bold;
+border:none;
+border-radius:8px;
+background:#ff9100;
+color:black;
+cursor:pointer;
+font-family:sans-serif;
+box-shadow: 0 4px 15px rgba(255,145,0,0.3);
+margin-bottom:20px;
+}
+.analyzer-grid {
+display: grid;
+grid-template-columns: 1fr;
+gap: 15px;
+width: 100%;
+max-width: 600px;
+}
+.panel {
+background:#11161d;
+border:1px solid #2d3748;
+border-radius:8px;
+padding:15px;
+}
+.panel-title {
+font-family: sans-serif;
+font-size: 14px;
+color: #ff9100;
+font-weight: bold;
+margin-bottom: 10px;
+text-transform: uppercase;
+border-bottom: 1px solid #2d3748;
+padding-bottom:5px;
+}
+.row {
+display: flex;
+justify-content: space-between;
+padding: 4px 0;
+font-size: 13px;
+border-bottom: 1px solid #161f2a;
+}
+.changed { background: rgba(255, 145, 0, 0.2); }
+.bit-display { color: #00e5ff; font-weight: bold; }
+.hex-display { color: #ffeb3b; }
 </style>
 </head>
 <body>
 
-<div id="version-tag">PRODUCTION v4.0 (SMART TIMER)</div>
-<button id="conn-btn">PŘIPOJIT KOSTKU</button>
-<div id="status">Chcete-li začít, připojte zapnutou kostku přes Bluetooth</div>
+<div id="version-tag">LABORATORNÍ KONZOLE v5.0 (DEKÓDOVÁNÍ VŠECH SIGNÁLŮ)</div>
+<button id="btn">PŘIPOJIT PRO DEKÓDOVÁNÍ</button>
+<div id="status" style="font-family:sans-serif; font-size:14px; color:#9ca3af; margin-bottom:20px;">Odpojeno</div>
 
-<div class="main-timer" id="display">0.00</div>
-<div class="last-moves" id="move-display">- - -</div>
+<div class="analyzer-grid">
 
-<div class="grid">
-    <div class="stat-card"><div class="stat-label">Čisté tahy</div><div class="stat-value" id="moves-val">0</div></div>
-    <div class="stat-card"><div class="stat-label">Reálné TPS</div><div class="stat-value" id="tps-val" style="color:#00e676;">0.0</div></div>
-    <div class="stat-card"><div class="stat-label">Max TPS</div><div class="stat-value" id="max-tps-val">0.0</div></div>
-    <div class="stat-card"><div class="stat-label">Nejdelší pauza</div><div class="stat-value" id="pause-val" style="color:#ff1744;">0.00s</div></div>
-</div>
+    <div class="panel">
+        <div class="panel-title">Sledování registru tahů (Bajt 04 & 05)</div>
+        <div class="row" id="reg-b4">
+            <span>Bajt [04] (Signál tahu):</span>
+            <span class="hex-display" id="b4-hex">0x00</span>
+        </div>
+        <div class="row">
+            <span>↳ Binárně (Bity 7 až 0):</span>
+            <span class="bit-display" id="b4-bits">00000000</span>
+        </div>
+        <div class="row" id="reg-b5">
+            <span>Bajt [05] (HW Počítadlo):</span>
+            <span class="hex-display" id="b5-val">0</span>
+        </div>
+        <div class="row">
+            <span>↳ Binárně (Bity 7 až 0):</span>
+            <span class="bit-display" id="b5-bits">00000000</span>
+        </div>
+    </div>
 
-<div class="history-box">
-    <div class="history-title">Historie skládání</div>
-    <div id="history-list" style="color:#718096; text-align:center; font-size:13px; padding:10px 0;">Žádné uložené pokusy</div>
+    <div class="panel">
+        <div class="panel-title">Systémové registry a Baterie</div>
+        <div class="row" id="reg-b12">
+            <span>Bajt [12] (Potenciální Baterie):</span>
+            <span class="hex-display" id="b12-val">Čekám...</span>
+        </div>
+        <div class="row" id="reg-b16-19">
+            <span>Surové BLE bajty [16-19]:</span>
+            <span style="color:#00e676;" id="raw-end">Čekám...</span>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-title">Kompletní pole (00 - 15 Dešifrováno)</div>
+        <div id="full-dump">
+            <div style="text-align:center; color:#4b5563; padding:10px;">Připojte kostku pro dump...</div>
+        </div>
+    </div>
 </div>
 
 <script>
-const AES_KEY_HEX = "2d565c3412ab00000000000000000000";
+const AES_KEY_HEX = "2d565c3412ab00000000000000000000"; 
 const key = CryptoJS.enc.Hex.parse(AES_KEY_HEX);
 
-let isRunning = false;
-let startTime = 0;
-let timerInterval = null;
-let lastMoveTime = 0;
+let prevBytes = new Array(20).fill(0);
 
-let moveCount = 0;
-let maxTps = 0.0;
-let longestPause = 0.0;
-
-let lastHardwareCounter = null;
-let previousCubeState = null;
-let historySolves = [];
-
-// Překladová tabulka tahů na základě změny stavového pole
-function detectMoveFace(oldState, newState) {
-    if (!oldState) return "Tah";
-    // Porovnáváme bajty 6 až 11 (indexy 6-11 v decBytes), které drží stavy stěn
-    if (newState[6] !== oldState[6]) return "U";
-    if (newState[7] !== oldState[7]) return "R";
-    if (newState[8] !== oldState[8]) return "F";
-    if (newState[9] !== oldState[9]) return "D";
-    if (newState[10] !== oldState[10]) return "L";
-    if (newState[11] !== oldState[11]) return "B";
-    return "Tah";
-}
-
-function updateDisplay() {
-    let elapsed = (Date.now() - startTime) / 1000;
-    document.getElementById("display").innerText = elapsed.toFixed(2);
-    
-    if (elapsed > 0.1 && moveCount > 0) {
-        let currentTps = moveCount / elapsed;
-        document.getElementById("tps-val").innerText = currentTps.toFixed(1);
-        if (currentTps > maxTps) {
-            maxTps = currentTps;
-            document.getElementById("max-tps-val").innerText = maxTps.toFixed(1);
-        }
-    }
-}
-
-function startTimer() {
-    isRunning = true;
-    startTime = Date.now();
-    lastMoveTime = startTime;
-    moveCount = 0;
-    maxTps = 0.0;
-    longestPause = 0.0;
-    
-    document.getElementById("moves-val").innerText = "0";
-    document.getElementById("tps-val").innerText = "0.0";
-    document.getElementById("max-tps-val").innerText = "0.0";
-    document.getElementById("pause-val").innerText = "0.00s";
-    document.getElementById("move-display").innerText = "";
-    
-    timerInterval = setInterval(updateDisplay, 10);
-}
-
-function stopTimer() {
-    isRunning = false;
-    clearInterval(timerInterval);
-    let finalTime = ((Date.now() - startTime) / 1000).toFixed(2);
-    document.getElementById("display").innerText = finalTime;
-    
-    let finalTps = finalTime > 0 ? (moveCount / finalTime).toFixed(1) : "0.0";
-    
-    historySolves.unshift({ time: finalTime, moves: moveCount, tps: finalTps });
-    if(historySolves.length > 5) historySolves.pop();
-    
-    let histHtml = "";
-    historySolves.forEach((s, idx) => {
-        histHtml += `<div class="history-item"><span>#${historySolves.length - idx}</span><span style="color:#00e5ff;font-weight:bold;">${s.time}s</span><span>${s.moves} tahů</span><span>${s.tps} TPS</span></div>`;
-    });
-    document.getElementById("history-list").innerHTML = histHtml;
-    document.getElementById("history-list").style.textAlign = "left";
-}
-
-document.getElementById("conn-btn").onclick = async () => {
-    try {
-        document.getElementById("status").innerText = "Vyhledávám kostku...";
-        const device = await navigator.bluetooth.requestDevice({
-            filters: [{namePrefix:"MG"}, {namePrefix:"GAN"}],
-            optionalServices: ["6e400001-b5a3-f393-e0a9-e50e24dc4179"]
+document.getElementById("btn").onclick=async()=>{
+    try{
+        document.getElementById("status").innerText="Vyhledávám kostku...";
+        const device=await navigator.bluetooth.requestDevice({
+            filters:[{namePrefix:"MG"}, {namePrefix:"GAN"}],
+            optionalServices:["6e400001-b5a3-f393-e0a9-e50e24dc4179"]
         });
 
-        const server = await device.gatt.connect();
-        const service = await server.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dc4179");
-        const characteristic = await service.getCharacteristic("28be4cb6-cd67-11e9-a32f-2a2ae2dbcce4");
+        const server=await device.gatt.connect();
+        const service=await server.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dc4179");
+        const characteristic=await service.getCharacteristic("28be4cb6-cd67-11e9-a32f-2a2ae2dbcce4");
 
         await characteristic.startNotifications();
-        document.getElementById("conn-btn").style.display = "none";
-        document.getElementById("status").innerText = "Kostka připravena: " + device.name + " (Započněte skládání libovolným tahem)";
+        document.getElementById("btn").style.display="none";
+        document.getElementById("status").innerText="Sleduji stream: " + device.name;
 
-        characteristic.addEventListener("characteristicvaluechanged", event => {
-            const value = event.target.value;
-            if (value.byteLength < 16) return;
+        characteristic.addEventListener("characteristicvaluechanged",event=>{
+            const value=event.target.value;
+            if(value.byteLength < 16) return;
 
+            // Izolace 16 bajtů pro AES
             let cleanBytes = new Uint8Array(16);
-            for (let i = 0; i < 16; i++) cleanBytes[i] = value.getUint8(i);
+            for(let i=0; i<16; i++) cleanBytes[i] = value.getUint8(i);
 
             let wordArray = CryptoJS.lib.WordArray.create(cleanBytes);
             let decrypted = CryptoJS.AES.decrypt({ ciphertext: wordArray }, key, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding });
@@ -154,47 +163,51 @@ document.getElementById("conn-btn").onclick = async () => {
                 decBytes.push((decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff);
             }
 
-            let currentHardwareCounter = decBytes[5];
-
-            // Hlavní zachycení reálného nového tahu
-            if (lastHardwareCounter !== null && currentHardwareCounter !== lastHardwareCounter) {
-                let now = Date.now();
-                
-                if (!isRunning) {
-                    startTimer();
-                } else {
-                    moveCount++;
-                    document.getElementById("moves-val").innerText = moveCount;
-                    
-                    // Výpočet pauzy mezi tahy
-                    let pause = (now - lastMoveTime) / 1000;
-                    if (pause > longestPause) {
-                        longestPause = pause;
-                        document.getElementById("pause-val").innerText = longestPause.toFixed(2) + "s";
-                    }
-                }
-                
-                // Detekce otočené stěny ze změny matice
-                let detectedFace = detectMoveFace(previousCubeState, decBytes);
-                let moveDisp = document.getElementById("move-display");
-                moveDisp.innerText = (moveDisp.innerText + " " + detectedFace).trim().slice(-20);
-                
-                lastMoveTime = now;
+            // Přidáme surové zbylé bajty z konce balíčku (16 až 19)
+            for(let i=16; i<value.byteLength; i++) {
+                decBytes.push(value.getUint8(i));
             }
 
-            // Pokud se kostka vrátí do kompletně složeného stavu (všechny stavy barev stabilní) a časomíra běží, stopneme ji
-            // Alternativně: Pokud složíš, stačí kliknout na displej telefonu pro stopnutí.
-            lastHardwareCounter = currentHardwareCounter;
-            previousCubeState = [...decBytes];
+            // 1. Bitová analýza Bajtu 04
+            let b4 = decBytes[4];
+            document.getElementById("b4-hex").innerText = "0x" + b4.toString(16).toUpperCase() + " (" + b4 + ")";
+            document.getElementById("b4-bits").innerText = b4.toString(2).padStart(8, '0');
+            if(b4 !== prevBytes[4]) document.getElementById("reg-b4").classList.add("changed");
+            else document.getElementById("reg-b4").classList.remove("changed");
+
+            // 2. Bitová analýza Bajtu 05
+            let b5 = decBytes[5];
+            document.getElementById("b5-val").innerText = b5;
+            document.getElementById("b5-bits").innerText = b5.toString(2).padStart(8, '0');
+            if(b5 !== prevBytes[5]) document.getElementById("reg-b5").classList.add("changed");
+            else document.getElementById("reg-b5").classList.remove("changed");
+
+            // 3. Analýza potenciální baterie (Bajt 12)
+            let b12 = decBytes[12];
+            document.getElementById("b12-val").innerText = "0x" + b12.toString(16).toUpperCase() + " (DEC: " + b12 + ")";
+            if(b12 !== prevBytes[12]) document.getElementById("reg-b12").classList.add("changed");
+            else document.getElementById("reg-b12").classList.remove("changed");
+
+            // 4. Surový konec balíčku (16-19)
+            let rawEndStr = "";
+            for(let i=16; i<decBytes.length; i++) {
+                rawEndStr += "0x" + decBytes[i].toString(16).toUpperCase() + " ";
+            }
+            document.getElementById("raw-end").innerText = rawEndStr;
+
+            // 5. Kompletní dump do třetího panelu
+            let dumpHtml = "";
+            for(let i=0; i<decBytes.length; i++) {
+                let cClass = (decBytes[i] !== prevBytes[i]) ? "changed" : "";
+                dumpHtml += `<div class="row ${cClass}"><span>Bajt [${String(i).padStart(2,'0')}]</span><span>0x${decBytes[i].toString(16).toUpperCase().padStart(2,'0')} (${decBytes[i]})</span></div>`;
+            }
+            document.getElementById("full-dump").innerHTML = dumpHtml;
+
+            prevBytes = [...decBytes];
         });
 
-        // Manuální stopnutí kliknutím na displej
-        document.getElementById("display").onclick = () => {
-            if (isRunning) stopTimer();
-        };
-
-    } catch (e) {
-        document.getElementById("status").innerText = "Chyba připojení: " + e.message;
+    }catch(e){
+        document.getElementById("status").innerText="Chyba: " + e.message;
     }
 };
 </script>
