@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>MG3i Signal Analyzer v3.2</title>
+<title>MG3i Signal Decoder v3.3</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
 body{
@@ -23,11 +23,11 @@ box-sizing:border-box;
 font-family: sans-serif;
 font-size: 14px;
 font-weight: bold;
-color: #ffeb3b;
-background: rgba(255,235,59,0.1);
+color: #00e5ff;
+background: rgba(0,229,255,0.1);
 padding: 4px 12px;
 border-radius: 20px;
-border: 1px solid #ffeb3b;
+border: 1px solid #00e5ff;
 margin-bottom: 15px;
 }
 button{
@@ -36,12 +36,12 @@ font-size:18px;
 font-weight:bold;
 border:none;
 border-radius:8px;
-background:#ffeb3b;
+background:#00e5ff;
 color:black;
 margin-bottom:20px;
 cursor:pointer;
 font-family:sans-serif;
-box-shadow: 0 4px 15px rgba(255,235,59,0.3);
+box-shadow: 0 4px 15px rgba(0,229,255,0.3);
 }
 #status{
 color:#a0aec0;
@@ -53,33 +53,30 @@ font-family:sans-serif;
 background:#1a202c;
 border:2px solid #4a5568;
 border-radius:10px;
-padding:15px;
+padding:20px;
 width:100%;
 max-width:550px;
 box-sizing:border-box;
 }
-.row{
-display:flex;
-justify-content:space-between;
-padding:8px 0;
+.log-item{
+padding:10px;
 border-bottom:1px solid #2d3748;
-font-size:13px;
+font-size:14px;
+line-height: 1.5;
 }
-.index{ color:#ecc94b; font-weight:bold; width: 80px; }
-.val{ color:#63b3ed; width: 140px; }
-.desc{ color:#a0aec0; font-style: italic; }
-.changed{ background: rgba(245, 158, 11, 0.2); }
+.highlight{ color:#ffeb3b; font-weight:bold; }
+.success{ color:#00e676; font-weight:bold; }
 </style>
 </head>
 <body>
 
-<div id="version-tag">VERZE APLIKACE: v3.2 (SIGNAL INTERPRETER)</div>
+<div id="version-tag">VERZE APLIKACE: v3.3 (LIVE DECODER)</div>
 
-<button id="btn">SPUSTIT ANALÝZU SIGNÁLŮ</button>
+<button id="btn">SPUSTIT DEKODÉR SIGNÁLŮ</button>
 <div id="status">Odpojeno</div>
 
 <div class="console" id="console-box">
-    <div style="text-align:center;color:#718096;">Připoj kostku a plynule otoč stěnou.</div>
+    <div style="text-align:center;color:#718096;">Připoj kostku a proveď libovolný tah.</div>
 </div>
 
 <script>
@@ -87,31 +84,11 @@ const btn=document.getElementById("btn");
 const status=document.getElementById("status");
 const consoleBox=document.getElementById("console-box");
 
-// Výchozí klíč pro řadu GAN/MG
 const AES_KEY_HEX = "2d565c3412ab00000000000000000000"; 
 const key = CryptoJS.enc.Hex.parse(AES_KEY_HEX);
 
-let previousBytes = new Array(16).fill(0);
-
-// Popisky, co by který bajt měl teoreticky v protokolu znamenat
-const SIGNAL_MAP = [
-    "HW Časovač (Timestamp LSB)",
-    "HW Časovač (Timestamp)",
-    "HW Časovač (Timestamp)",
-    "HW Časovač (Timestamp MSB)",
-    "Identifikátor tahu / Směr stěny",
-    "Čítač provedených tahů",
-    "Stav stěny U (Bílá)",
-    "Stav stěny R (Červená)",
-    "Stav stěny F (Zelená)",
-    "Stav stěny D (Žlutá)",
-    "Stav stěny L (Oranžová)",
-    "Stav stěny B (Modrá)",
-    "Baterie / Systémový signál",
-    "Rezervováno / Volné",
-    "Rezervováno / Volné",
-    "Rezervováno / Volné"
-];
+let lastMoveCount = null;
+const faces = ["U (Bílá)", "R (Červená)", "F (Zelená)", "D (Žlutá)", "L (Oranžová)", "B (Modrá)"];
 
 btn.onclick=async()=>{
     try{
@@ -128,45 +105,54 @@ btn.onclick=async()=>{
         await characteristic.startNotifications();
 
         btn.style.display="none";
-        status.innerText="Interpretuji signály z: " + device.name;
+        status.innerText="Dekóduji signály v reálném čase z: " + device.name;
+        consoleBox.innerHTML = "<div style='color:#00e676; text-align:center;'>Kostka připravena. Otoč libovolnou stěnou!</div>";
 
         characteristic.addEventListener("characteristicvaluechanged",event=>{
             const value=event.target.value;
             if(value.byteLength < 16) return;
 
-            // Izolujeme přesně prvních 16 bajtů pro AES-128 dešifrování
             let cleanBytes = new Uint8Array(16);
-            for(let i=0; i<16; i++) {
-                cleanBytes[i] = value.getUint8(i);
-            }
+            for(let i=0; i<16; i++) cleanBytes[i] = value.getUint8(i);
 
             let wordArray = CryptoJS.lib.WordArray.create(cleanBytes);
-            let decrypted = CryptoJS.AES.decrypt(
-                { ciphertext: wordArray },
-                key,
-                { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding }
-            );
+            let decrypted = CryptoJS.AES.decrypt({ ciphertext: wordArray }, key, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding });
 
             let decBytes = [];
             for (let i = 0; i < 16; i++) {
                 decBytes.push((decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff);
             }
 
-            let html = "";
-            for(let i=0; i<16; i++) {
-                let decVal = decBytes[i];
-                let hexVal = decVal.toString(16).toUpperCase().padStart(2, '0');
-                let changeClass = (decVal !== previousBytes[i]) ? "changed" : "";
+            let rawMoveInfo = decBytes[4];
+            let moveCount = decBytes[5];
 
-                html += `<div class="row ${changeClass}">`;
-                html += `  <span class="index">Bajt [${String(i).padStart(2, '0')}]</span>`;
-                html += `  <span class="val">0x${hexVal} (${String(decVal).padStart(3, ' ')})</span>`;
-                html += `  <span class="desc">→ ${SIGNAL_MAP[i]}</span>`;
-                html += `</div>`;
+            // Rozbití Bajtu [04] na index stěny a směr podle specifikace GAN protokolu
+            let faceIndex = rawMoveInfo >> 4; 
+            let directionSign = rawMoveInfo & 0x0F; 
+
+            let faceName = faces[faceIndex] || "Neznámá stěna (" + faceIndex + ")";
+            let directionName = "Neznámý směr";
+            if(directionSign === 1) directionName = "ve směru hodinových ručiček (90°)";
+            if(directionSign === 2) directionName = "proti směru hodinových ručiček (90°)";
+            if(directionSign === 3) directionName = "dvojitý tah (180°)";
+
+            // Detekce, zda jde o nový potvrzený tah nebo jen průběžný signál
+            let isNewMove = false;
+            if (lastMoveCount !== null && moveCount !== lastMoveCount) {
+                isNewMove = true;
             }
 
-            consoleBox.innerHTML = html;
-            previousBytes = [...decBytes];
+            let html = `
+                <div class="log-item">
+                    <b>Průběžný signál stěny:</b> <span class="highlight">${faceName}</span><br>
+                    <b>Surová data tahu (Bajt 04):</b> HEX: 0x${rawMoveInfo.toString(16).toUpperCase()} (DEC: ${rawMoveInfo})<br>
+                    <b>Vnitřní čítač kostky (Bajt 05):</b> ${moveCount}<br>
+                    <b>Stav tahu v aplikaci:</b> ${isNewMove ? '<span class="success">POTVRZENÝ NOVÝ TAH!</span>' : '<span>Fyzický pohyb (ignorovano pro TPS)</span>'}
+                </div>
+            `;
+
+            consoleBox.innerHTML = html + consoleBox.innerHTML;
+            lastMoveCount = moveCount;
         });
 
     }catch(e){
