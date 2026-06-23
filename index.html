@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-
-<title>MG3i Pro Trainer</title>
-
+<title>MG3i Smart Timer</title>
 <style>
 body{
 margin:0;
@@ -18,8 +16,20 @@ justify-content:center;
 align-items:center;
 min-height:100vh;
 overflow:hidden;
+user-select:none;
 }
-
+#stop-zone{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+z-index:1;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+}
 button{
 padding:15px 30px;
 font-size:20px;
@@ -28,142 +38,65 @@ border:none;
 border-radius:50px;
 background:#00e676;
 color:black;
-margin-bottom:15px;
+margin-bottom:20px;
+z-index:10;
+position:relative;
 }
-
 #status{
 color:#aaa;
 font-size:14px;
 height:20px;
-margin-bottom:5px;
+margin-bottom:10px;
+z-index:5;
 }
-
 #state-msg{
-font-size:22px;
+font-size:28px;
 font-weight:bold;
-height:30px;
+height:40px;
 color:yellow;
+margin-bottom:20px;
 }
-
-#tps{
-font-size:100px;
+#time-val{
+font-size:120px;
 font-weight:bold;
 color:#00e5ff;
 line-height:1;
-margin:10px;
+font-variant-numeric: tabular-nums;
 }
-
-.stats-grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:15px;
-width:90%;
-max-width:400px;
-}
-
-.stat-box{
-background:#1e1e1e;
-padding:12px;
-border-radius:12px;
+#hint{
+font-size:16px;
+color:#666;
+margin-top:30px;
 text-align:center;
-border:1px solid #333;
-}
-
-.stat-label{
-font-size:12px;
-color:#999;
-}
-
-.stat-val{
-font-size:22px;
-font-weight:bold;
-}
-
-canvas{
-position:absolute;
-bottom:0;
-left:0;
-width:100%;
-height:30%;
-pointer-events:none;
 }
 </style>
 </head>
-
 <body>
 
-<button id="btn">PŘIPOJIT KOSTKU</button>
-<div id="status">Odpojeno</div>
-<div id="state-msg">Připoj kostku</div>
-<div id="tps">0.0</div>
-
-<div class="stats-grid">
-    <div class="stat-box">
-        <div class="stat-label">ČAS</div>
-        <div id="time-val" class="stat-val">0.00s</div>
-    </div>
-
-    <div class="stat-box">
-        <div class="stat-label">TAHY</div>
-        <div id="moves-val" class="stat-val">0</div>
-    </div>
-
-    <div class="stat-box">
-        <div class="stat-label">PRŮMĚRNÉ TPS</div>
-        <div id="avg-val" class="stat-val" style="color:#00e676">0.0</div>
-    </div>
-
-    <div class="stat-box">
-        <div class="stat-label">MAX TPS</div>
-        <div id="max-val" class="stat-val">0.0</div>
-    </div>
-
-    <div class="stat-box" style="grid-column:span 2">
-        <div class="stat-label">NEJDELŠÍ PAUZA</div>
-        <div id="pause-val" class="stat-val" style="color:#ff1744">0.00s</div>
-    </div>
+<div id="stop-zone">
+    <button id="btn">PŘIPOJIT KOSTKU</button>
+    <div id="status">Odpojeno</div>
+    <div id="state-msg">Připoj kostku</div>
+    <div id="time-val">0.00</div>
+    <div id="hint">Pro start otoč kostkou<br>Pro stop klepni kamkoliv na obrazovku</div>
 </div>
-
-<canvas id="graph"></canvas>
 
 <script>
 const btn=document.getElementById("btn");
 const status=document.getElementById("status");
 const state=document.getElementById("state-msg");
-const tps=document.getElementById("tps");
-
 const timeVal=document.getElementById("time-val");
-const movesVal=document.getElementById("moves-val");
-const avgVal=document.getElementById("avg-val");
-const maxVal=document.getElementById("max-val");
-const pauseVal=document.getElementById("pause-val");
-
-const canvas=document.getElementById("graph");
-const ctx=canvas.getContext("2d");
-
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight*.3;
-
-let moveTimes=[];
-let totalMoves=0;
-let maxTPS=0;
-let longestPause=0;
-
-let lastMoveTime=0;
-let lastMoveCounter = -1;
+const stopZone=document.getElementById("stop-zone");
 
 let solving=false;
 let startTime=0;
-
 let timer=null;
-let stopTimer=null;
+let readyToStart=false;
 
-let graph=[];
-
-btn.onclick=async()=>{
+btn.onclick=async(e)=>{
+    e.stopPropagation(); // Zabrání okamžitému stopnutí při kliku na tlačítko
     try{
         status.innerText="Vyber MG3i";
-
         const device=await navigator.bluetooth.requestDevice({
             filters:[{namePrefix:"MG"}, {namePrefix:"GAN"}],
             optionalServices:["6e400001-b5a3-f393-e0a9-e50e24dc4179"]
@@ -176,124 +109,56 @@ btn.onclick=async()=>{
         await characteristic.startNotifications();
 
         btn.style.display="none";
-        status.innerText="Připojeno: " + device.name;
+        status.innerText="Připojeno: "+device.name;
         state.innerText="PŘIPRAVEN";
+        readyToStart=true;
 
-        characteristic.addEventListener("characteristicvaluechanged",event=>{
-            const now=performance.now();
-            const value=event.target.value;
-
-            if(value.byteLength < 3) return;
-
-            // Vytáhneme hardwarové počítadlo tahů (bajt index 2)
-            const currentCounter = value.getUint8(2);
-
-            // Blokace duplicitního paketu ze stejného tahu
-            if(currentCounter === lastMoveCounter) {
-                return;
+        characteristic.addEventListener("characteristicvaluechanged",()=>{
+            // Jakýkoliv signál z kostky odpálí start, pokud zrovna neskládáme
+            if(readyToStart && !solving){
+                startSolve();
             }
-
-            // Bezpečnostní bleskový filtr (50ms), aby to nebralo otřesy gyroskopu
-            if(now - lastMoveTime < 50){
-                return;
-            }
-
-            lastMoveCounter = currentCounter;
-            lastMoveTime = now;
-
-            handleMove(now);
         });
 
-        setInterval(updateTPS,100);
-
-    }catch(e){
-        status.innerText=e.message;
+    }catch(err){
+        status.innerText=err.message;
     }
 };
 
-function handleMove(now){
-    if(!solving){
-        solving=true;
-        startTime=now;
-        totalMoves=0;
-        maxTPS=0;
-        longestPause=0;
-        moveTimes=[];
-        graph=[];
+function startSolve(){
+    solving=true;
+    readyToStart=false;
+    startTime=performance.now();
+    state.innerText="SKLÁDÁŠ";
+    state.style.color="#00e676";
 
-        state.innerText="SKLÁDÁŠ";
-
-        timer=setInterval(()=>{
-            let t=(performance.now()-startTime)/1000;
-            timeVal.innerText=t.toFixed(2)+"s";
-        },50);
-    }else{
-        let pause=(now-lastMoveTime)/1000;
-        if(pause>longestPause){
-            longestPause=pause;
-            pauseVal.innerText=pause.toFixed(2)+"s";
-        }
-    }
-
-    moveTimes.push(now);
-    totalMoves++;
-    movesVal.innerText=totalMoves;
-
-    clearTimeout(stopTimer);
-    stopTimer=setTimeout(finishSolve,2500);
+    timer=setInterval(()=>{
+        let t=(performance.now()-startTime)/1000;
+        timeVal.innerText=t.toFixed(2);
+    },10);
 }
 
-function updateTPS(){
-    const now=performance.now();
-    moveTimes=moveTimes.filter(t=>now-t<1000);
-    const current=moveTimes.length;
-
-    tps.innerText=current.toFixed(1);
-
+// Klepnutí kamkoliv na obrazovku stopne čas
+stopZone.onclick=()=>{
     if(solving){
-        let elapsed=(now-startTime)/1000;
-        let avg=totalMoves/elapsed;
-        avgVal.innerText=avg.toFixed(1);
-
-        if(current>maxTPS){
-            maxTPS=current;
-            maxVal.innerText=maxTPS.toFixed(1);
-        }
-
-        graph.push(current);
-        if(graph.length>100){
-            graph.shift();
-        }
-        drawGraph();
+        solving=false;
+        clearInterval(timer);
+        
+        let finalTime=(performance.now()-startTime)/1000;
+        timeVal.innerText=finalTime.toFixed(2);
+        
+        state.innerText="SOLVE DOKONČEN!";
+        state.style.color="yellow";
+        
+        // Za 1.5 sekundy připraví časovač na další pokus
+        setTimeout(()=>{
+            if(!solving){
+                state.innerText="PŘIPRAVEN";
+                readyToStart=true;
+            }
+        },1500);
     }
-}
-
-function finishSolve(){
-    solving=false;
-    clearInterval(timer);
-    state.innerText="SOLVE DOKONČEN!";
-}
-
-function drawGraph(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    if(graph.length<2) return;
-
-    ctx.beginPath();
-    ctx.strokeStyle="#00e676";
-    ctx.lineWidth=4;
-
-    let step=canvas.width/100;
-
-    for(let i=0;i<graph.length;i++){
-        let x=i*step;
-        let y=canvas.height-(graph[i]/10)*canvas.height;
-
-        if(i===0) ctx.moveTo(x,y);
-        else ctx.lineTo(x,y);
-    }
-    ctx.stroke();
-}
+};
 </script>
-
 </body>
 </html>
