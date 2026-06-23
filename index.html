@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>MG3i Pro Decrypted Trainer</title>
+<title>MG3i Debugger</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
 body{
@@ -27,7 +27,6 @@ border-radius:50px;
 background:#00e676;
 color:black;
 margin-bottom:15px;
-cursor:pointer;
 }
 #status{
 color:#999;
@@ -43,12 +42,13 @@ height:30px;
 color:yellow;
 }
 #detected-move{
-font-size:80px;
+font-size:40px;
 font-weight:bold;
 color:#ffeb3b;
 height:90px;
 margin:5px 0;
-text-shadow: 0 0 15px rgba(255,235,59,0.6);
+text-align:center;
+word-break:break-all;
 }
 #tps{
 font-size:80px;
@@ -95,7 +95,7 @@ pointer-events:none;
 <div id="status">Odpojeno</div>
 <div id="state-msg">Připoj kostku</div>
 
-<div id="detected-move">--</div>
+<div id="detected-move">READY</div>
 
 <div id="tps">0.0</div>
 
@@ -155,14 +155,9 @@ let timer=null;
 let stopTimer=null;
 let graph=[];
 
-// 🔑 TVÁ MAC ADRESA: AB:12:34:5C:56:2D
-// Vygenerovaný unikátní AES klíč pro tvůj hardware:
+// MAC: AB:12:34:5C:56:2D
 const AES_KEY_HEX = "2d565c3412ab00000000000000000000"; 
 const key = CryptoJS.enc.Hex.parse(AES_KEY_HEX);
-
-// Mapování stěn z dešifrovaného protokolu GAN
-const FACE_MAP = { 0: "U", 1: "R", 2: "F", 3: "D", 4: "L", 5: "B" };
-const DIRECTION_MAP = { 1: "", 2: "2", 3: "'" };
 
 btn.onclick=async()=>{
     try{
@@ -181,52 +176,36 @@ btn.onclick=async()=>{
         btn.style.display="none";
         status.innerText="Připojeno: "+device.name;
         state.innerText="PŘIPRAVEN";
-        detectedMoveDisplay.innerText = "READY";
 
         characteristic.addEventListener("characteristicvaluechanged",event=>{
             const now=performance.now();
             const value=event.target.value;
 
-            // Potřebujeme aspoň 16 bajtů šifry pro AES block
             if(value.byteLength < 16) return;
 
-            // Načtení surových bajtů z Bluetooth
             let uint8Array = new Uint8Array(value.buffer);
             let wordArray = CryptoJS.lib.WordArray.create(uint8Array);
 
-            // 🔓 BLESKOVÉ DEŠIFROVÁNÍ V REÁLNÉM ČASE
+            // Dešifrování
             let decrypted = CryptoJS.AES.decrypt(
                 { ciphertext: wordArray },
                 key,
                 { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding }
             );
 
-            // Převod zpět na bajty
             let decBytes = [];
             for (let i = 0; i < 16; i++) {
                 decBytes.push((decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff);
             }
 
-            // GAN protokol: index 4 je stěna, index 5 je směr
-            let faceIndex = decBytes[4];
-            let dirIndex = decBytes[5];
+            // Vypíšeme surové hodnoty z indexu 4 a 5, ať vidíme, co kostka reálně posílá
+            let debugText = "B4:" + decBytes[4] + " B5:" + decBytes[5];
+            detectedMoveDisplay.innerText = debugText;
 
-            // Pokud jsou data mimo rozsah, je to falešný paket (např. gyroskop)
-            if (faceIndex > 5 || dirIndex < 1 || dirIndex > 3) return;
-
-            let face = FACE_MAP[faceIndex];
-            let direction = DIRECTION_MAP[dirIndex];
-            let currentMove = face + direction;
-
-            // Hardwarový bleskový filtr proti duplicitám (40ms)
-            if(now - lastMoveTime < 40){
-                return;
-            }
-
-            // Vypíšeme na displej naprosto přesný tah!
-            detectedMoveDisplay.innerText = currentMove;
-
+            // Totální ignorování filtrů pro start stopek – jakýkoliv balíček odpálí čas
+            if(now - lastMoveTime < 40) return;
             lastMoveTime = now;
+            
             handleMove(now);
         });
 
@@ -246,14 +225,7 @@ function handleMove(now){
         longestPause=0;
         moveTimes=[];
         graph=[];
-
         state.innerText="SKLÁDÁŠ";
-    }else{
-        let pause=(now-lastMoveTime)/1000;
-        if(pause>longestPause){
-            longestPause=pause;
-            pauseVal.innerText=pause.toFixed(2)+"s";
-        }
     }
 
     totalMoves++;
@@ -268,14 +240,13 @@ function handleMove(now){
     }
 
     clearTimeout(stopTimer);
-    stopTimer=setTimeout(finishSolve,2500);
+    stopTimer=setTimeout(finishSolve,3500);
 }
 
 function updateTPS(){
     const now=performance.now();
     moveTimes=moveTimes.filter(t=>now-t<1000);
     const current=moveTimes.length;
-
     tps.innerText=current.toFixed(1);
 
     if(solving){
@@ -284,16 +255,12 @@ function updateTPS(){
             let avg=totalMoves/elapsed;
             avgVal.innerText=avg.toFixed(1);
         }
-
         if(current>maxTPS){
             maxTPS=current;
             maxVal.innerText=maxTPS.toFixed(1);
         }
-
         graph.push(current);
-        if(graph.length>100){
-            graph.shift();
-        }
+        if(graph.length>100) graph.shift();
         drawGraph();
     }
 }
@@ -308,23 +275,18 @@ function finishSolve(){
 function drawGraph(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     if(graph.length<2) return;
-
     ctx.beginPath();
     ctx.strokeStyle="#00e676";
     ctx.lineWidth=4;
-
     let step=canvas.width/100;
-
     for(let i=0;i<graph.length;i++){
         let x=i*step;
         let y=canvas.height-(graph[i]/10)*canvas.height;
-
         if(i===0) ctx.moveTo(x,y);
         else ctx.lineTo(x,y);
     }
     ctx.stroke();
 }
 </script>
-
 </body>
 </html>
