@@ -3,11 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
 <title>MG3i Real TPS</title>
 
 <style>
-
 body{
 margin:0;
 background:#121212;
@@ -37,13 +35,13 @@ color:#aaa;
 #notation{
 width:90%;
 max-width:500px;
-padding:12px;
 background:#1e1e1e;
+padding:12px;
 border-radius:10px;
 font-family:monospace;
 font-size:22px;
 color:#ffea00;
-min-height:70px;
+min-height:60px;
 word-break:break-word;
 }
 
@@ -51,17 +49,16 @@ word-break:break-word;
 font-size:90px;
 font-weight:bold;
 color:#00e5ff;
-margin-top:20px;
+margin-top:25px;
 }
 
-.stats{
-margin-top:15px;
-font-size:24px;
+#moves{
+font-size:28px;
+margin-top:10px;
 }
 
 </style>
 </head>
-
 <body>
 
 <button id="btn">
@@ -80,32 +77,20 @@ Notace:
 0.0
 </div>
 
-<div class="stats">
-Tahy:
-<span id="moves">
-0
-</span>
+<div id="moves">
+Tahy: 0
 </div>
 
 <script type="module">
 
-import {connectGanCube}
-from "https://cdn.jsdelivr.net/npm/gan-web-bluetooth/+esm";
+import { connectGanCube }
+from "https://esm.sh/gan-web-bluetooth";
 
-const btn=
-document.getElementById("btn");
-
-const status=
-document.getElementById("status");
-
-const notation=
-document.getElementById("notation");
-
-const tpsDiv=
-document.getElementById("tps");
-
-const movesDiv=
-document.getElementById("moves");
+const btn=document.getElementById("btn");
+const status=document.getElementById("status");
+const notation=document.getElementById("notation");
+const tpsDiv=document.getElementById("tps");
+const movesDiv=document.getElementById("moves");
 
 let sequence=[];
 let moveTimes=[];
@@ -115,17 +100,17 @@ btn.onclick=async()=>{
 
 try{
 
-status.innerText=
-"Připojuji...";
+status.innerText="Připojuji...";
 
-const cube=
+const conn=
 await connectGanCube();
 
 status.innerText=
 "Připojeno";
 
-cube.events$
-.subscribe(event=>{
+conn.events$.subscribe(event=>{
+
+console.log(event);
 
 if(event.type==="MOVE"){
 
@@ -134,10 +119,8 @@ event.move;
 
 sequence.push(move);
 
-if(sequence.length>25){
-
+if(sequence.length>20){
 sequence.shift();
-
 }
 
 notation.innerText=
@@ -157,13 +140,10 @@ t=>now-t<1000
 totalMoves++;
 
 movesDiv.innerText=
-totalMoves;
-
-const tps=
-moveTimes.length;
+"Tahy: "+totalMoves;
 
 tpsDiv.innerText=
-tps.toFixed(1);
+moveTimes.length.toFixed(1);
 
 }
 
@@ -173,11 +153,12 @@ tps.toFixed(1);
 catch(e){
 
 status.innerText=
-e.message;
+"Chyba: "+e.message;
+console.log(e);
 
 }
 
-};
+}
 
 </script>
 
