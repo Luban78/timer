@@ -2,105 +2,184 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>MG3i Initial Packet Isolator v5.4</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>MG3i Real TPS</title>
+
 <style>
-body { margin:0; background:#0b0f19; color:#eceff1; font-family:'Courier New',monospace; padding:15px; }
-#header { background:#161f30; padding:15px; border-radius:6px; border:1px solid #00e5ff; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; }
-button { background:#00e5ff; color:#000; border:none; padding:12px 24px; font-weight:bold; border-radius:4px; cursor:pointer; }
-.panel { background:#111827; border:1px solid #23324c; border-radius:6px; padding:15px; margin-bottom:15px; }
-.title { color:#ff9100; font-family:sans-serif; font-size:14px; font-weight:bold; text-transform:uppercase; margin-bottom:10px; }
-.dump-box { background:#070a10; padding:12px; border-radius:4px; font-size:14px; color:#ffeb3b; line-height:1.8; }
-.highlight { color:#00ffcc; font-weight:bold; }
+
+body{
+margin:0;
+background:#121212;
+color:white;
+font-family:Arial,sans-serif;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding:20px;
+min-height:100vh;
+}
+
+button{
+padding:15px 30px;
+font-size:20px;
+font-weight:bold;
+border:none;
+border-radius:50px;
+background:#00e676;
+}
+
+#status{
+margin:15px;
+color:#aaa;
+}
+
+#notation{
+width:90%;
+max-width:500px;
+padding:12px;
+background:#1e1e1e;
+border-radius:10px;
+font-family:monospace;
+font-size:22px;
+color:#ffea00;
+min-height:70px;
+word-break:break-word;
+}
+
+#tps{
+font-size:90px;
+font-weight:bold;
+color:#00e5ff;
+margin-top:20px;
+}
+
+.stats{
+margin-top:15px;
+font-size:24px;
+}
+
 </style>
 </head>
+
 <body>
 
-<div id="header">
-    <div>
-        <strong style="color:#00e5ff;">INITIAL PACKET ISOLATOR v5.4</strong><br>
-        <span id="status" style="font-size:12px; color:#90a4ae;">Odpojeno - Připravte kostku v klidu</span>
-    </div>
-    <button id="conn-btn">PRIPOJIT</button>
+<button id="btn">
+PŘIPOJIT KOSTKU
+</button>
+
+<div id="status">
+Odpojeno
 </div>
 
-<div class="panel">
-    <div class="title">🔐 Analyzovaný první inicializační balíček</div>
-    <div id="init-dump" class="dump-box">
-        Čekám na připojení... Pro přesný výsledek s kostkou při připojování nehýbejte.
-    </div>
+<div id="notation">
+Notace:
 </div>
 
-<script>
-const AES_KEY_HEX = "2d565c3412ab00000000000000000000"; 
-const key = CryptoJS.enc.Hex.parse(AES_KEY_HEX);
-let initialPacketCaptured = false;
+<div id="tps">
+0.0
+</div>
 
-document.getElementById("conn-btn").onclick = async () => {
-    try {
-        initialPacketCaptured = false;
-        document.getElementById("status").innerText = "Skenuji BLE...";
-        
-        const device = await navigator.bluetooth.requestDevice({
-            filters: [{namePrefix:"MG"}, {namePrefix:"GAN"}],
-            optionalServices: ["6e400001-b5a3-f393-e0a9-e50e24dc4179"]
-        });
+<div class="stats">
+Tahy:
+<span id="moves">
+0
+</span>
+</div>
 
-        const server = await device.gatt.connect();
-        const service = await server.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dc4179");
-        const characteristic = await service.getCharacteristic("28be4cb6-cd67-11e9-a32f-2a2ae2dbcce4");
+<script type="module">
 
-        document.getElementById("status").innerText = "Zachytávám startovní paket...";
-        await characteristic.startNotifications();
-        document.getElementById("conn-btn").style.display = "none";
+import {connectGanCube}
+from "https://cdn.jsdelivr.net/npm/gan-web-bluetooth/+esm";
 
-        characteristic.addEventListener("characteristicvaluechanged", event => {
-            // Chceme pouze úplně první balíček, který kostka vygeneruje po otevření streamu
-            if (initialPacketCaptured) return;
-            initialPacketCaptured = true;
+const btn=
+document.getElementById("btn");
 
-            const value = event.target.value;
-            if (value.byteLength < 16) return;
+const status=
+document.getElementById("status");
 
-            // Dešifrování bloku
-            let cleanBytes = new Uint8Array(16);
-            for(let i=0; i<16; i++) cleanBytes[i] = value.getUint8(i);
-            let wordArray = CryptoJS.lib.WordArray.create(cleanBytes);
-            let decrypted = CryptoJS.AES.decrypt({ ciphertext: wordArray }, key, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding });
+const notation=
+document.getElementById("notation");
 
-            let bytes = [];
-            for (let i = 0; i < 16; i++) {
-                bytes.push((decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff);
-            }
-            for(let i=16; i<value.byteLength; i++) {
-                bytes.push(value.getUint8(i));
-            }
+const tpsDiv=
+document.getElementById("tps");
 
-            document.getElementById("status").innerText = "Paket úspěšně izolován!";
+const movesDiv=
+document.getElementById("moves");
 
-            // Formátování výstupu pro kontrolu hardwarových registrů
-            let html = "<b>=== DEŠIFROVANÝ START-UP BLOK ===</b><br>";
-            
-            // Prověříme registry, které u modelů GAN nesou stav napájení
-            html += `Bajt [07] (Často napětí): <span class="highlight">0x${bytes[7].toString(16).toUpperCase()} (${bytes[7]})</span><br>`;
-            html += `Bajt [12] (Systém/Baterie): <span class="highlight">0x${bytes[12].toString(16).toUpperCase()} (${bytes[12]})</span><br>`;
-            html += `Bajt [13] (Rezervováno): <span class="highlight">0x${bytes[13].toString(16).toUpperCase()} (${bytes[13]})</span><br><br>`;
-            
-            html += "<b>Kompletní dump prvního balíčku:</b><br>";
-            let row = [];
-            for(let i=0; i<bytes.length; i++) {
-                row.push(`[${String(i).padStart(2,'0')}]:0x${bytes[i].toString(16).toUpperCase().padStart(2,'0')}`);
-            }
-            html += row.join(" | ");
+let sequence=[];
+let moveTimes=[];
+let totalMoves=0;
 
-            document.getElementById("init-dump").innerHTML = html;
-        });
+btn.onclick=async()=>{
 
-    } catch (e) {
-        document.getElementById("status").innerText = "Chyba izolátoru: " + e.message;
-    }
+try{
+
+status.innerText=
+"Připojuji...";
+
+const cube=
+await connectGanCube();
+
+status.innerText=
+"Připojeno";
+
+cube.events$
+.subscribe(event=>{
+
+if(event.type==="MOVE"){
+
+const move=
+event.move;
+
+sequence.push(move);
+
+if(sequence.length>25){
+
+sequence.shift();
+
+}
+
+notation.innerText=
+"Notace:\n"+
+sequence.join(" ");
+
+const now=
+performance.now();
+
+moveTimes.push(now);
+
+moveTimes=
+moveTimes.filter(
+t=>now-t<1000
+);
+
+totalMoves++;
+
+movesDiv.innerText=
+totalMoves;
+
+const tps=
+moveTimes.length;
+
+tpsDiv.innerText=
+tps.toFixed(1);
+
+}
+
+});
+
+}
+catch(e){
+
+status.innerText=
+e.message;
+
+}
+
 };
+
 </script>
+
 </body>
 </html>
