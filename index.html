@@ -3,38 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>MG3i Trainer</title>
-
+<title>MG3i Trainer HTM</title>
 <style>
-body{
-margin:0;background:#121212;color:white;font-family:Arial,sans-serif;
-display:flex;flex-direction:column;align-items:center;min-height:100vh;
-padding:16px;box-sizing:border-box;overflow:hidden;
-}
-button{
-padding:15px 30px;font-size:20px;font-weight:bold;border:none;
-border-radius:50px;background:#00e676;color:black;margin-bottom:10px;
-}
-#status{color:#aaa;font-size:14px;margin-bottom:8px;text-align:center;}
-#notation{
-width:92%;max-width:480px;background:#1e1e1e;border:1px solid #333;
-border-radius:10px;padding:10px;margin-bottom:8px;font-family:monospace;
-font-size:18px;color:#ffea00;word-break:break-word;min-height:48px;
-}
-#state-msg{font-size:20px;color:yellow;font-weight:bold;height:28px;}
-#tps{font-size:96px;font-weight:bold;color:#00e5ff;line-height:1;margin:4px 0;}
-.stats-grid{
-display:grid;grid-template-columns:1fr 1fr;gap:10px;width:92%;max-width:420px;
-z-index:2;
-}
-.stat-box{background:#1e1e1e;padding:10px;border-radius:10px;border:1px solid #333;text-align:center;}
-.stat-label{font-size:12px;color:#aaa;text-transform:uppercase;}
-.stat-val{font-size:24px;font-weight:bold;}
-canvas{position:absolute;bottom:0;left:0;width:100%;height:28%;pointer-events:none;}
+body{margin:0;background:#121212;color:white;font-family:Arial,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:16px;box-sizing:border-box;overflow:hidden}
+button{padding:15px 30px;font-size:20px;font-weight:bold;border:none;border-radius:50px;background:#00e676;color:black;margin-bottom:10px}
+#status{color:#aaa;font-size:14px;margin-bottom:8px;text-align:center}
+#notation{width:92%;max-width:480px;background:#1e1e1e;border:1px solid #333;border-radius:10px;padding:10px;margin-bottom:8px;font-family:monospace;font-size:18px;color:#ffea00;word-break:break-word;min-height:58px}
+#state-msg{font-size:20px;color:yellow;font-weight:bold;height:28px}
+#tps{font-size:96px;font-weight:bold;color:#00e5ff;line-height:1;margin:4px 0}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:92%;max-width:420px;z-index:2}
+.stat-box{background:#1e1e1e;padding:10px;border-radius:10px;border:1px solid #333;text-align:center}
+.stat-label{font-size:12px;color:#aaa;text-transform:uppercase}
+.stat-val{font-size:24px;font-weight:bold}
+canvas{position:absolute;bottom:0;left:0;width:100%;height:28%;pointer-events:none}
+#history{position:fixed;left:4px;top:220px;width:90px;max-height:55vh;overflow:auto;background:rgba(30,30,30,.88);border:1px solid #333;border-radius:8px;padding:6px;font-size:12px;z-index:20}
+#history-title{color:#aaa;font-size:11px;margin-bottom:4px;text-align:center}
+.hist-row{border-bottom:1px solid #333;padding:4px 0}
+.hist-time{color:#00e5ff;font-weight:bold}
+.hist-small{color:#aaa;font-size:10px}
 </style>
 </head>
 
 <body>
+
+<div id="history">
+  <div id="history-title">ČASY</div>
+  <div id="history-list">-</div>
+</div>
 
 <button id="btn">PŘIPOJIT KOSTKU</button>
 <div id="status">Odpojeno</div>
@@ -43,11 +38,11 @@ canvas{position:absolute;bottom:0;left:0;width:100%;height:28%;pointer-events:no
 <div id="tps">0.0</div>
 
 <div class="stats-grid">
-  <div class="stat-box"><div class="stat-label">Čas</div><div id="time-val" class="stat-val">0.00s</div></div>
-  <div class="stat-box"><div class="stat-label">Tahy</div><div id="moves-val" class="stat-val">0</div></div>
-  <div class="stat-box"><div class="stat-label">Průměrné TPS</div><div id="avg-val" class="stat-val" style="color:#00e676">0.0</div></div>
-  <div class="stat-box"><div class="stat-label">Max TPS</div><div id="max-val" class="stat-val">0.0</div></div>
-  <div class="stat-box" style="grid-column:span 2"><div class="stat-label">Nejdelší pauza / Fluency</div><div id="pause-val" class="stat-val" style="color:#ff1744">0.00s</div></div>
+<div class="stat-box"><div class="stat-label">Čas</div><div id="time-val" class="stat-val">0.00s</div></div>
+<div class="stat-box"><div class="stat-label">Tahy HTM</div><div id="moves-val" class="stat-val">0</div></div>
+<div class="stat-box"><div class="stat-label">Průměrné TPS</div><div id="avg-val" class="stat-val" style="color:#00e676">0.0</div></div>
+<div class="stat-box"><div class="stat-label">Špička TPS</div><div id="max-val" class="stat-val">0.0</div></div>
+<div class="stat-box" style="grid-column:span 2"><div class="stat-label">Nejdelší pauza / Fluency</div><div id="pause-val" class="stat-val" style="color:#ff1744">0.00s</div></div>
 </div>
 
 <canvas id="graph"></canvas>
@@ -65,189 +60,331 @@ const movesVal=document.getElementById("moves-val");
 const avgVal=document.getElementById("avg-val");
 const maxVal=document.getElementById("max-val");
 const pauseVal=document.getElementById("pause-val");
+const historyList=document.getElementById("history-list");
 const canvas=document.getElementById("graph");
 const ctx=canvas.getContext("2d");
 
-let seq=[], moveTimes=[], tpsHistory=[];
-let totalMoves=0, maxTPS=0, longestPause=0;
-let isSolving=false, startTime=0, lastMoveTime=0;
-let uiTimer=null, stopTimer=null;
-let audioCtx=null, lastBeep=0;
+let seq=[];
+let moveTimes=[];
+let tpsHistory=[];
+let savedSolves=[];
+
+let totalMoves=0;
+let maxTPS=0;
+let longestPause=0;
+
+let isSolving=false;
+let isFinished=false;
+let startTime=0;
+let lastMoveTime=0;
+
+let uiTimer=null;
+let stopTimer=null;
+
+let pendingMove=null;
+let pendingMoveTime=0;
+let pendingTimer=null;
+
+let audioCtx=null;
+let lastBeep=0;
+
+const DOUBLE_MOVE_WINDOW=280;
+const TPS_WINDOW=2000;
 
 function resize(){
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight*0.28;
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight*0.28;
 }
 window.onresize=resize;
 resize();
 
 function initAudio(){
-  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  if(audioCtx.state==="suspended") audioCtx.resume();
+if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+if(audioCtx.state==="suspended") audioCtx.resume();
 }
 
 function beep(freq=240,dur=0.12){
-  try{
-    initAudio();
-    const o=audioCtx.createOscillator();
-    const g=audioCtx.createGain();
-    o.type="sine";
-    o.frequency.value=freq;
-    g.gain.setValueAtTime(0.06,audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.00001,audioCtx.currentTime+dur);
-    o.connect(g); g.connect(audioCtx.destination);
-    o.start(); o.stop(audioCtx.currentTime+dur);
-  }catch(e){}
+try{
+initAudio();
+const o=audioCtx.createOscillator();
+const g=audioCtx.createGain();
+o.frequency.value=freq;
+g.gain.setValueAtTime(0.06,audioCtx.currentTime);
+g.gain.exponentialRampToValueAtTime(0.00001,audioCtx.currentTime+dur);
+o.connect(g);g.connect(audioCtx.destination);
+o.start();o.stop(audioCtx.currentTime+dur);
+}catch(e){}
 }
 
 btn.onclick=async()=>{
-  try{
-    initAudio();
-    status.innerText="Připojuji...";
-    const cube=await connectGanCube();
+try{
+initAudio();
+status.innerText="Připojuji...";
+const cube=await connectGanCube();
 
-    cube.events$.subscribe(event=>{
-      if(event.type==="MOVE") handleMove(event.move);
-      if(event.type==="FACELETS") status.innerText="Připojeno + stav načten";
-    });
+cube.events$.subscribe(event=>{
+if(event.type==="MOVE") handleRawMove(event.move);
+if(event.type==="FACELETS") status.innerText="Připojeno + stav načten";
+});
 
-    if(typeof cube.sendCubeCommand==="function"){
-      await cube.sendCubeCommand({type:"REQUEST_FACELETS"});
-    }
-
-    status.innerText="Připojeno, čekám na tahy...";
-    stateMsg.innerText="PŘIPRAVEN";
-    btn.style.display="none";
-    beep(523,0.08);
-
-  }catch(e){
-    status.innerText="Chyba: "+e.message;
-    console.log(e);
-  }
-};
-
-function startSolve(now){
-  isSolving=true;
-  startTime=now;
-  lastMoveTime=now;
-  totalMoves=0;
-  maxTPS=0;
-  longestPause=0;
-  moveTimes=[];
-  tpsHistory=[];
-  seq=[];
-
-  stateMsg.innerText="SKLÁDÁŠ...";
-  stateMsg.style.color="#00e676";
-  timeVal.innerText="0.00s";
-  movesVal.innerText="0";
-  avgVal.innerText="0.0";
-  maxVal.innerText="0.0";
-  pauseVal.innerText="0.00s";
-  notation.innerText="Notace:";
-
-  clearInterval(uiTimer);
-  uiTimer=setInterval(updateUI,100);
+if(typeof cube.sendCubeCommand==="function"){
+await cube.sendCubeCommand({type:"REQUEST_FACELETS"});
 }
 
-function handleMove(move){
-  const now=performance.now();
+status.innerText="Připojeno, čekám na tahy...";
+stateMsg.innerText="PŘIPRAVEN";
+btn.style.display="none";
+beep(523,0.08);
 
-  if(!isSolving) startSolve(now);
-  else{
-    const pause=(now-lastMoveTime)/1000;
-    if(totalMoves>0 && pause>longestPause){
-      longestPause=pause;
-      pauseVal.innerText=pause.toFixed(2)+"s";
-    }
-  }
+}catch(e){status.innerText="Chyba: "+e.message;}
+};
 
-  lastMoveTime=now;
-  totalMoves++;
-  movesVal.innerText=totalMoves;
+document.body.addEventListener("click",e=>{
+if(e.target.tagName==="BUTTON") return;
 
-  seq.push(move);
-  if(seq.length>30) seq.shift();
-  notation.innerText="Notace:\n"+seq.join(" ");
+if(isSolving){
+manualStop();
+return;
+}
 
-  moveTimes.push(now);
+if(isFinished){
+prepareNext();
+}
+});
 
-  clearTimeout(stopTimer);
-  stopTimer=setTimeout(finishSolve,3000);
+function prepareNext(){
+isFinished=false;
+seq=[];
+moveTimes=[];
+tpsHistory=[];
+totalMoves=0;
+maxTPS=0;
+longestPause=0;
+pendingMove=null;
+
+notation.innerText="Notace:";
+stateMsg.innerText="PŘIPRAVEN";
+stateMsg.style.color="yellow";
+tpsDiv.innerText="0.0";
+timeVal.innerText="0.00s";
+movesVal.innerText="0";
+avgVal.innerText="0.0";
+maxVal.innerText="0.0";
+pauseVal.innerText="0.00s";
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+function baseFace(move){
+return String(move).replace("2","").replace("'","");
+}
+
+function direction(move){
+if(String(move).includes("'")) return -1;
+return 1;
+}
+
+function makeDoubleMove(move){
+return baseFace(move)+"2";
+}
+
+function handleRawMove(move){
+if(isFinished) return;
+
+const now=performance.now();
+
+if(
+pendingMove &&
+baseFace(pendingMove)===baseFace(move) &&
+direction(pendingMove)===direction(move) &&
+now-pendingMoveTime<DOUBLE_MOVE_WINDOW
+){
+clearTimeout(pendingTimer);
+const merged=makeDoubleMove(move);
+pendingMove=null;
+commitMove(merged,now);
+return;
+}
+
+if(pendingMove){
+clearTimeout(pendingTimer);
+commitMove(pendingMove,pendingMoveTime);
+}
+
+pendingMove=move;
+pendingMoveTime=now;
+
+pendingTimer=setTimeout(()=>{
+if(pendingMove){
+commitMove(pendingMove,pendingMoveTime);
+pendingMove=null;
+}
+},DOUBLE_MOVE_WINDOW);
+}
+
+function startSolve(now){
+isSolving=true;
+isFinished=false;
+startTime=now;
+lastMoveTime=now;
+
+totalMoves=0;
+maxTPS=0;
+longestPause=0;
+moveTimes=[];
+tpsHistory=[];
+seq=[];
+
+stateMsg.innerText="SKLÁDÁŠ... KLEPNI PRO STOP";
+stateMsg.style.color="#00e676";
+
+timeVal.innerText="0.00s";
+movesVal.innerText="0";
+avgVal.innerText="0.0";
+maxVal.innerText="0.0";
+pauseVal.innerText="0.00s";
+notation.innerText="Notace:";
+
+clearInterval(uiTimer);
+uiTimer=setInterval(updateUI,100);
+}
+
+function commitMove(move,now){
+if(!isSolving){
+startSolve(now);
+}else{
+const pause=(now-lastMoveTime)/1000;
+if(totalMoves>0 && pause>longestPause){
+longestPause=pause;
+pauseVal.innerText=pause.toFixed(2)+"s";
+}
+}
+
+lastMoveTime=now;
+totalMoves++;
+movesVal.innerText=totalMoves;
+
+seq.push(move);
+if(seq.length>30) seq.shift();
+notation.innerText="Notace:\n"+seq.join(" ");
+
+moveTimes.push(now);
+
+clearTimeout(stopTimer);
+stopTimer=setTimeout(()=>finishSolve(lastMoveTime,false),3000);
 }
 
 function updateUI(){
-  const now=performance.now();
+const now=performance.now();
+moveTimes=moveTimes.filter(t=>now-t<TPS_WINDOW);
+const currentTPS=moveTimes.length/(TPS_WINDOW/1000);
 
-  moveTimes=moveTimes.filter(t=>now-t<1000);
-  const currentTPS=moveTimes.length;
+tpsDiv.innerText=currentTPS.toFixed(1);
 
-  tpsDiv.innerText=currentTPS.toFixed(1);
+if(isSolving){
+const elapsed=(now-startTime)/1000;
+timeVal.innerText=elapsed.toFixed(2)+"s";
 
-  if(isSolving){
-    const elapsed=(now-startTime)/1000;
-    timeVal.innerText=elapsed.toFixed(2)+"s";
+if(elapsed>0){
+const avg=totalMoves/elapsed;
+avgVal.innerText=avg.toFixed(1);
 
-    if(elapsed>0){
-      const avg=totalMoves/elapsed;
-      avgVal.innerText=avg.toFixed(1);
-
-      if(totalMoves>8 && currentTPS<avg*0.65 && now-lastBeep>1200){
-        beep(220,0.12);
-        lastBeep=now;
-      }
-    }
-
-    if(currentTPS>maxTPS){
-      maxTPS=currentTPS;
-      maxVal.innerText=maxTPS.toFixed(1);
-    }
-
-    tpsHistory.push(currentTPS);
-    if(tpsHistory.length>100) tpsHistory.shift();
-    drawGraph();
-  }
+if(totalMoves>8 && currentTPS<avg*0.65 && now-lastBeep>1200){
+beep(220,0.12);
+lastBeep=now;
+}
 }
 
-function finishSolve(){
-  if(!isSolving) return;
+if(currentTPS>maxTPS){
+maxTPS=currentTPS;
+maxVal.innerText=maxTPS.toFixed(1);
+}
 
-  isSolving=false;
-  clearInterval(uiTimer);
+tpsHistory.push(currentTPS);
+if(tpsHistory.length>100)tpsHistory.shift();
 
-  const finalTime=(lastMoveTime-startTime)/1000;
-  timeVal.innerText=finalTime.toFixed(2)+"s";
+drawGraph();
+}
+}
 
-  if(finalTime>0){
-    avgVal.innerText=(totalMoves/finalTime).toFixed(1);
-  }
+function manualStop(){
+const stopTime=performance.now();
 
-  moveTimes=[];
-  tpsDiv.innerText="0.0";
-  stateMsg.innerText="SOLVE DOKONČEN!";
-  stateMsg.style.color="yellow";
-  beep(880,0.2);
+if(pendingMove){
+clearTimeout(pendingTimer);
+commitMove(pendingMove,pendingMoveTime);
+pendingMove=null;
+}
+
+finishSolve(stopTime,true);
+}
+
+function finishSolve(stopTime,manual){
+if(!isSolving)return;
+
+isSolving=false;
+isFinished=true;
+clearInterval(uiTimer);
+clearTimeout(stopTimer);
+
+const finalTime=(stopTime-startTime)/1000;
+timeVal.innerText=finalTime.toFixed(2)+"s";
+
+const finalAvg=finalTime>0 ? totalMoves/finalTime : 0;
+avgVal.innerText=finalAvg.toFixed(1);
+
+moveTimes=[];
+tpsDiv.innerText="0.0";
+stateMsg.innerText=manual ? "ZASTAVENO - KLEPNI PRO DALŠÍ" : "SOLVE DOKONČEN - KLEPNI PRO DALŠÍ";
+stateMsg.style.color="yellow";
+
+saveSolve(finalTime,totalMoves,finalAvg);
+beep(880,0.2);
+}
+
+function saveSolve(time,moves,avg){
+savedSolves.unshift({
+time:time,
+moves:moves,
+avg:avg
+});
+
+savedSolves=savedSolves.slice(0,15);
+renderHistory();
+}
+
+function renderHistory(){
+if(savedSolves.length===0){
+historyList.innerText="-";
+return;
+}
+
+historyList.innerHTML=savedSolves.map((s,i)=>`
+<div class="hist-row">
+<div class="hist-time">${i+1}. ${s.time.toFixed(2)}s</div>
+<div class="hist-small">${s.moves}t • ${s.avg.toFixed(1)} TPS</div>
+</div>
+`).join("");
 }
 
 function drawGraph(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  if(tpsHistory.length<2) return;
+ctx.clearRect(0,0,canvas.width,canvas.height);
+if(tpsHistory.length<2)return;
 
-  ctx.beginPath();
-  ctx.strokeStyle="rgba(0,230,118,0.75)";
-  ctx.lineWidth=4;
-  ctx.lineJoin="round";
+ctx.beginPath();
+ctx.strokeStyle="rgba(0,230,118,0.75)";
+ctx.lineWidth=4;
+ctx.lineJoin="round";
 
-  const step=canvas.width/100;
+const step=canvas.width/100;
 
-  for(let i=0;i<tpsHistory.length;i++){
-    const x=i*step+(canvas.width-tpsHistory.length*step);
-    const y=canvas.height-(tpsHistory[i]/12)*canvas.height;
-    if(i===0) ctx.moveTo(x,y);
-    else ctx.lineTo(x,y);
-  }
-
-  ctx.stroke();
+for(let i=0;i<tpsHistory.length;i++){
+const x=i*step+(canvas.width-tpsHistory.length*step);
+const y=canvas.height-(tpsHistory[i]/6)*canvas.height;
+if(i===0)ctx.moveTo(x,y);
+else ctx.lineTo(x,y);
+}
+ctx.stroke();
 }
 </script>
 </body>
