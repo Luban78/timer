@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
+    
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#121212">
+<meta name="mobile-web-app-capable" content="yes"> 
+    
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#121212">
@@ -244,7 +249,7 @@ color:white;
 <body>
 
 <div id="app">
-<button id="btn">PŘIPOJIT KOSTKU</button>
+<button id="btn">PŘIPOJIT KOSTKU v.1</button>
 
 <div id="modeButtons">
 <button class="modeBtn" id="ollBtn">OLL</button>
@@ -586,17 +591,26 @@ clearInterval(uiTimer);
 clearTimeout(stopTimer);
 
 const finalTime=(stopTime-startTime)/1000;
-timeVal.innerText=finalTime.toFixed(2)+"s";
-
 const finalAvg=finalTime>0?totalMoves/finalTime:0;
+
+timeVal.innerText=finalTime.toFixed(2)+"s";
 avgVal.innerText=finalAvg.toFixed(1);
 
 moveTimes=[];
 tpsDiv.innerText="0.0";
-stateMsg.innerText=manual?"ZASTAVENO - OTOČ PRO DALŠÍ":"HOTOVO - OTOČ PRO DALŠÍ";
+
+stateMsg.innerText=manual
+?"ZASTAVENO - OTOČ PRO DALŠÍ"
+:"HOTOVO - OTOČ PRO DALŠÍ";
+
 stateMsg.style.color="yellow";
 
-saveSolve(finalTime,totalMoves,finalAvg);
+saveSolve(
+Number(finalTime.toFixed(2)),
+totalMoves,
+Number(finalAvg.toFixed(1))
+);
+
 beep(880,.2);
 }
 
@@ -607,10 +621,14 @@ renderHistory();
 }
 
 function renderHistory(){
-if(savedSolves.length===0){historyList.innerText="-";return;}
+if(savedSolves.length===0){
+historyList.innerText="-";
+return;
+}
+
 historyList.innerHTML=savedSolves.map((s,i)=>`
 <div class="hist-row">
-<div class="hist-time">${i+1}. ${s.time.toFixed(2)}</div>
+<div class="hist-time">${i+1}. ${s.time.toFixed(2)}s</div>
 <div class="hist-small">${s.moves}t</div>
 <div class="hist-small">${s.avg.toFixed(1)}TPS</div>
 </div>
@@ -652,6 +670,11 @@ const link=document.createElement("link");
 link.rel="manifest";
 link.href=URL.createObjectURL(blob);
 document.head.appendChild(link);
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+
 </script>
 </body>
 </html>
