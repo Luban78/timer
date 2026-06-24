@@ -2,165 +2,253 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MG3i Real TPS</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>MG3i Trainer</title>
 
 <style>
 body{
-margin:0;
-background:#121212;
-color:white;
-font-family:Arial,sans-serif;
-display:flex;
-flex-direction:column;
-align-items:center;
-padding:20px;
-min-height:100vh;
+margin:0;background:#121212;color:white;font-family:Arial,sans-serif;
+display:flex;flex-direction:column;align-items:center;min-height:100vh;
+padding:16px;box-sizing:border-box;overflow:hidden;
 }
-
 button{
-padding:15px 30px;
-font-size:20px;
-font-weight:bold;
-border:none;
-border-radius:50px;
-background:#00e676;
+padding:15px 30px;font-size:20px;font-weight:bold;border:none;
+border-radius:50px;background:#00e676;color:black;margin-bottom:10px;
 }
-
-#status{
-margin:15px;
-color:#aaa;
-}
-
+#status{color:#aaa;font-size:14px;margin-bottom:8px;text-align:center;}
 #notation{
-width:90%;
-max-width:500px;
-background:#1e1e1e;
-padding:12px;
-border-radius:10px;
-font-family:monospace;
-font-size:22px;
-color:#ffea00;
-min-height:60px;
-word-break:break-word;
+width:92%;max-width:480px;background:#1e1e1e;border:1px solid #333;
+border-radius:10px;padding:10px;margin-bottom:8px;font-family:monospace;
+font-size:18px;color:#ffea00;word-break:break-word;min-height:48px;
 }
-
-#tps{
-font-size:90px;
-font-weight:bold;
-color:#00e5ff;
-margin-top:25px;
+#state-msg{font-size:20px;color:yellow;font-weight:bold;height:28px;}
+#tps{font-size:96px;font-weight:bold;color:#00e5ff;line-height:1;margin:4px 0;}
+.stats-grid{
+display:grid;grid-template-columns:1fr 1fr;gap:10px;width:92%;max-width:420px;
+z-index:2;
 }
-
-#moves{
-font-size:28px;
-margin-top:10px;
-}
-
+.stat-box{background:#1e1e1e;padding:10px;border-radius:10px;border:1px solid #333;text-align:center;}
+.stat-label{font-size:12px;color:#aaa;text-transform:uppercase;}
+.stat-val{font-size:24px;font-weight:bold;}
+canvas{position:absolute;bottom:0;left:0;width:100%;height:28%;pointer-events:none;}
 </style>
 </head>
+
 <body>
 
-<button id="btn">
-PŘIPOJIT KOSTKU
-</button>
+<button id="btn">PŘIPOJIT KOSTKU</button>
+<div id="status">Odpojeno</div>
+<div id="notation">Notace:</div>
+<div id="state-msg">Připoj kostku...</div>
+<div id="tps">0.0</div>
 
-<div id="status">
-Odpojeno
+<div class="stats-grid">
+  <div class="stat-box"><div class="stat-label">Čas</div><div id="time-val" class="stat-val">0.00s</div></div>
+  <div class="stat-box"><div class="stat-label">Tahy</div><div id="moves-val" class="stat-val">0</div></div>
+  <div class="stat-box"><div class="stat-label">Průměrné TPS</div><div id="avg-val" class="stat-val" style="color:#00e676">0.0</div></div>
+  <div class="stat-box"><div class="stat-label">Max TPS</div><div id="max-val" class="stat-val">0.0</div></div>
+  <div class="stat-box" style="grid-column:span 2"><div class="stat-label">Nejdelší pauza / Fluency</div><div id="pause-val" class="stat-val" style="color:#ff1744">0.00s</div></div>
 </div>
 
-<div id="notation">
-Notace:
-</div>
-
-<div id="tps">
-0.0
-</div>
-
-<div id="moves">
-Tahy: 0
-</div>
+<canvas id="graph"></canvas>
 
 <script type="module">
-
-import { connectGanCube }
-from "https://esm.sh/gan-web-bluetooth";
+import { connectGanCube } from "https://esm.sh/gan-web-bluetooth";
 
 const btn=document.getElementById("btn");
 const status=document.getElementById("status");
 const notation=document.getElementById("notation");
+const stateMsg=document.getElementById("state-msg");
 const tpsDiv=document.getElementById("tps");
-const movesDiv=document.getElementById("moves");
+const timeVal=document.getElementById("time-val");
+const movesVal=document.getElementById("moves-val");
+const avgVal=document.getElementById("avg-val");
+const maxVal=document.getElementById("max-val");
+const pauseVal=document.getElementById("pause-val");
+const canvas=document.getElementById("graph");
+const ctx=canvas.getContext("2d");
 
-let sequence=[];
-let moveTimes=[];
-let totalMoves=0;
+let seq=[], moveTimes=[], tpsHistory=[];
+let totalMoves=0, maxTPS=0, longestPause=0;
+let isSolving=false, startTime=0, lastMoveTime=0;
+let uiTimer=null, stopTimer=null;
+let audioCtx=null, lastBeep=0;
+
+function resize(){
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight*0.28;
+}
+window.onresize=resize;
+resize();
+
+function initAudio(){
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==="suspended") audioCtx.resume();
+}
+
+function beep(freq=240,dur=0.12){
+  try{
+    initAudio();
+    const o=audioCtx.createOscillator();
+    const g=audioCtx.createGain();
+    o.type="sine";
+    o.frequency.value=freq;
+    g.gain.setValueAtTime(0.06,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.00001,audioCtx.currentTime+dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime+dur);
+  }catch(e){}
+}
 
 btn.onclick=async()=>{
+  try{
+    initAudio();
+    status.innerText="Připojuji...";
+    const cube=await connectGanCube();
 
-try{
+    cube.events$.subscribe(event=>{
+      if(event.type==="MOVE") handleMove(event.move);
+      if(event.type==="FACELETS") status.innerText="Připojeno + stav načten";
+    });
 
-status.innerText="Připojuji...";
+    if(typeof cube.sendCubeCommand==="function"){
+      await cube.sendCubeCommand({type:"REQUEST_FACELETS"});
+    }
 
-const conn=
-await connectGanCube();
+    status.innerText="Připojeno, čekám na tahy...";
+    stateMsg.innerText="PŘIPRAVEN";
+    btn.style.display="none";
+    beep(523,0.08);
 
-status.innerText=
-"Připojeno";
+  }catch(e){
+    status.innerText="Chyba: "+e.message;
+    console.log(e);
+  }
+};
 
-conn.events$.subscribe(event=>{
+function startSolve(now){
+  isSolving=true;
+  startTime=now;
+  lastMoveTime=now;
+  totalMoves=0;
+  maxTPS=0;
+  longestPause=0;
+  moveTimes=[];
+  tpsHistory=[];
+  seq=[];
 
-console.log(event);
+  stateMsg.innerText="SKLÁDÁŠ...";
+  stateMsg.style.color="#00e676";
+  timeVal.innerText="0.00s";
+  movesVal.innerText="0";
+  avgVal.innerText="0.0";
+  maxVal.innerText="0.0";
+  pauseVal.innerText="0.00s";
+  notation.innerText="Notace:";
 
-if(event.type==="MOVE"){
-
-const move=
-event.move;
-
-sequence.push(move);
-
-if(sequence.length>20){
-sequence.shift();
+  clearInterval(uiTimer);
+  uiTimer=setInterval(updateUI,100);
 }
 
-notation.innerText=
-"Notace:\n"+
-sequence.join(" ");
+function handleMove(move){
+  const now=performance.now();
 
-const now=
-performance.now();
+  if(!isSolving) startSolve(now);
+  else{
+    const pause=(now-lastMoveTime)/1000;
+    if(totalMoves>0 && pause>longestPause){
+      longestPause=pause;
+      pauseVal.innerText=pause.toFixed(2)+"s";
+    }
+  }
 
-moveTimes.push(now);
+  lastMoveTime=now;
+  totalMoves++;
+  movesVal.innerText=totalMoves;
 
-moveTimes=
-moveTimes.filter(
-t=>now-t<1000
-);
+  seq.push(move);
+  if(seq.length>30) seq.shift();
+  notation.innerText="Notace:\n"+seq.join(" ");
 
-totalMoves++;
+  moveTimes.push(now);
 
-movesDiv.innerText=
-"Tahy: "+totalMoves;
-
-tpsDiv.innerText=
-moveTimes.length.toFixed(1);
-
+  clearTimeout(stopTimer);
+  stopTimer=setTimeout(finishSolve,3000);
 }
 
-});
+function updateUI(){
+  const now=performance.now();
 
+  moveTimes=moveTimes.filter(t=>now-t<1000);
+  const currentTPS=moveTimes.length;
+
+  tpsDiv.innerText=currentTPS.toFixed(1);
+
+  if(isSolving){
+    const elapsed=(now-startTime)/1000;
+    timeVal.innerText=elapsed.toFixed(2)+"s";
+
+    if(elapsed>0){
+      const avg=totalMoves/elapsed;
+      avgVal.innerText=avg.toFixed(1);
+
+      if(totalMoves>8 && currentTPS<avg*0.65 && now-lastBeep>1200){
+        beep(220,0.12);
+        lastBeep=now;
+      }
+    }
+
+    if(currentTPS>maxTPS){
+      maxTPS=currentTPS;
+      maxVal.innerText=maxTPS.toFixed(1);
+    }
+
+    tpsHistory.push(currentTPS);
+    if(tpsHistory.length>100) tpsHistory.shift();
+    drawGraph();
+  }
 }
-catch(e){
 
-status.innerText=
-"Chyba: "+e.message;
-console.log(e);
+function finishSolve(){
+  if(!isSolving) return;
 
+  isSolving=false;
+  clearInterval(uiTimer);
+
+  const finalTime=(lastMoveTime-startTime)/1000;
+  timeVal.innerText=finalTime.toFixed(2)+"s";
+
+  if(finalTime>0){
+    avgVal.innerText=(totalMoves/finalTime).toFixed(1);
+  }
+
+  moveTimes=[];
+  tpsDiv.innerText="0.0";
+  stateMsg.innerText="SOLVE DOKONČEN!";
+  stateMsg.style.color="yellow";
+  beep(880,0.2);
 }
 
-}
+function drawGraph(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(tpsHistory.length<2) return;
 
+  ctx.beginPath();
+  ctx.strokeStyle="rgba(0,230,118,0.75)";
+  ctx.lineWidth=4;
+  ctx.lineJoin="round";
+
+  const step=canvas.width/100;
+
+  for(let i=0;i<tpsHistory.length;i++){
+    const x=i*step+(canvas.width-tpsHistory.length*step);
+    const y=canvas.height-(tpsHistory[i]/12)*canvas.height;
+    if(i===0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  }
+
+  ctx.stroke();
+}
 </script>
-
 </body>
 </html>
