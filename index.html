@@ -3,96 +3,120 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>MG3i Trainer HTM</title>
+<meta name="theme-color" content="#121212">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MG Trainer">
+<title>MG3i Trainer</title>
 
 <style>
 body{
 margin:0;background:#121212;color:white;font-family:Arial,sans-serif;
-min-height:100vh;overflow:hidden;box-sizing:border-box;
-display:flex;justify-content:center;
+min-height:100vh;overflow:hidden;display:flex;justify-content:center;
 }
 
 #app{
-width:calc(100vw - 96px);
-max-width:430px;
-padding:14px 92px 14px 8px;
+width:calc(100vw - 92px);
+padding:10px 92px 10px 6px;
 box-sizing:border-box;
-display:flex;
-flex-direction:column;
-align-items:center;
+display:flex;flex-direction:column;align-items:center;
 }
 
 button{
-padding:14px 24px;font-size:18px;font-weight:bold;border:none;
-border-radius:50px;background:#00e676;color:black;margin-bottom:8px;
+border:none;border-radius:18px;font-weight:bold;
+background:#00e676;color:black;
 }
 
-#status{color:#aaa;font-size:14px;margin-bottom:8px;text-align:center}
+#btn{
+width:95%;padding:18px;font-size:22px;margin-bottom:8px;
+}
+
+#modeButtons{
+display:none;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-bottom:8px;
+}
+
+.modeBtn{
+padding:16px;font-size:22px;
+}
+
+#status{
+color:#aaa;font-size:14px;margin-bottom:6px;text-align:center;
+}
+
+#selectedAlg{
+width:100%;background:#263238;border:1px solid #455a64;
+border-radius:10px;padding:8px;margin-bottom:6px;
+font-size:15px;color:#fff;box-sizing:border-box;
+word-break:break-word;
+}
 
 #notation{
 width:100%;background:#1e1e1e;border:1px solid #333;border-radius:10px;
-padding:10px;margin-bottom:8px;font-family:monospace;font-size:17px;
-color:#ffea00;word-break:break-word;min-height:64px;box-sizing:border-box;
+padding:9px;margin-bottom:6px;font-family:monospace;font-size:16px;
+color:#ffea00;word-break:break-word;min-height:62px;box-sizing:border-box;
 }
 
-#state-msg{font-size:19px;color:yellow;font-weight:bold;min-height:28px;text-align:center}
+#state-msg{
+font-size:18px;color:yellow;font-weight:bold;min-height:26px;text-align:center;
+}
 
 #tps{
-font-size:86px;font-weight:bold;color:#00e5ff;line-height:1;margin:4px 0;
+font-size:78px;font-weight:bold;color:#00e5ff;line-height:1;margin:2px 0;
 }
 
 .stats-grid{
-display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;z-index:2;
+display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%;z-index:2;
 }
 
 .stat-box{
-background:#1e1e1e;padding:9px;border-radius:10px;border:1px solid #333;text-align:center;
+background:#1e1e1e;padding:8px;border-radius:10px;border:1px solid #333;text-align:center;
 }
 
-.stat-label{font-size:11px;color:#aaa;text-transform:uppercase}
-.stat-val{font-size:23px;font-weight:bold}
+.stat-label{font-size:10px;color:#aaa;text-transform:uppercase}
+.stat-val{font-size:22px;font-weight:bold}
 
 canvas{
-position:absolute;bottom:0;left:0;width:calc(100% - 92px);height:25%;
+position:absolute;bottom:0;left:0;width:calc(100% - 92px);height:23%;
 pointer-events:none;
 }
 
 #history{
-position:fixed;
-right:4px;
-top:8px;
-bottom:8px;
-width:84px;
-overflow:auto;
-background:rgba(30,30,30,.92);
-border:1px solid #333;
-border-radius:10px;
-padding:6px;
-font-size:11px;
-z-index:20;
-box-sizing:border-box;
+position:fixed;right:4px;top:4px;bottom:4px;width:84px;
+overflow:auto;background:rgba(30,30,30,.94);border:1px solid #333;
+border-radius:10px;padding:5px;font-size:11px;z-index:20;box-sizing:border-box;
 }
 
 #history-title{
-color:#aaa;font-size:11px;margin-bottom:6px;text-align:center;
+color:#aaa;font-size:11px;margin-bottom:5px;text-align:center;
 position:sticky;top:0;background:#1e1e1e;
 }
 
-.hist-row{
-border-bottom:1px solid #333;
-padding:5px 0;
+.hist-row{border-bottom:1px solid #333;padding:5px 0}
+.hist-time{color:#00e5ff;font-weight:bold;font-size:12px}
+.hist-small{color:#aaa;font-size:9px;line-height:1.25}
+
+#modal{
+display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);
+z-index:100;padding:14px;box-sizing:border-box;overflow:auto;
 }
 
-.hist-time{
-color:#00e5ff;
-font-weight:bold;
-font-size:12px;
+#modalContent{
+max-width:520px;margin:auto;background:#1e1e1e;border-radius:14px;
+padding:12px;border:1px solid #444;
 }
 
-.hist-small{
-color:#aaa;
-font-size:9px;
-line-height:1.2;
+#modal h2{text-align:center;margin:6px 0 12px}
+
+.algGrid{
+display:grid;grid-template-columns:1fr 1fr;gap:8px;
+}
+
+.algBtn{
+padding:14px;font-size:17px;background:#263238;color:white;border-radius:12px;
+}
+
+.closeBtn{
+width:100%;padding:14px;margin-top:12px;font-size:18px;background:#ff1744;color:white;
 }
 </style>
 </head>
@@ -100,14 +124,19 @@ line-height:1.2;
 <body>
 
 <div id="app">
-
 <button id="btn">PŘIPOJIT KOSTKU</button>
+
+<div id="modeButtons">
+<button class="modeBtn" id="ollBtn">OLL</button>
+<button class="modeBtn" id="pllBtn">PLL</button>
+</div>
+
 <div id="status">Odpojeno</div>
 
+<div id="selectedAlg">Algoritmus: nevybráno</div>
 <div id="notation">Notace:</div>
 
 <div id="state-msg">Připoj kostku...</div>
-
 <div id="tps">0.0</div>
 
 <div class="stats-grid">
@@ -119,7 +148,6 @@ line-height:1.2;
 </div>
 
 <canvas id="graph"></canvas>
-
 </div>
 
 <div id="history">
@@ -127,11 +155,50 @@ line-height:1.2;
 <div id="history-list">-</div>
 </div>
 
+<div id="modal">
+<div id="modalContent">
+<h2 id="modalTitle">PLL</h2>
+<div class="algGrid" id="algList"></div>
+<button class="closeBtn" id="closeModal">ZAVŘÍT</button>
+</div>
+</div>
+
 <script type="module">
 import { connectGanCube } from "https://esm.sh/gan-web-bluetooth";
 
+const pllAlgs={
+"Ua-perm":"R U' R U R U R U' R' U' R2",
+"Ub-perm":"R2 U R U R' U' R' U' R' U R'",
+"Z-perm":"M2 U M2 U M' U2 M2 U2 M' U2",
+"H-perm":"M2 U M2 U2 M2 U M2",
+"Aa-perm":"x R' U R' D2 R U' R' D2 R2 x'",
+"Ab-perm":"x R2 D2 R U R' D2 R U' R x'",
+"E-perm":"x' R U' R' D R U R' D' R U R' D R U' R' D'",
+"T-perm":"R U R' U' R' F R2 U' R' U' R U R' F'",
+"F-perm":"R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R",
+"Ja-perm":"x R2 F R F' R U2 r' U r U2",
+"Jb-perm":"R U R' F' R U R' U' R' F R2 U' R'",
+"Ra-perm":"R U' R' U' R U R D R' U' R D' R' U2 R'",
+"Rb-perm":"R' U2 R U2 R' F R U R' U' R' F' R2",
+"V-perm":"R' U R' U' y R' F' R2 U' R' U R' F R F",
+"Y-perm":"F R U' R' U' R U R' F' R U R' U' R' F R F'",
+"Na-perm":"R U R' U R U R' F' R U R' U' R' F R2 U' R'",
+"Nb-perm":"R' U R U' R' F' U' F R U R' F R' F' R U'",
+"Ga-perm":"R2 U R' U R' U' R U' R2 D U' R' U R D'",
+"Gb-perm":"R' U' R U D' R2 U R' U R U' R U' R2 D",
+"Gc-perm":"R2 U' R U' R U R' U R2 D' U R U' R' D",
+"Gd-perm":"R U R' U' D R2 U' R U' R' U R' U R2 D'"
+};
+
 const btn=document.getElementById("btn");
+const modeButtons=document.getElementById("modeButtons");
+const pllBtn=document.getElementById("pllBtn");
+const ollBtn=document.getElementById("ollBtn");
+const modal=document.getElementById("modal");
+const algList=document.getElementById("algList");
+const closeModal=document.getElementById("closeModal");
 const status=document.getElementById("status");
+const selectedAlg=document.getElementById("selectedAlg");
 const notation=document.getElementById("notation");
 const stateMsg=document.getElementById("state-msg");
 const tpsDiv=document.getElementById("tps");
@@ -146,7 +213,7 @@ const ctx=canvas.getContext("2d");
 
 let seq=[],moveTimes=[],tpsHistory=[],savedSolves=[];
 let totalMoves=0,maxTPS=0,longestPause=0;
-let isSolving=false,isFinished=false,isConnected=false;
+let isSolving=false,isConnected=false;
 let startTime=0,lastMoveTime=0;
 let uiTimer=null,stopTimer=null;
 let pendingMove=null,pendingMoveTime=0,pendingTimer=null;
@@ -157,7 +224,7 @@ const TPS_WINDOW=2000;
 
 function resize(){
 canvas.width=window.innerWidth-92;
-canvas.height=window.innerHeight*.25;
+canvas.height=window.innerHeight*.23;
 }
 window.onresize=resize;
 resize();
@@ -182,11 +249,9 @@ o.start();o.stop(audioCtx.currentTime+dur);
 
 btn.onclick=async(e)=>{
 e.stopPropagation();
-
 try{
 initAudio();
 status.innerText="Připojuji...";
-
 const cube=await connectGanCube();
 
 cube.events$.subscribe(event=>{
@@ -199,41 +264,62 @@ await cube.sendCubeCommand({type:"REQUEST_FACELETS"});
 }
 
 isConnected=true;
+btn.style.display="none";
+modeButtons.style.display="grid";
 status.innerText="Připojeno, začni otočením kostky";
 stateMsg.innerText="PŘIPRAVEN";
-btn.style.display="none";
 beep(523,.08);
 
-}catch(e){
-status.innerText="Chyba: "+e.message;
-}
+}catch(e){status.innerText="Chyba: "+e.message;}
 };
+
+pllBtn.onclick=e=>{
+e.stopPropagation();
+openPLL();
+};
+
+ollBtn.onclick=e=>{
+e.stopPropagation();
+alert("OLL menu doplníme v další verzi. Teď je hotové PLL.");
+};
+
+closeModal.onclick=e=>{
+e.stopPropagation();
+modal.style.display="none";
+};
+
+modal.onclick=e=>{
+if(e.target===modal) modal.style.display="none";
+};
+
+function openPLL(){
+algList.innerHTML="";
+Object.entries(pllAlgs).forEach(([name,alg])=>{
+const b=document.createElement("button");
+b.className="algBtn";
+b.innerText=name;
+b.onclick=e=>{
+e.stopPropagation();
+selectedAlg.innerText=name+": "+alg;
+modal.style.display="none";
+prepareNext();
+};
+algList.appendChild(b);
+});
+modal.style.display="block";
+}
 
 document.body.addEventListener("click",e=>{
 if(e.target.tagName==="BUTTON") return;
-
-if(isSolving){
-manualStop();
-return;
-}
-
-if(isFinished){
-prepareNext();
-}
+if(modal.style.display==="block") return;
+if(isSolving) manualStop();
 });
 
 function prepareNext(){
-isFinished=false;
-seq=[];
-moveTimes=[];
-tpsHistory=[];
-totalMoves=0;
-maxTPS=0;
-longestPause=0;
-pendingMove=null;
-
+seq=[];moveTimes=[];tpsHistory=[];
+totalMoves=0;maxTPS=0;longestPause=0;pendingMove=null;
 notation.innerText="Notace:";
-stateMsg.innerText=isConnected ? "PŘIPRAVEN" : "Připoj kostku...";
+stateMsg.innerText=isConnected?"PŘIPRAVEN":"Připoj kostku...";
 stateMsg.style.color="yellow";
 tpsDiv.innerText="0.0";
 timeVal.innerText="0.00s";
@@ -244,22 +330,16 @@ pauseVal.innerText="0.00s";
 ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
-function baseFace(move){
-return String(move).replace("2","").replace("'","");
-}
-
-function direction(move){
-return String(move).includes("'")?-1:1;
-}
-
-function makeDoubleMove(move){
-return baseFace(move)+"2";
-}
+function baseFace(move){return String(move).replace("2","").replace("'","");}
+function direction(move){return String(move).includes("'")?-1:1;}
+function makeDoubleMove(move){return baseFace(move)+"2";}
 
 function handleRawMove(move){
-if(isFinished)return;
-
 const now=performance.now();
+
+if(!isSolving && seq.length>0){
+prepareNext();
+}
 
 if(
 pendingMove &&
@@ -292,16 +372,10 @@ pendingMove=null;
 
 function startSolve(now){
 isSolving=true;
-isFinished=false;
 startTime=now;
 lastMoveTime=now;
-
-totalMoves=0;
-maxTPS=0;
-longestPause=0;
-moveTimes=[];
-tpsHistory=[];
-seq=[];
+totalMoves=0;maxTPS=0;longestPause=0;
+moveTimes=[];tpsHistory=[];seq=[];
 
 stateMsg.innerText="SKLÁDÁŠ... KLEPNI PRO STOP";
 stateMsg.style.color="#00e676";
@@ -337,14 +411,12 @@ if(seq.length>24)seq.shift();
 notation.innerText="Notace:\n"+seq.join(" ");
 
 moveTimes.push(now);
-
 clearTimeout(stopTimer);
 stopTimer=setTimeout(()=>finishSolve(lastMoveTime,false),3000);
 }
 
 function updateUI(){
 const now=performance.now();
-
 moveTimes=moveTimes.filter(t=>now-t<TPS_WINDOW);
 const currentTPS=moveTimes.length/(TPS_WINDOW/1000);
 
@@ -357,7 +429,6 @@ timeVal.innerText=elapsed.toFixed(2)+"s";
 if(elapsed>0){
 const avg=totalMoves/elapsed;
 avgVal.innerText=avg.toFixed(1);
-
 if(totalMoves>8&&currentTPS<avg*.65&&now-lastBeep>1200){
 beep(220,.12);
 lastBeep=now;
@@ -371,7 +442,6 @@ maxVal.innerText=maxTPS.toFixed(1);
 
 tpsHistory.push(currentTPS);
 if(tpsHistory.length>100)tpsHistory.shift();
-
 drawGraph();
 }
 }
@@ -392,7 +462,6 @@ function finishSolve(stopTime,manual){
 if(!isSolving)return;
 
 isSolving=false;
-isFinished=true;
 clearInterval(uiTimer);
 clearTimeout(stopTimer);
 
@@ -404,7 +473,7 @@ avgVal.innerText=finalAvg.toFixed(1);
 
 moveTimes=[];
 tpsDiv.innerText="0.0";
-stateMsg.innerText=manual?"ZASTAVENO - KLEPNI PRO DALŠÍ":"SOLVE DOKONČEN - KLEPNI PRO DALŠÍ";
+stateMsg.innerText=manual?"ZASTAVENO - OTOČ PRO DALŠÍ":"HOTOVO - OTOČ PRO DALŠÍ";
 stateMsg.style.color="yellow";
 
 saveSolve(finalTime,totalMoves,finalAvg);
@@ -418,11 +487,7 @@ renderHistory();
 }
 
 function renderHistory(){
-if(savedSolves.length===0){
-historyList.innerText="-";
-return;
-}
-
+if(savedSolves.length===0){historyList.innerText="-";return;}
 historyList.innerHTML=savedSolves.map((s,i)=>`
 <div class="hist-row">
 <div class="hist-time">${i+1}. ${s.time.toFixed(2)}</div>
@@ -446,13 +511,27 @@ const step=canvas.width/100;
 for(let i=0;i<tpsHistory.length;i++){
 const x=i*step+(canvas.width-tpsHistory.length*step);
 const y=canvas.height-(tpsHistory[i]/6)*canvas.height;
-
 if(i===0)ctx.moveTo(x,y);
 else ctx.lineTo(x,y);
 }
-
 ctx.stroke();
 }
+
+/* PWA manifest */
+const manifest={
+name:"MG3i Trainer",
+short_name:"MG Trainer",
+start_url:".",
+display:"fullscreen",
+background_color:"#121212",
+theme_color:"#121212",
+icons:[]
+};
+const blob=new Blob([JSON.stringify(manifest)],{type:"application/json"});
+const link=document.createElement("link");
+link.rel="manifest";
+link.href=URL.createObjectURL(blob);
+document.head.appendChild(link);
 </script>
 </body>
 </html>
