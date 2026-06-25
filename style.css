@@ -1,315 +1,475 @@
+/* =====================================================
+   MG3i Trainer - hlavní vzhled aplikace
+   Tento soubor nahrazuje celý <style> blok v index.html
+===================================================== */
+
+
+/* -----------------------------------------------------
+   Globální proměnné
+   Tady si můžeš jednoduše měnit hlavní barvy a šířky
+----------------------------------------------------- */
 :root{
---history-width:78px;
---gap:8px;
---box-radius:16px;
---bg:#121212;
---box:#1e1e1e;
---green:#00e676;
---cyan:#00e5ff;
---yellow:#ffea00;
---red:#ff1744;
+  --history-width:72px;     /* šířka pravého panelu s časy */
+  --bg:#121212;             /* hlavní tmavé pozadí */
+  --box:#1e1e1e;            /* barva okének */
+  --green:#00e676;          /* zelená tlačítka */
+  --cyan:#00e5ff;           /* modrá TPS čísla */
+  --yellow:#ffea00;         /* žlutá notace/stav */
+  --red:#ff1744;            /* červená pauza / zavřít */
 }
 
-html,body{
-margin:0;
-padding:0;
-background:var(--bg);
-color:white;
-font-family:Arial,sans-serif;
-width:100%;
-height:100%;
-overflow:hidden;
-}
 
+/* -----------------------------------------------------
+   Základ stránky
+----------------------------------------------------- */
+html,
 body{
-display:flex;
-justify-content:center;
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  background:var(--bg);
+  color:white;
+  font-family:Arial,sans-serif;
+  overflow:hidden;
 }
 
+
+/* -----------------------------------------------------
+   Body drží celou aplikaci uprostřed
+----------------------------------------------------- */
+body{
+  display:flex;
+  justify-content:center;
+}
+
+
+/* -----------------------------------------------------
+   Hlavní obsah aplikace vlevo od historie
+----------------------------------------------------- */
 #app{
-width:calc(100vw - var(--history-width));
-height:100vh;
-padding:8px calc(var(--history-width) + 6px) 8px 8px;
-box-sizing:border-box;
-display:grid;
-grid-template-rows:auto auto auto auto auto 1fr;
-gap:6px;
-align-content:start;
+  width:calc(100vw - var(--history-width));
+  height:100vh;
+  padding:8px calc(var(--history-width) + 6px) 8px 8px;
+  box-sizing:border-box;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
 }
 
+
+/* -----------------------------------------------------
+   Všechna tlačítka
+----------------------------------------------------- */
 button{
-border:none;
-border-radius:22px;
-font-weight:bold;
-background:var(--green);
-color:black;
+  border:none;
+  border-radius:11px;
+  font-weight:bold;
+  background:var(--green);
+  color:black;
 }
 
+
+/* -----------------------------------------------------
+   Hlavní tlačítko Připojit kostku
+----------------------------------------------------- */
 #btn{
-width:100%;
-padding:24px 12px;
-font-size:30px;
-line-height:1.15;
-margin:0;
+  width:120%;
+  padding:18px 10px;
+  font-size:26px;
+  line-height:1.15;
+  margin:0;
 }
 
+
+/* -----------------------------------------------------
+   Kontejner tlačítek OLL / PLL
+   Po připojení se zobrazí přes JavaScript
+----------------------------------------------------- */
 #modeButtons{
-display:none;
-grid-template-columns:1fr 1fr;
-gap:10px;
-width:100%;
+  display:none;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  width:100%;
 }
 
+
+/* -----------------------------------------------------
+   Tlačítka OLL a PLL
+----------------------------------------------------- */
 .modeBtn{
-padding:24px 8px;
-font-size:34px;
-border-radius:24px;
+  padding:18px 8px;
+  font-size:28px;
+  border-radius:20px;
 }
 
+
+/* -----------------------------------------------------
+   Stav připojení kostky
+----------------------------------------------------- */
 #status{
-color:#aaa;
-font-size:18px;
-line-height:1.1;
-text-align:center;
-min-height:20px;
+  color:#aaa;
+  font-size:15px;
+  line-height:1.1;
+  text-align:center;
+  min-height:18px;
 }
 
+
+/* -----------------------------------------------------
+   Okno s vybraným algoritmem
+----------------------------------------------------- */
 #selectedAlg{
-width:100%;
-background:#263238;
-border:1px solid #455a64;
-border-radius:16px;
-padding:14px;
-font-size:26px;
-line-height:1.25;
-color:#fff;
-box-sizing:border-box;
-word-break:break-word;
-min-height:78px;
+  width:120%;
+  background:#263238;
+  border:1px solid #455a64;
+  border-radius:14px;
+  padding:10px;
+  box-sizing:border-box;
+
+  font-size:20px;
+  line-height:1.25;
+  color:white;
+  word-break:break-word;
+
+  min-height:58px;
 }
 
+
+/* -----------------------------------------------------
+   Okno se skutečnou notací z kostky
+----------------------------------------------------- */
 #notation{
-width:100%;
-background:var(--box);
-border:1px solid #333;
-border-radius:16px;
-padding:14px;
-font-family:monospace;
-font-size:28px;
-line-height:1.25;
-color:var(--yellow);
-word-break:break-word;
-min-height:128px;
-box-sizing:border-box;
+  width:120%;
+  background:var(--box);
+  border:1px solid #333;
+  border-radius:14px;
+  padding:10px;
+  box-sizing:border-box;
+
+  font-family:monospace;
+  font-size:21px;
+  line-height:1.25;
+  color:var(--yellow);
+  word-break:break-word;
+
+  min-height:88px;
 }
 
+
+/* -----------------------------------------------------
+   Stav měření: PŘIPRAVEN / SKLÁDÁŠ / ZASTAVENO
+----------------------------------------------------- */
 #state-msg{
-font-size:30px;
-line-height:1.1;
-color:var(--yellow);
-font-weight:bold;
-text-align:center;
-min-height:42px;
+  font-size:24px;
+  line-height:1.1;
+  color:var(--yellow);
+  font-weight:bold;
+  text-align:center;
+  min-height:32px;
 }
 
+
+/* -----------------------------------------------------
+   Velké aktuální TPS číslo
+----------------------------------------------------- */
 #tps{
-font-size:118px;
-font-weight:bold;
-color:var(--cyan);
-line-height:.9;
-margin:0;
-text-align:center;
+  font-size:96px;
+  font-weight:bold;
+  color:var(--cyan);
+  line-height:.9;
+  margin:0;
+  text-align:center;
 }
 
+
+/* -----------------------------------------------------
+   Mřížka statistik
+   Čas / Tahy / Průměr TPS / Špička TPS / Pauza
+----------------------------------------------------- */
 .stats-grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
-width:100%;
-z-index:2;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  width:120%;
+  z-index:2;
 }
 
+
+/* -----------------------------------------------------
+   Jedno statistické okénko
+----------------------------------------------------- */
 .stat-box{
-background:var(--box);
-padding:16px 10px;
-border-radius:18px;
-border:1px solid #333;
-text-align:center;
-min-height:84px;
-display:flex;
-flex-direction:column;
-justify-content:center;
-box-sizing:border-box;
+  background:var(--box);
+  border:1px solid #333;
+  border-radius:14px;
+  padding:10px 8px;
+  box-sizing:border-box;
+
+  text-align:center;
+  min-height:68px;
+
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
 
+
+/* -----------------------------------------------------
+   Popisek ve statistickém okénku
+----------------------------------------------------- */
 .stat-label{
-font-size:16px;
-color:#aaa;
-text-transform:uppercase;
-line-height:1.1;
+  font-size:13px;
+  color:#aaa;
+  text-transform:uppercase;
+  line-height:1.1;
 }
 
+
+/* -----------------------------------------------------
+   Hodnota ve statistickém okénku
+----------------------------------------------------- */
 .stat-val{
-font-size:42px;
-font-weight:bold;
-line-height:1.05;
+  font-size:34px;
+  font-weight:bold;
+  line-height:1.05;
 }
 
+
+/* -----------------------------------------------------
+   Graf TPS dole
+----------------------------------------------------- */
 canvas{
-position:absolute;
-bottom:0;
-left:0;
-width:calc(100% - var(--history-width));
-height:22%;
-pointer-events:none;
-z-index:1;
+  position:absolute;
+  bottom:0;
+  left:0;
+
+  width:calc(100% - var(--history-width));
+  height:22%;
+
+  pointer-events:none;
+  z-index:1;
 }
 
+
+/* -----------------------------------------------------
+   Pravý panel s uloženými časy
+----------------------------------------------------- */
 #history{
-position:fixed;
-right:3px;
-top:3px;
-bottom:3px;
-width:calc(var(--history-width) - 6px);
-overflow:auto;
-background:rgba(30,30,30,.96);
-border:1px solid #333;
-border-radius:12px;
-padding:5px;
-z-index:20;
-box-sizing:border-box;
+  position:fixed;
+  right:3px;
+  top:3px;
+  bottom:3px;
+
+  width:calc(var(--history-width) + 13px);
+  overflow:auto;
+
+  background:rgba(30,30,30,.96);
+  border:1px solid #333;
+  border-radius:12px;
+  padding:5px;
+  box-sizing:border-box;
+
+  z-index:20;
 }
 
+
+/* -----------------------------------------------------
+   Nadpis ČASY v pravém panelu
+----------------------------------------------------- */
 #history-title{
-color:#aaa;
-font-size:15px;
-margin-bottom:6px;
-text-align:center;
-position:sticky;
-top:0;
-background:var(--box);
+  color:#aaa;
+  font-size:12px;
+  margin-bottom:5px;
+  text-align:center;
+
+  position:sticky;
+  top:0;
+  background:var(--box);
 }
 
+
+/* -----------------------------------------------------
+   Jeden uložený čas v historii
+----------------------------------------------------- */
 .hist-row{
-border-bottom:1px solid #333;
-padding:6px 0;
+  border-bottom:1px solid #333;
+  padding:5px 0;
 }
 
+
+/* -----------------------------------------------------
+   Hlavní čas v historii
+----------------------------------------------------- */
 .hist-time{
-color:var(--cyan);
-font-weight:bold;
-font-size:17px;
-line-height:1.1;
+  color:var(--cyan);
+  font-weight:bold;
+  font-size:13px;
+  line-height:1.1;
 }
 
+
+/* -----------------------------------------------------
+   Malé údaje pod časem: tahy, TPS
+----------------------------------------------------- */
 .hist-small{
-color:#aaa;
-font-size:12px;
-line-height:1.2;
+  color:#aaa;
+  font-size:9px;
+  line-height:1.15;
 }
 
+
+/* -----------------------------------------------------
+   Modal - tmavé okno přes celou obrazovku
+   Používá se pro výběr PLL/OLL
+----------------------------------------------------- */
 #modal{
-display:none;
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.92);
-z-index:100;
-padding:10px;
-box-sizing:border-box;
-overflow:auto;
+  display:none;
+  position:fixed;
+  inset:0;
+
+  background:rgba(0,0,0,.92);
+  z-index:100;
+
+  padding:10px;
+  box-sizing:border-box;
+  overflow:auto;
 }
 
+
+/* -----------------------------------------------------
+   Vnitřní obsah modalu
+----------------------------------------------------- */
 #modalContent{
-max-width:560px;
-margin:auto;
-background:var(--box);
-border-radius:16px;
-padding:12px;
-border:1px solid #444;
+  max-width:560px;
+  margin:auto;
+
+  background:var(--box);
+  border:1px solid #444;
+  border-radius:16px;
+  padding:12px;
 }
 
+
+/* -----------------------------------------------------
+   Nadpis v modalu
+----------------------------------------------------- */
 #modal h2{
-text-align:center;
-margin:6px 0 12px;
-font-size:32px;
+  text-align:center;
+  margin:6px 0 12px;
+  font-size:28px;
 }
 
+
+/* -----------------------------------------------------
+   Mřížka algoritmů v modalu
+----------------------------------------------------- */
 .algGrid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
 }
 
+
+/* -----------------------------------------------------
+   Tlačítko jednoho algoritmu
+----------------------------------------------------- */
 .algBtn{
-padding:22px 8px;
-font-size:21px;
-background:#263238;
-color:white;
-border-radius:14px;
+  padding:18px 8px;
+  font-size:19px;
+  background:#263238;
+  color:white;
+  border-radius:14px;
 }
 
+
+/* -----------------------------------------------------
+   Tlačítko zavřít modal
+----------------------------------------------------- */
 .closeBtn{
-width:100%;
-padding:18px;
-margin-top:12px;
-font-size:24px;
-background:var(--red);
-color:white;
+  width:100%;
+  padding:16px;
+  margin-top:12px;
+
+  font-size:22px;
+  background:var(--red);
+  color:white;
 }
 
-/* menší telefony */
+
+/* =====================================================
+   Úpravy pro menší výšku displeje
+   Když je mobil nižší, trochu zmenšíme prvky
+===================================================== */
 @media (max-height:760px){
-#selectedAlg{
-font-size:22px;
-min-height:62px;
-padding:10px;
+
+  #selectedAlg{
+    font-size:18px;
+    min-height:50px;
+    padding:8px;
+  }
+
+  #notation{
+    font-size:19px;
+    min-height:76px;
+    padding:8px;
+  }
+
+  #state-msg{
+    font-size:22px;
+    min-height:28px;
+  }
+
+  #tps{
+    font-size:82px;
+  }
+
+  .stat-box{
+    min-height:60px;
+    padding:8px 6px;
+  }
+
+  .stat-label{
+    font-size:12px;
+  }
+
+  .stat-val{
+    font-size:30px;
+  }
 }
 
-#notation{
-font-size:24px;
-min-height:100px;
-padding:10px;
-}
 
-#state-msg{
-font-size:26px;
-min-height:34px;
-}
-
-#tps{
-font-size:96px;
-}
-
-.stat-box{
-min-height:70px;
-padding:10px 8px;
-}
-
-.stat-val{
-font-size:34px;
-}
-
-.stat-label{
-font-size:13px;
-}
-}
-
-/* opravdu malé displeje */
+/* =====================================================
+   Úpravy pro velmi malé displeje
+===================================================== */
 @media (max-height:660px){
-#notation{
-font-size:21px;
-min-height:84px;
-}
 
-#tps{
-font-size:80px;
-}
+  #btn{
+    padding:14px 10px;
+    font-size:22px;
+  }
 
-.stat-box{
-min-height:62px;
-}
+  .modeBtn{
+    padding:14px 6px;
+    font-size:24px;
+  }
 
-.stat-val{
-font-size:30px;
-}
+  #notation{
+    font-size:17px;
+    min-height:64px;
+  }
+
+  #tps{
+    font-size:72px;
+  }
+
+  .stat-box{
+    min-height:54px;
+  }
+
+  .stat-val{
+    font-size:26px;
+  }
 }
