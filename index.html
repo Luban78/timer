@@ -107,7 +107,13 @@ const historyList=document.getElementById("history-list");
 const canvas=document.getElementById("graph");
 const ctx=canvas.getContext("2d");
 
-let seq=[],moveTimes=[],tpsHistory=[],savedSolves=[];
+let seq=[];
+let moveTimes=[];
+let tpsHistory=[];
+
+
+
+
 let totalMoves=0,maxTPS=0,longestPause=0;
 let isSolving=false,isConnected=false;
 let startTime=0,lastMoveTime=0;
@@ -115,6 +121,17 @@ let uiTimer=null,stopTimer=null;
 let pendingMove=null,pendingMoveTime=0,pendingTimer=null;
 let audioCtx=null,lastBeep=0;
 
+let currentMoves=[];
+let currentAlgorithmName="Nevybráno";
+let savedSolves=[];
+try{
+  savedSolves=
+  JSON.parse(
+    localStorage.getItem("mg3i_solves")
+  ) || [];
+}catch(e){
+  savedSolves=[];
+}
 const DOUBLE_MOVE_WINDOW=280;
 const TPS_WINDOW=2000;
 
@@ -197,6 +214,7 @@ b.innerText=name;
 b.onclick=e=>{
 e.stopPropagation();
 selectedAlg.innerText=name+": "+alg;
+currentAlgorithmName=name;
 modal.style.display="none";
 prepareNext();
 };
@@ -267,6 +285,7 @@ pendingMove=null;
 }
 
 function startSolve(now){
+currentMoves=[];
 isSolving=true;
 startTime=now;
 lastMoveTime=now;
@@ -303,6 +322,10 @@ totalMoves++;
 movesVal.innerText=totalMoves;
 
 seq.push(move);
+currentMoves.push({
+  move:move,
+  time:Number(((now-startTime)/1000).toFixed(3))
+});
 if(seq.length>24)seq.shift();
 notation.innerText="Notace:\n"+seq.join(" ");
 
@@ -376,34 +399,60 @@ stateMsg.innerText=manual
 
 stateMsg.style.color="yellow";
 
-saveSolve(
-Number(finalTime.toFixed(2)),
-totalMoves,
-Number(finalAvg.toFixed(1))
-);
+saveSolve(finalTime,totalMoves,finalAvg);
 
 beep(880,.2);
 }
 
 function saveSolve(time,moves,avg){
-savedSolves.unshift({time,moves,avg});
-savedSolves=savedSolves.slice(0,25);
+
+const solve={
+  id:Date.now(),
+  algorithm:currentAlgorithmName,
+  time:Number(time.toFixed(2)),
+  htm:moves,
+  tps:Number(avg.toFixed(1)),
+  peakTPS:Number(maxTPS.toFixed(1)),
+  longestPause:Number(longestPause.toFixed(2)),
+  notation:currentMoves.map(m=>m.move),
+  moves:[...currentMoves],
+  date:new Date().toLocaleString("cs-CZ")
+};
+
+savedSolves.unshift(solve);
+
+savedSolves=savedSolves.slice(0,50);
+
+localStorage.setItem(
+  "mg3i_solves",
+  JSON.stringify(savedSolves)
+);
+
 renderHistory();
 }
 
 function renderHistory(){
+
 if(savedSolves.length===0){
 historyList.innerText="-";
 return;
 }
 
-historyList.innerHTML=savedSolves.map((s,i)=>`
+historyList.innerHTML=savedSolves.map((s,i)=>{
+
+const time=Number(s.time||0);
+const htm=s.htm ?? s.moves ?? 0;
+const tps=s.tps ?? s.avg ?? 0;
+
+return `
 <div class="hist-row">
-<div class="hist-time">${i+1}. ${s.time.toFixed(2)}s</div>
-<div class="hist-small">${s.moves}t</div>
-<div class="hist-small">${s.avg.toFixed(1)}TPS</div>
+<div class="hist-time">${i+1}. ${time.toFixed(2)}s</div>
+<div class="hist-small">${htm}t</div>
+<div class="hist-small">${Number(tps).toFixed(1)}TPS</div>
 </div>
-`).join("");
+`;
+
+}).join("");
 }
 
 function drawGraph(){
@@ -426,26 +475,11 @@ else ctx.lineTo(x,y);
 ctx.stroke();
 }
 
-/* PWA manifest */
-const manifest={
-name:"MG3i Trainer",
-short_name:"MG Trainer",
-start_url:".",
-display:"fullscreen",
-background_color:"#121212",
-theme_color:"#121212",
-icons:[]
-};
-const blob=new Blob([JSON.stringify(manifest)],{type:"application/json"});
-const link=document.createElement("link");
-link.rel="manifest";
-link.href=URL.createObjectURL(blob);
-document.head.appendChild(link);
-
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js");
+  navigator.serviceWorker.register("./sw.js");
 }
 
+renderHistory();
 </script>
 </body>
 </html>
