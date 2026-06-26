@@ -1,6 +1,6 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
-
+import { renderHistory } from "./history.js";
 import { loadSolves, saveSolves } from "./storage.js";
 import { connectGanCube } from "https://esm.sh/gan-web-bluetooth";
 import { pllAlgs } from "./algorithms.js";
@@ -336,15 +336,10 @@ savedSolves=savedSolves.slice(0,50);
 
 
 saveSolves(savedSolves);
-renderHistory();
+renderHistory(historyList, savedSolves);
 }
 
-function renderHistory(){
 
-if(savedSolves.length===0){
-historyList.innerText="-";
-return;
-}
 
 historyList.innerHTML=savedSolves.map((s,i)=>{
 
@@ -387,4 +382,4 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js");
 }
 
-renderHistory();
+renderHistory(historyList, savedSolves);
