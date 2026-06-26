@@ -2,7 +2,6 @@
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
 
-
 import { openPLLMenu } from "./algMenu.js";
 import { resetStatsUI, clearCanvas } from "./ui.js";
 import { initAudio, beep } from "./sound.js";
@@ -178,14 +177,6 @@ pendingMove=null;
 }
 },DOUBLE_MOVE_WINDOW);
 }
-
-function startSolve(now){
-currentMoves=[];
-isSolving=true;
-startTime=now;
-lastMoveTime=now;
-totalMoves=0;maxTPS=0;longestPause=0;
-moveTimes=[];tpsHistory=[];seq=[];
 
 function startSolve(now){
 currentMoves=[];
