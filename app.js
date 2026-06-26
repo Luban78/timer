@@ -1,5 +1,7 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
+//v4
+import { drawGraph } from "./graph.js";
 import { renderHistory } from "./history.js";
 import { loadSolves, saveSolves } from "./storage.js";
 import { connectGanCube } from "https://esm.sh/gan-web-bluetooth";
@@ -272,7 +274,7 @@ maxVal.innerText=maxTPS.toFixed(1);
 
 tpsHistory.push(currentTPS);
 if(tpsHistory.length>100)tpsHistory.shift();
-drawGraph();
+drawGraph(ctx, canvas, tpsHistory);
 }
 }
 
@@ -337,30 +339,6 @@ savedSolves=savedSolves.slice(0,50);
 
 saveSolves(savedSolves);
 renderHistory(historyList, savedSolves);
-}
-
-
-
-
-
-function drawGraph(){
-ctx.clearRect(0,0,canvas.width,canvas.height);
-if(tpsHistory.length<2)return;
-
-ctx.beginPath();
-ctx.strokeStyle="rgba(0,230,118,.75)";
-ctx.lineWidth=4;
-ctx.lineJoin="round";
-
-const step=canvas.width/100;
-
-for(let i=0;i<tpsHistory.length;i++){
-const x=i*step+(canvas.width-tpsHistory.length*step);
-const y=canvas.height-(tpsHistory[i]/6)*canvas.height;
-if(i===0)ctx.moveTo(x,y);
-else ctx.lineTo(x,y);
-}
-ctx.stroke();
 }
 
 if ("serviceWorker" in navigator) {
