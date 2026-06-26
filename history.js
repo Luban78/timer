@@ -13,7 +13,7 @@ const bestTime = Math.min(...savedSolves.map(s => Number(s.time || 0)));
     
 
     return `
-      <div class="hist-row">
+      <div class="hist-row ${isPB ? "pb-row" : ""}">
         <div class="hist-time">${i+1}. ${isPB ? "🥇 " : ""}${time.toFixed(2)}s</div>
         <div class="hist-small">${htm}t</div>
         <div class="hist-small">${Number(tps).toFixed(1)}TPS</div>
