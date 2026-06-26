@@ -3,7 +3,7 @@
 //v4
 import { resetStatsUI, clearCanvas } from "./ui.js";
 import { initAudio, beep } from "./sound.js";
-import { drawGraph } from "./graph.js";
+import { drawGraph, resizeGraphCanvas } from "./graph.js";
 import { renderHistory } from "./history.js";
 import { loadSolves, saveSolves } from "./storage.js";
 import { connectGanCube } from "https://esm.sh/gan-web-bluetooth";
@@ -50,12 +50,8 @@ let savedSolves = loadSolves();
 const DOUBLE_MOVE_WINDOW=280;
 const TPS_WINDOW=2000;
 
-function resize(){
-canvas.width=window.innerWidth-92;
-canvas.height=window.innerHeight*.23;
-}
-window.onresize=resize;
-resize();
+window.onresize = () => resizeGraphCanvas(canvas);
+resizeGraphCanvas(canvas);
 
 btn.onclick=async(e)=>{
 e.stopPropagation();
