@@ -2,6 +2,7 @@
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
 
+import { startSolve as startSolveModule } from "./timerStart.js";
 import { openPLLMenu } from "./algMenu.js";
 import { resetStatsUI, clearCanvas } from "./ui.js";
 import { initAudio, beep } from "./sound.js";
@@ -186,8 +187,45 @@ lastMoveTime=now;
 totalMoves=0;maxTPS=0;longestPause=0;
 moveTimes=[];tpsHistory=[];seq=[];
 
-stateMsg.innerText="SKLÁDÁŠ... KLEPNI PRO STOP";
-stateMsg.style.color="#00e676";
+function startSolve(now){
+  startSolveModule({
+    now,
+    state:{
+      currentMoves,
+      isSolving,
+      startTime,
+      lastMoveTime,
+      totalMoves,
+      maxTPS,
+      longestPause,
+      moveTimes,
+      tpsHistory,
+      seq
+    },
+    ui:{
+      stateMsg,
+      timeVal,
+      movesVal,
+      avgVal,
+      maxVal,
+      pauseVal,
+      notation
+    },
+    clearUiTimer:()=>{
+      clearInterval(uiTimer);
+    },
+    startUiTimer:()=>{
+      uiTimer=setInterval(updateUI,100);
+    }
+  });
+
+  isSolving=true;
+  startTime=now;
+  lastMoveTime=now;
+  totalMoves=0;
+  maxTPS=0;
+  longestPause=0;
+}
 
 timeVal.innerText="0.00s";
 movesVal.innerText="0";
