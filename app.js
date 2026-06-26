@@ -8,7 +8,7 @@ import { initAudio, beep } from "./sound.js";
 import { drawGraph, resizeGraphCanvas } from "./graph.js";
 import { renderHistory } from "./history.js";
 import { loadSolves, saveSolves } from "./storage.js";
-import { connectGanCube } from "https://esm.sh/gan-web-bluetooth";
+import { connectCube } from "./cubeConnection.js";
 import { pllAlgs } from "./algorithms.js";
 
 const btn=document.getElementById("btn");
@@ -56,29 +56,29 @@ window.onresize = () => resizeGraphCanvas(canvas);
 resizeGraphCanvas(canvas);
 
 btn.onclick=async(e)=>{
-e.stopPropagation();
-try{
-initAudio();
-status.innerText="Připojuji...";
-const cube=await connectGanCube();
+  e.stopPropagation();
 
-cube.events$.subscribe(event=>{
-if(event.type==="MOVE") handleRawMove(event.move);
-if(event.type==="FACELETS") status.innerText="Připojeno + stav načten";
-});
+  try{
+    initAudio();
+    status.innerText="Připojuji...";
 
-if(typeof cube.sendCubeCommand==="function"){
-await cube.sendCubeCommand({type:"REQUEST_FACELETS"});
-}
+    await connectCube({
+      onMove: move => handleRawMove(move),
+      onFacelets: () => {
+        status.innerText="Připojeno + stav načten";
+      }
+    });
 
-isConnected=true;
-btn.style.display="none";
-modeButtons.style.display="grid";
-status.innerText="Připojeno, začni otočením kostky";
-stateMsg.innerText="PŘIPRAVEN";
-beep(523,.08);
+    isConnected=true;
+    btn.style.display="none";
+    modeButtons.style.display="grid";
+    status.innerText="Připojeno, začni otočením kostky";
+    stateMsg.innerText="PŘIPRAVEN";
+    beep(523,.08);
 
-}catch(e){status.innerText="Chyba: "+e.message;}
+  }catch(e){
+    status.innerText="Chyba: "+e.message;
+  }
 };
 
 pllBtn.onclick=e=>{
