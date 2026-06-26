@@ -1,6 +1,8 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
+
+import { openPLLMenu } from "./algMenu.js";
 import { resetStatsUI, clearCanvas } from "./ui.js";
 import { initAudio, beep } from "./sound.js";
 import { drawGraph, resizeGraphCanvas } from "./graph.js";
@@ -98,23 +100,19 @@ modal.onclick=e=>{
 if(e.target===modal) modal.style.display="none";
 };
 
-function openPLL(){
-algList.innerHTML="";
-Object.entries(pllAlgs).forEach(([name,alg])=>{
-const b=document.createElement("button");
-b.className="algBtn";
-b.innerText=name;
-b.onclick=e=>{
-e.stopPropagation();
-selectedAlg.innerText=name+": "+alg;
-currentAlgorithmName=name;
-modal.style.display="none";
-prepareNext();
+pllBtn.onclick=e=>{
+  e.stopPropagation();
+  openPLLMenu({
+    algList,
+    modal,
+    selectedAlg,
+    pllAlgs,
+    onSelect: name=>{
+      currentAlgorithmName = name;
+      prepareNext();
+    }
+  });
 };
-algList.appendChild(b);
-});
-modal.style.display="block";
-}
 
 document.body.addEventListener("click",e=>{
 if(e.target.tagName==="BUTTON") return;
