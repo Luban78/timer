@@ -1,7 +1,7 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
-
+import { drawDetailGraph } from "./detailGraph.js";
 import { openPLLMenu } from "./algMenu.js";
 import { resetStatsUI, clearCanvas } from "./ui.js";
 import { initAudio, beep } from "./sound.js";
@@ -398,6 +398,13 @@ function showSolveDetail(solve){
   `;
 
   solveDetail.style.display="block";
+
+  setTimeout(()=>{
+    drawDetailGraph(
+      document.getElementById("detail-graph"),
+      solve
+    );
+  }, 0);
 }
 
 closeDetailBtn.onclick=()=>{

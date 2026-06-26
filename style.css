@@ -595,12 +595,13 @@ Open Window detail solve
 /*graf
 */
 #detail-graph{
+  position:static;
   display:block;
   width:100%;
   height:120px;
   max-height:120px;
+  margin-top:12px;
   background:#121212;
   border:1px solid #333;
   border-radius:12px;
-  margin-top:12px;
 }
