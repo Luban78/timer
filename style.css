@@ -83,8 +83,19 @@ button{
   line-height:1.15;
   margin:0;
 }
+/* -----------------------------------------------------
+tlačítko clear history
+----------------------------------------------------- */
 
-
+#clear-history-btn{
+  width:100%;
+  margin-top:8px;
+  padding:7px 4px;
+  font-size:12px;
+  border-radius:8px;
+  background:#ff1744;
+  color:white;
+}
 /* -----------------------------------------------------
    Kontejner tlačítek OLL / PLL
    Po připojení se zobrazí přes JavaScript

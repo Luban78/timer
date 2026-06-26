@@ -36,6 +36,7 @@ const statBest=document.getElementById("stat-best");
 const statAo5=document.getElementById("stat-ao5");
 const statAo12=document.getElementById("stat-ao12");
 const statCount=document.getElementById("stat-count");
+const clearHistoryBtn=document.getElementById("clear-history-btn");
 
 let seq=[];
 let moveTimes=[];
@@ -366,6 +367,14 @@ updateStats();
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js");
 }
+clearHistoryBtn.onclick=()=>{
+  const ok=confirm("Opravdu vymazat všechny uložené časy?");
+  if(!ok)return;
 
+  savedSolves=[];
+  saveSolves(savedSolves);
+  renderHistory(historyList, savedSolves);
+  updateStats();
+};
 renderHistory(historyList, savedSolves);
 updateStats();
