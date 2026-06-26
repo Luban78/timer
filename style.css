@@ -481,3 +481,20 @@ canvas{
   font-size:11px;
   z-index:30;
 }
+/* =====================================================
+   Úpravy pro větší displeje
+   Když je šířka větší než 900px, aplikace se vycentruje */
+@media (min-width: 900px){
+  body{
+    overflow-x: hidden;
+  }
+
+  #app{
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  #history{
+    width: 220px;
+  }
+}
