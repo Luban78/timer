@@ -76,7 +76,7 @@ button{
    Hlavní tlačítko Připojit kostku
 ----------------------------------------------------- */
 #btn{
-  width:120%;
+  width:100%;
   padding:18px 10px;
   font-size:26px;
   line-height:1.15;
@@ -122,14 +122,14 @@ button{
    Okno s vybraným algoritmem
 ----------------------------------------------------- */
 #selectedAlg{
-  width:120%;
+  width:100%;
   background:#263238;
   border:1px solid #455a64;
   border-radius:14px;
   padding:10px;
   box-sizing:border-box;
 
-  font-size:20px;
+  font-size:15px;
   line-height:1.25;
   color:white;
   word-break:break-word;
@@ -142,7 +142,7 @@ button{
    Okno se skutečnou notací z kostky
 ----------------------------------------------------- */
 #notation{
-  width:120%;
+  width:100%;
   background:var(--box);
   border:1px solid #333;
   border-radius:14px;
@@ -193,7 +193,7 @@ button{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:8px;
-  width:120%;
+  width:100%;
   z-index:2;
 }
 
@@ -263,7 +263,7 @@ canvas{
   top:3px;
   bottom:3px;
 
-  width:calc(var(--history-width) + 13px);
+  width:calc(var(--history-width) + 33px);
 
   background:rgba(30,30,30,.96);
   border:1px solid #333;
