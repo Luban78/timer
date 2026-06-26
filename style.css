@@ -264,13 +264,16 @@ canvas{
   bottom:3px;
 
   width:calc(var(--history-width) + 13px);
-  overflow:auto;
 
   background:rgba(30,30,30,.96);
   border:1px solid #333;
   border-radius:12px;
   padding:5px;
   box-sizing:border-box;
+
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
 
   z-index:20;
 }
@@ -502,12 +505,16 @@ canvas{
 statistiky ao 100
 ------------------------------------------------------------*/
 #stats-box{
-  margin: 6px 6px 10px;
-  padding: 6px;
-  border-bottom: 1px solid #333;
-  font-size: 13px;
-  line-height: 1.35;
-  color: #ccc;
+  flex:0 0 auto;
+
+  margin:6px 6px 8px;
+  padding:6px;
+
+  border-bottom:1px solid #333;
+
+  font-size:13px;
+  line-height:1.35;
+  color:#ccc;
 }
 
 #stats-box span{
@@ -516,5 +523,9 @@ statistiky ao 100
 }
 
 #history-list{
-  margin-top: 8px;
-} 
+  flex:1;
+  overflow-y:auto;
+
+  margin-top:0;
+  padding:0 6px 8px;
+}
