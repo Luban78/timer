@@ -142,26 +142,26 @@ button{
 /* -----------------------------------------------------
    Okno se skutečnou notací z kostky
 ----------------------------------------------------- */
-#notation {
-  width: 100%;
-  background: var(--box);
-  border: 1px solid #333;
-  border-radius: 14px;
-  padding: 10px;
-  box-sizing: border-box;
-  
-  font-family: monospace;
-  font-size: 21px;
-  line-height: 1.25;
-  color: var(--yellow);
-  word-break: break-word;
-  
-  height: 88px;
-  min-height: 88px;
-  max-height: 88px;
-  overflow-y: auto;
-}
+#notation{
+  width:120%;
+  background:var(--box);
+  border:1px solid #333;
+  border-radius:14px;
+  padding:10px;
+  box-sizing:border-box;
 
+  font-family:monospace;
+  font-size:21px;
+  line-height:1.25;
+  color:var(--yellow);
+  word-break:break-word;
+
+  height:150px;
+  /*
+  min-height:150px;
+  max-height:150px;
+  overflow-y:auto;*/
+}
 
 /* -----------------------------------------------------
    Stav měření: PŘIPRAVEN / SKLÁDÁŠ / ZASTAVENÍ 
