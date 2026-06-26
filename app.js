@@ -1,6 +1,7 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
+import { initAudio, beep } from "./sound.js";
 import { drawGraph } from "./graph.js";
 import { renderHistory } from "./history.js";
 import { loadSolves, saveSolves } from "./storage.js";
@@ -40,7 +41,7 @@ let isSolving=false,isConnected=false;
 let startTime=0,lastMoveTime=0;
 let uiTimer=null,stopTimer=null;
 let pendingMove=null,pendingMoveTime=0,pendingTimer=null;
-let audioCtx=null,lastBeep=0;
+let lastBeep=0;
 
 let currentMoves=[];
 let currentAlgorithmName="Nevybráno";
@@ -54,24 +55,6 @@ canvas.height=window.innerHeight*.23;
 }
 window.onresize=resize;
 resize();
-
-function initAudio(){
-if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-if(audioCtx.state==="suspended") audioCtx.resume();
-}
-
-function beep(freq=240,dur=.12){
-try{
-initAudio();
-const o=audioCtx.createOscillator();
-const g=audioCtx.createGain();
-o.frequency.value=freq;
-g.gain.setValueAtTime(.06,audioCtx.currentTime);
-g.gain.exponentialRampToValueAtTime(.00001,audioCtx.currentTime+dur);
-o.connect(g);g.connect(audioCtx.destination);
-o.start();o.stop(audioCtx.currentTime+dur);
-}catch(e){}
-}
 
 btn.onclick=async(e)=>{
 e.stopPropagation();
