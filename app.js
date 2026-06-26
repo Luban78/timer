@@ -38,6 +38,11 @@ const statAo12=document.getElementById("stat-ao12");
 const statCount=document.getElementById("stat-count");
 const clearHistoryBtn=document.getElementById("clear-history-btn");
 
+const solveDetail=document.getElementById("solve-detail");
+const solveDetailContent=document.getElementById("solve-detail-content");
+const closeDetailBtn=document.getElementById("close-detail-btn");
+
+
 let seq=[];
 let moveTimes=[];
 let tpsHistory=[];
@@ -358,7 +363,7 @@ savedSolves=savedSolves.slice(0,200);
 
 
 saveSolves(savedSolves);
-renderHistory(historyList, savedSolves);
+renderHistory(historyList, savedSolves, showSolveDetail);
 updateStats();
 
 }
@@ -373,8 +378,37 @@ clearHistoryBtn.onclick=()=>{
 
   savedSolves=[];
   saveSolves(savedSolves);
-  renderHistory(historyList, savedSolves);
+  renderHistory(historyList, savedSolves, showSolveDetail);
   updateStats();
 };
-renderHistory(historyList, savedSolves);
+
+function showSolveDetail(solve){
+  solveDetailContent.innerHTML = `
+    <div><b>Algoritmus:</b> ${solve.algorithm || "Nevybráno"}</div>
+    <div><b>Čas:</b> ${Number(solve.time).toFixed(2)}s</div>
+    <div><b>Tahy:</b> ${solve.htm ?? solve.moves ?? 0}</div>
+    <div><b>TPS:</b> ${Number(solve.tps ?? solve.avg ?? 0).toFixed(1)}</div>
+    <div><b>Peak TPS:</b> ${Number(solve.peakTPS ?? 0).toFixed(1)}</div>
+    <div><b>Nejdelší pauza:</b> ${Number(solve.longestPause ?? 0).toFixed(2)}s</div>
+    <div><b>Datum:</b> ${solve.date || "-"}</div>
+    <div class="detail-notation">
+      <b>Notace:</b><br>
+      ${(solve.notation || []).join(" ")}
+    </div>
+  `;
+
+  solveDetail.style.display="block";
+}
+
+closeDetailBtn.onclick=()=>{
+  solveDetail.style.display="none";
+};
+
+solveDetail.onclick=e=>{
+  if(e.target===solveDetail){
+    solveDetail.style.display="none";
+  }
+};
+
+renderHistory(historyList, savedSolves, showSolveDetail);
 updateStats();
