@@ -45,6 +45,10 @@ export function drawDetailGraph(canvas, solve){
   if(points.length < 2)return;
 
   const maxTime = moves[moves.length-1].time || 1;
+  points.unshift({
+  time: 0,
+  tps: points[0].tps
+});
   const maxTps = Math.max(...points.map(p=>p.tps), 1);
 
   ctx.beginPath();
