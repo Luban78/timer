@@ -498,3 +498,19 @@ canvas{
     width: 220px;
   }
 }
+/*----------------------------------------------------------
+statistiky ao 100
+------------------------------------------------------------*/
+#stats-box{
+  font-size:14px;
+  color:#ccc;
+  border-bottom:1px solid #333;
+  padding:6px 4px 8px;
+  margin-bottom:6px;
+  line-height:1.35;
+}
+
+#stats-box span{
+  color:#00e5ff;
+  font-weight:bold;
+}

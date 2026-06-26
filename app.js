@@ -32,6 +32,11 @@ const historyList=document.getElementById("history-list");
 const canvas=document.getElementById("graph");
 const ctx=canvas.getContext("2d");
 
+const statBest=document.getElementById("stat-best");
+const statAo5=document.getElementById("stat-ao5");
+const statAo12=document.getElementById("stat-ao12");
+const statCount=document.getElementById("stat-count");
+
 let seq=[];
 let moveTimes=[];
 let tpsHistory=[];
@@ -298,6 +303,39 @@ saveSolve(finalTime,totalMoves,finalAvg);
 beep(880,.2);
 }
 
+function updateStats(){
+  const times=savedSolves.map(s=>Number(s.time)).filter(t=>t>0);
+
+  statCount.innerText=times.length;
+
+  if(times.length===0){
+    statBest.innerText="-";
+    statAo5.innerText="-";
+    statAo12.innerText="-";
+    return;
+  }
+
+  statBest.innerText=Math.min(...times).toFixed(2)+"s";
+
+  statAo5.innerText=calcAverage(times,5);
+  statAo12.innerText=calcAverage(times,12);
+}
+
+function calcAverage(times,count){
+  if(times.length<count)return "-";
+
+  const last=times.slice(0,count);
+
+  if(last.length>=3){
+    const sorted=[...last].sort((a,b)=>a-b);
+    sorted.shift();
+    sorted.pop();
+    return (sorted.reduce((a,b)=>a+b,0)/sorted.length).toFixed(2)+"s";
+  }
+
+  return (last.reduce((a,b)=>a+b,0)/last.length).toFixed(2)+"s";
+}
+
 function saveSolve(time,moves,avg){
 
 const solve={
@@ -315,15 +353,19 @@ const solve={
 
 savedSolves.unshift(solve);
 
-savedSolves=savedSolves.slice(0,50);
+savedSolves=savedSolves.slice(0,200);
 
 
 saveSolves(savedSolves);
 renderHistory(historyList, savedSolves);
+updateStats();
+
 }
+
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js");
 }
 
 renderHistory(historyList, savedSolves);
+updateStats();
