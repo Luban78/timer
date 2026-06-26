@@ -1,6 +1,7 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
+import { resetStatsUI, clearCanvas } from "./ui.js";
 import { initAudio, beep } from "./sound.js";
 import { drawGraph } from "./graph.js";
 import { renderHistory } from "./history.js";
@@ -128,16 +129,19 @@ if(isSolving) manualStop();
 function prepareNext(){
 seq=[];moveTimes=[];tpsHistory=[];
 totalMoves=0;maxTPS=0;longestPause=0;pendingMove=null;
-notation.innerText="Notace:";
-stateMsg.innerText=isConnected?"PŘIPRAVEN":"Připoj kostku...";
-stateMsg.style.color="yellow";
-tpsDiv.innerText="0.0";
-timeVal.innerText="0.00s";
-movesVal.innerText="0";
-avgVal.innerText="0.0";
-maxVal.innerText="0.0";
-pauseVal.innerText="0.00s";
-ctx.clearRect(0,0,canvas.width,canvas.height);
+resetStatsUI({
+  notation,
+  stateMsg,
+  tpsDiv,
+  timeVal,
+  movesVal,
+  avgVal,
+  maxVal,
+  pauseVal,
+  isConnected
+});
+
+clearCanvas(ctx, canvas);
 }
 
 function baseFace(move){return String(move).replace("2","").replace("'","");}
