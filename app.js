@@ -47,10 +47,57 @@ const exportText=document.getElementById("export-text");
 const closeExportBtn=document.getElementById("close-export-btn");
 const copyExportBtn=document.getElementById("copy-export-btn");
 const importHistoryBtn=document.getElementById("import-history-btn");
-importHistoryBtn.onclick=()=>{
-  alert("Import připravujeme");
+const importModal=document.getElementById("import-modal");
+const importText=document.getElementById("import-text");
+const runImportBtn=document.getElementById("run-import-btn");
+const closeImportBtn=document.getElementById("close-import-btn");
+
+importHistoryBtn.onclick = () => {
+  importText.value = "";
+  importModal.style.display = "block";
 };
 
+closeImportBtn.onclick = () => {
+  importModal.style.display = "none";
+};
+
+
+importModal.onclick = e => {
+  if (e.target === importModal) {
+    importModal.style.display = "none";
+  }
+};
+/* run import buton*/
+runImportBtn.onclick=()=>{
+  try{
+
+    const imported=JSON.parse(importText.value);
+
+    if(!Array.isArray(imported)){
+      alert("Neplatný formát.");
+      return;
+    }
+
+    savedSolves.length=0;
+    savedSolves.push(...imported);
+
+    localStorage.setItem(
+      "savedSolves",
+      JSON.stringify(savedSolves)
+    );
+
+    renderHistory(historyList,savedSolves,showSolveDetail);
+    updateStats(savedSolves);
+
+    importModal.style.display="none";
+
+    alert("Import dokončen.");
+
+  }catch(e){
+    alert("Import se nepodařil.");
+  }
+};
+/* end run import button*/
 exportHistoryBtn.onclick=()=>{
   exportText.value=JSON.stringify(savedSolves,null,2);
   exportModal.style.display="block";
