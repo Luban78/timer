@@ -61,6 +61,27 @@ const settingsExportBtn=document.getElementById("settings-export-btn");
 const settingsImportBtn=document.getElementById("settings-import-btn");
 const settingsClearBtn=document.getElementById("settings-clear-btn");
 const statsScreen=document.getElementById("stats-screen");
+const statsBest = document.getElementById("stats-best");
+const statsBestTPS = document.getElementById("stats-best-tps");
+const statsSolves = document.getElementById("stats-solves");
+function updateStatistics(){
+
+  if(savedSolves.length===0){
+    statsBest.textContent="-";
+    statsBestTPS.textContent="-";
+    statsSolves.textContent="0";
+    return;
+  }
+
+  const best=Math.min(...savedSolves.map(s=>Number(s.time)||0));
+
+  const bestTPS=Math.max(...savedSolves.map(s=>Number(s.tps ?? s.avg ?? 0)));
+
+  statsBest.textContent=best.toFixed(2)+" s";
+  statsBestTPS.textContent=bestTPS.toFixed(1);
+  statsSolves.textContent=savedSolves.length;
+
+}
 
 function setActiveNav(activeBtn){
   [navTimer,navStats,navSettings].forEach(btn=>{
@@ -492,7 +513,7 @@ savedSolves=savedSolves.slice(0,200);
 saveSolves(savedSolves);
 renderHistory(historyList, savedSolves, showSolveDetail);
 updateStats();
-
+updateStatistics();
 }
 
 
@@ -507,6 +528,7 @@ clearHistoryBtn.onclick=()=>{
   saveSolves(savedSolves);
   renderHistory(historyList, savedSolves, showSolveDetail);
   updateStats();
+  updateStatistics();
 };
 
 function showSolveDetail(solve){
@@ -546,3 +568,4 @@ solveDetail.onclick=e=>{
 
 renderHistory(historyList, savedSolves, showSolveDetail);
 updateStats();
+updateStatistics();
