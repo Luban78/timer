@@ -46,6 +46,10 @@ const exportModal=document.getElementById("export-modal");
 const exportText=document.getElementById("export-text");
 const closeExportBtn=document.getElementById("close-export-btn");
 const copyExportBtn=document.getElementById("copy-export-btn");
+const importHistoryBtn=document.getElementById("import-history-btn");
+importHistoryBtn.onclick=()=>{
+  alert("Import připravujeme");
+};
 
 exportHistoryBtn.onclick=()=>{
   exportText.value=JSON.stringify(savedSolves,null,2);

@@ -628,3 +628,13 @@ Open Window detail solve
   font-family:monospace;
   font-size:12px;
 }
+/*importní okno*/
+#import-history-btn{
+  width:100%;
+  margin-top:8px;
+  padding:7px 4px;
+  font-size:12px;
+  border-radius:8px;
+  background:#2979ff;
+  color:white;
+}
