@@ -64,12 +64,19 @@ const statsScreen=document.getElementById("stats-screen");
 const statsBest = document.getElementById("stats-best");
 const statsBestTPS = document.getElementById("stats-best-tps");
 const statsSolves = document.getElementById("stats-solves");
+const statsAvgTPS=document.getElementById("stats-avg-tps");
+const statsTotalTime=document.getElementById("stats-total-time");
+const statsWorst=document.getElementById("stats-worst");
+
 function updateStatistics(){
 
   if(savedSolves.length===0){
     statsBest.textContent="-";
     statsBestTPS.textContent="-";
     statsSolves.textContent="0";
+    statsAvgTPS.textContent="-";
+    statsTotalTime.textContent="-";
+    statsWorst.textContent="-";
     return;
   }
 
@@ -80,6 +87,18 @@ function updateStatistics(){
   statsBest.textContent=best.toFixed(2)+" s";
   statsBestTPS.textContent=bestTPS.toFixed(1);
   statsSolves.textContent=savedSolves.length;
+  const avgTPS =
+  savedSolves.reduce((sum,s)=>sum+Number(s.tps ?? s.avg ?? 0),0) / savedSolves.length;
+
+const totalTime =
+  savedSolves.reduce((sum,s)=>sum+Number(s.time || 0),0);
+
+const worst =
+  Math.max(...savedSolves.map(s=>Number(s.time)||0));
+
+statsAvgTPS.textContent=avgTPS.toFixed(1);
+statsTotalTime.textContent=totalTime.toFixed(1)+" s";
+statsWorst.textContent=worst.toFixed(2)+" s";
 
 }
 
