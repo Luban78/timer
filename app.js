@@ -51,7 +51,56 @@ const importModal=document.getElementById("import-modal");
 const importText=document.getElementById("import-text");
 const runImportBtn=document.getElementById("run-import-btn");
 const closeImportBtn=document.getElementById("close-import-btn");
+const navTimer=document.getElementById("nav-timer");
+const navStats=document.getElementById("nav-stats");
+const navSettings=document.getElementById("nav-settings");
+const appScreen=document.getElementById("app");
+const historyPanel=document.getElementById("history");
+const settingsScreen=document.getElementById("settings-screen");
+const settingsExportBtn=document.getElementById("settings-export-btn");
+const settingsImportBtn=document.getElementById("settings-import-btn");
+const settingsClearBtn=document.getElementById("settings-clear-btn");
 
+function setActiveNav(activeBtn){
+  [navTimer,navStats,navSettings].forEach(btn=>{
+    btn.classList.remove("active");
+  });
+
+  activeBtn.classList.add("active");
+}
+
+function showScreen(screen){
+  appScreen.style.display = screen==="timer" ? "block" : "none";
+  historyPanel.style.display = screen==="timer" ? "block" : "none";
+  settingsScreen.style.display = screen==="settings" ? "block" : "none";
+}
+
+navTimer.onclick = () => {
+  setActiveNav(navTimer);
+  showScreen("timer");
+};
+settingsExportBtn.onclick=()=>{
+  exportHistoryBtn.click();
+};
+
+settingsImportBtn.onclick=()=>{
+  importHistoryBtn.click();
+};
+
+settingsClearBtn.onclick=()=>{
+  clearHistoryBtn.click();
+};
+navStats.onclick=()=>{
+  setActiveNav(navStats);
+  alert("Statistiky připravujeme");
+};
+
+navSettings.onclick=()=>{
+  setActiveNav(navSettings);
+  showScreen("settings");
+};
+
+setActiveNav(navTimer);
 importHistoryBtn.onclick = () => {
   importText.value = "";
   importModal.style.display = "block";

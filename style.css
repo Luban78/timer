@@ -693,3 +693,13 @@ Open Window detail solve
 #bottom-nav button:active{
     background:#333;
 }
+
+#bottom-nav button.active{
+  color:#00e676;
+  font-weight:bold;
+  background:#151515;
+}
+
+#legacy-tools{
+    display:none;
+}

@@ -57,13 +57,13 @@
     <div>Ao100: <span id="stat-ao100">-</span></div>
     <div>Solves: <span id="stat-count">0</span></div>
   </div>
-  
+  <div id="legacy-tools">
   <button id="clear-history-btn">Vymazat časy</button>
   <button id="export-history-btn">Export</button>
   <button id="import-history-btn">Import</button>
   <div id="history-list"></div>
 </div>
-
+</div>
 <div id="modal">
 <div id="modalContent">
 <h2 id="modalTitle">PLL</h2>
@@ -103,6 +103,24 @@
     <button id="close-import-btn" class="closeBtn">Zavřít</button>
   </div>
 </div>
+
+
+<div id="settings-screen" style="display:none; padding:20px;">
+
+  <h2>⚙️ Nastavení</h2>
+
+  <p>Správa dat aplikace</p>
+
+  <button id="settings-export-btn">Export historie</button>
+
+  <button id="settings-import-btn">Import historie</button>
+
+  <button id="settings-clear-btn" class="danger">
+    Vymazat historii
+  </button>
+
+</div>
+
 
 <div id="bottom-nav">
   <button id="nav-timer">🏠<br>Timer</button>
