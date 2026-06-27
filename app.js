@@ -69,6 +69,22 @@ const statsWorst=document.getElementById("stats-worst");
 const algorithmStatsDiv=document.getElementById("algorithm-stats");
 const coachAlg=document.getElementById("coach-alg");
 const coachDetail=document.getElementById("coach-detail");
+const playerLevel=document.getElementById("player-level");
+const xpFill=document.getElementById("xp-fill");
+const xpText=document.getElementById("xp-text");
+
+function updateXPUI(){
+
+    playerLevel.textContent=playerProfile.level;
+
+    const need=playerProfile.level*100;
+
+    xpText.textContent=
+        `${playerProfile.xp} / ${need} XP`;
+
+    xpFill.style.width=
+        (playerProfile.xp/need*100)+"%";
+}
 
 function addXP(amount){
 
@@ -85,7 +101,7 @@ function addXP(amount){
   }
 
   saveProfile(playerProfile);
-
+  updateXPUI();
 }
 function updateCoach(){
   const algStats=getAlgorithmStats(savedSolves);
