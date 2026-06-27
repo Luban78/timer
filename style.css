@@ -703,3 +703,34 @@ Open Window detail solve
 #legacy-tools{
     display:none;
 }
+
+.stat-card{
+
+    background:var(--box);
+
+    border:1px solid #333;
+
+    border-radius:14px;
+
+    padding:16px;
+
+    margin-bottom:14px;
+
+    text-align:center;
+}
+
+.stat-card h3{
+
+    margin:0 0 10px 0;
+
+    color:var(--yellow);
+}
+
+.stat-card div{
+
+    font-size:34px;
+
+    font-weight:bold;
+
+    color:#00e5ff;
+}

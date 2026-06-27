@@ -60,6 +60,7 @@ const settingsScreen=document.getElementById("settings-screen");
 const settingsExportBtn=document.getElementById("settings-export-btn");
 const settingsImportBtn=document.getElementById("settings-import-btn");
 const settingsClearBtn=document.getElementById("settings-clear-btn");
+const statsScreen=document.getElementById("stats-screen");
 
 function setActiveNav(activeBtn){
   [navTimer,navStats,navSettings].forEach(btn=>{
@@ -69,31 +70,23 @@ function setActiveNav(activeBtn){
   activeBtn.classList.add("active");
 }
 
-function showScreen(screen){
-  appScreen.style.display = screen==="timer" ? "block" : "none";
-  historyPanel.style.display = screen==="timer" ? "block" : "none";
-  settingsScreen.style.display = screen==="settings" ? "block" : "none";
+function showScreen(screen) {
+  appScreen.style.display = screen === "timer" ? "block" : "none";
+  historyPanel.style.display = screen === "timer" ? "block" : "none";
+  settingsScreen.style.display = screen === "settings" ? "block" : "none";
+  statsScreen.style.display = screen === "stats" ? "block" : "none";
 }
 
 navTimer.onclick = () => {
   setActiveNav(navTimer);
   showScreen("timer");
 };
-settingsExportBtn.onclick=()=>{
-  exportHistoryBtn.click();
-};
 
-settingsImportBtn.onclick=()=>{
-  importHistoryBtn.click();
-};
-
-settingsClearBtn.onclick=()=>{
-  clearHistoryBtn.click();
-};
 navStats.onclick=()=>{
   setActiveNav(navStats);
-  alert("Statistiky připravujeme");
+  showScreen("stats");
 };
+/*7855778*/
 
 navSettings.onclick=()=>{
   setActiveNav(navSettings);
@@ -130,7 +123,10 @@ runImportBtn.onclick=()=>{
     savedSolves.length=0;
     savedSolves.push(...imported);
 
-    saveSolves(savedSolves);
+    localStorage.setItem(
+      "savedSolves",
+      JSON.stringify(savedSolves)
+    );
 
     renderHistory(historyList,savedSolves,showSolveDetail);
     updateStats(savedSolves);
