@@ -660,3 +660,36 @@ Open Window detail solve
   background:#2979ff;
   color:white;
 }
+/* ---------- Bottom navigation ---------- */
+
+#bottom-nav{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+
+    display:flex;
+
+    background:#1f1f1f;
+    border-top:1px solid #444;
+
+    z-index:999;
+}
+
+#bottom-nav button{
+
+    flex:1;
+
+    background:none;
+    border:none;
+
+    color:white;
+
+    padding:10px 0;
+
+    font-size:15px;
+}
+
+#bottom-nav button:active{
+    background:#333;
+}
