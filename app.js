@@ -182,13 +182,12 @@ runImportBtn.onclick=()=>{
     savedSolves.length=0;
     savedSolves.push(...imported);
 
-    localStorage.setItem(
-      "savedSolves",
-      JSON.stringify(savedSolves)
-    );
+    saveSolves(savedSolves);
 
     renderHistory(historyList,savedSolves,showSolveDetail);
-    updateStats(savedSolves);
+    updateStats();
+    updateStatistics();
+    updateAlgorithmStats();
 
     importModal.style.display="none";
 
@@ -204,7 +203,17 @@ exportHistoryBtn.onclick=()=>{
   exportModal.style.display="block";
   exportText.select();
 };
+settingsExportBtn.onclick=()=>{
+  exportHistoryBtn.onclick();
+};
 
+settingsImportBtn.onclick=()=>{
+  importHistoryBtn.onclick();
+};
+
+settingsClearBtn.onclick=()=>{
+  clearHistoryBtn.onclick();
+};
 closeExportBtn.onclick=()=>{
   exportModal.style.display="none";
 };
@@ -467,7 +476,34 @@ pendingMove=null;
 
 finishSolve(stopTime,true);
 }
+function stopIfSolving(){
+  if(isSolving){
+    manualStop();
+  }
+}
 
+document.addEventListener("pointerdown", e=>{
+  if(!isSolving)return;
+
+  if(e.target.closest("#bottom-nav"))return;
+  if(e.target.closest("#modal"))return;
+  if(e.target.closest("#solve-detail"))return;
+  if(e.target.closest("#export-modal"))return;
+  if(e.target.closest("#import-modal"))return;
+
+  stopIfSolving();
+});
+
+document.addEventListener("keydown", e=>{
+  if(!isSolving)return;
+
+  stopIfSolving();
+});
+tpsDiv.onclick=()=>{
+  if(isSolving){
+    manualStop();
+  }
+};
 function finishSolve(stopTime,manual){
 if(!isSolving)return;
 

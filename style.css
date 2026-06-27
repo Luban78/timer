@@ -703,7 +703,11 @@ Open Window detail solve
 }
 
 #legacy-tools{
-    display:none;
+    position:absolute;
+    left:-9999px;
+    top:-9999px;
+    opacity:0;
+    pointer-events:none;
 }
 
 .stat-card{
