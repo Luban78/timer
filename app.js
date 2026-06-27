@@ -41,7 +41,11 @@ const clearHistoryBtn=document.getElementById("clear-history-btn");
 const solveDetail=document.getElementById("solve-detail");
 const solveDetailContent=document.getElementById("solve-detail-content");
 const closeDetailBtn=document.getElementById("close-detail-btn");
+const exportHistoryBtn=document.getElementById("export-history-btn");
 
+exportHistoryBtn.onclick=()=>{
+  alert("Export připravujeme");
+};
 
 let seq=[];
 let moveTimes=[];
