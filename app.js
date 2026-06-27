@@ -42,9 +42,39 @@ const solveDetail=document.getElementById("solve-detail");
 const solveDetailContent=document.getElementById("solve-detail-content");
 const closeDetailBtn=document.getElementById("close-detail-btn");
 const exportHistoryBtn=document.getElementById("export-history-btn");
+const exportModal=document.getElementById("export-modal");
+const exportText=document.getElementById("export-text");
+const closeExportBtn=document.getElementById("close-export-btn");
+const copyExportBtn=document.getElementById("copy-export-btn");
 
-exportHistoryBtn.onclick = () => {
-  alert("Export jako text doplníme teď.");
+exportHistoryBtn.onclick=()=>{
+  exportText.value=JSON.stringify(savedSolves,null,2);
+  exportModal.style.display="block";
+  exportText.select();
+};
+
+closeExportBtn.onclick=()=>{
+  exportModal.style.display="none";
+};
+copyExportBtn.onclick=async()=>{
+  try{
+    await navigator.clipboard.writeText(exportText.value);
+
+    const oldText=copyExportBtn.innerText;
+    copyExportBtn.innerText="✅ Zkopírováno";
+
+    setTimeout(()=>{
+      copyExportBtn.innerText=oldText;
+    },1500);
+
+  }catch(e){
+    alert("Kopírování se nepodařilo.");
+  }
+};
+exportModal.onclick=e=>{
+  if(e.target===exportModal){
+    exportModal.style.display="none";
+  }
 };
 
 let seq=[];

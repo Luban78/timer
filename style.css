@@ -615,3 +615,16 @@ Open Window detail solve
   background:#00c853;
   color:black;
 }
+/*exportní okno*/
+#export-text{
+  width:100%;
+  height:260px;
+  box-sizing:border-box;
+  background:#121212;
+  color:#00e5ff;
+  border:1px solid #333;
+  border-radius:12px;
+  padding:10px;
+  font-family:monospace;
+  font-size:12px;
+}
