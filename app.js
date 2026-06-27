@@ -1,6 +1,7 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
+import { getAlgorithmStats } from "./algorithmStats.js";
 import { drawDetailGraph } from "./detailGraph.js";
 import { openPLLMenu } from "./algMenu.js";
 import { resetStatsUI, clearCanvas } from "./ui.js";
@@ -67,6 +68,24 @@ const statsSolves = document.getElementById("stats-solves");
 const statsAvgTPS=document.getElementById("stats-avg-tps");
 const statsTotalTime=document.getElementById("stats-total-time");
 const statsWorst=document.getElementById("stats-worst");
+const algorithmStatsDiv=document.getElementById("algorithm-stats");
+function updateAlgorithmStats(){
+  const algStats=getAlgorithmStats(savedSolves);
+
+  if(algStats.length===0){
+    algorithmStatsDiv.innerHTML="<p>Zatím žádná data algoritmů.</p>";
+    return;
+  }
+
+  algorithmStatsDiv.innerHTML=algStats.map(a=>`
+    <div class="stat-card">
+      <h3>${a.name}</h3>
+      <div>${a.count}×</div>
+      <p>Best: ${a.best.toFixed(2)} s</p>
+      <p>Avg: ${a.avg.toFixed(2)} s</p>
+    </div>
+  `).join("");
+}
 
 function updateStatistics(){
 
@@ -533,6 +552,7 @@ saveSolves(savedSolves);
 renderHistory(historyList, savedSolves, showSolveDetail);
 updateStats();
 updateStatistics();
+updateAlgorithmStats();
 }
 
 
@@ -548,6 +568,7 @@ clearHistoryBtn.onclick=()=>{
   renderHistory(historyList, savedSolves, showSolveDetail);
   updateStats();
   updateStatistics();
+  updateAlgorithmStats();
 };
 
 function showSolveDetail(solve){
@@ -588,3 +609,4 @@ solveDetail.onclick=e=>{
 renderHistory(historyList, savedSolves, showSolveDetail);
 updateStats();
 updateStatistics();
+updateAlgorithmStats();
