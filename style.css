@@ -154,7 +154,7 @@ tlačítko clear history
    Okno se skutečnou notací z kostky
 ----------------------------------------------------- */
 #notation{
-  width:120%;
+  width:100%;
   background:var(--box);
   border:1px solid #333;
   border-radius:14px;
