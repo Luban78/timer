@@ -292,10 +292,12 @@ canvas{
 
   z-index:20;
   --history-width: 95px;
-
 }
-
-
+#history-list{
+  overflow-y:auto;
+  flex:1;
+  padding-bottom:80px;
+}
 /* -----------------------------------------------------
    Nadpis ČASY v pravém panelu
 ----------------------------------------------------- */
