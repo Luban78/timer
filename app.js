@@ -70,6 +70,23 @@ const algorithmStatsDiv=document.getElementById("algorithm-stats");
 const coachAlg=document.getElementById("coach-alg");
 const coachDetail=document.getElementById("coach-detail");
 
+function addXP(amount){
+
+  playerProfile.xp += amount;
+  playerProfile.totalXP += amount;
+
+  while(playerProfile.xp >= playerProfile.level*100){
+
+    playerProfile.xp -= playerProfile.level*100;
+
+    playerProfile.level++;
+
+    alert("🎉 LEVEL UP!\n\nLevel "+playerProfile.level);
+  }
+
+  saveProfile(playerProfile);
+
+}
 function updateCoach(){
   const algStats=getAlgorithmStats(savedSolves);
 
@@ -287,6 +304,8 @@ let lastBeep=0;
 let currentMoves=[];
 let currentAlgorithmName="Nevybráno";
 let savedSolves = loadSolves();
+
+let playerProfile = loadProfile();
 const DOUBLE_MOVE_WINDOW=280;
 const TPS_WINDOW=2000;
 
@@ -545,6 +564,7 @@ stateMsg.style.color="yellow";
 saveSolve(finalTime,totalMoves,finalAvg);
 
 beep(880,.2);
+addXP(10);
 }
 
 function updateStats(){
