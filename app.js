@@ -130,10 +130,7 @@ runImportBtn.onclick=()=>{
     savedSolves.length=0;
     savedSolves.push(...imported);
 
-    localStorage.setItem(
-      "savedSolves",
-      JSON.stringify(savedSolves)
-    );
+    saveSolves(savedSolves);
 
     renderHistory(historyList,savedSolves,showSolveDetail);
     updateStats(savedSolves);
