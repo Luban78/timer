@@ -32,13 +32,11 @@ const pauseVal=document.getElementById("pause-val");
 const historyList=document.getElementById("history-list");
 const canvas=document.getElementById("graph");
 const ctx=canvas.getContext("2d");
-
 const statBest=document.getElementById("stat-best");
 const statAo5=document.getElementById("stat-ao5");
 const statAo12=document.getElementById("stat-ao12");
 const statCount=document.getElementById("stat-count");
 const clearHistoryBtn=document.getElementById("clear-history-btn");
-
 const solveDetail=document.getElementById("solve-detail");
 const solveDetailContent=document.getElementById("solve-detail-content");
 const closeDetailBtn=document.getElementById("close-detail-btn");
@@ -69,6 +67,7 @@ const statsAvgTPS=document.getElementById("stats-avg-tps");
 const statsTotalTime=document.getElementById("stats-total-time");
 const statsWorst=document.getElementById("stats-worst");
 const algorithmStatsDiv=document.getElementById("algorithm-stats");
+
 function updateAlgorithmStats(){
   const algStats=getAlgorithmStats(savedSolves);
 
@@ -130,7 +129,7 @@ function setActiveNav(activeBtn){
 }
 
 function showScreen(screen) {
-  appScreen.style.display = screen === "timer" ? "block" : "none";
+  appScreen.style.display = screen === "timer" ? "flex" : "none";
   historyPanel.style.display = screen === "timer" ? "block" : "none";
   settingsScreen.style.display = screen === "settings" ? "block" : "none";
   statsScreen.style.display = screen === "stats" ? "block" : "none";
@@ -145,7 +144,6 @@ navStats.onclick=()=>{
   setActiveNav(navStats);
   showScreen("stats");
 };
-/*7855778*/
 
 navSettings.onclick=()=>{
   setActiveNav(navSettings);
@@ -153,10 +151,14 @@ navSettings.onclick=()=>{
 };
 
 setActiveNav(navTimer);
-importHistoryBtn.onclick = () => {
-  importText.value = "";
-  importModal.style.display = "block";
-};
+
+function showImportModal(){
+  importText.value="";
+  importModal.style.display="block";
+}
+
+importHistoryBtn.onclick=showImportModal;
+settingsImportBtn.onclick=showImportModal;
 
 closeImportBtn.onclick = () => {
   importModal.style.display = "none";
@@ -198,11 +200,15 @@ runImportBtn.onclick=()=>{
   }
 };
 /* end run import button*/
-exportHistoryBtn.onclick=()=>{
+function showExportModal(){
   exportText.value=JSON.stringify(savedSolves,null,2);
   exportModal.style.display="block";
   exportText.select();
-};
+}
+
+exportHistoryBtn.onclick=showExportModal;
+settingsExportBtn.onclick=showExportModal;
+
 settingsExportBtn.onclick=()=>{
   exportHistoryBtn.onclick();
 };
@@ -241,10 +247,6 @@ exportModal.onclick=e=>{
 let seq=[];
 let moveTimes=[];
 let tpsHistory=[];
-
-
-
-
 let totalMoves=0,maxTPS=0,longestPause=0;
 let isSolving=false,isConnected=false;
 let startTime=0,lastMoveTime=0;
@@ -287,11 +289,6 @@ btn.onclick=async(e)=>{
   }
 };
 
-pllBtn.onclick=e=>{
-e.stopPropagation();
-openPLL();
-};
-
 ollBtn.onclick=e=>{
 e.stopPropagation();
 alert("OLL menu doplníme v další verzi. Teď je hotové PLL.");
@@ -319,12 +316,6 @@ pllBtn.onclick=e=>{
     }
   });
 };
-
-document.body.addEventListener("click",e=>{
-if(e.target.tagName==="BUTTON") return;
-if(modal.style.display==="block") return;
-if(isSolving) manualStop();
-});
 
 function prepareNext(){
 seq=[];moveTimes=[];tpsHistory=[];
@@ -496,14 +487,9 @@ document.addEventListener("pointerdown", e=>{
 
 document.addEventListener("keydown", e=>{
   if(!isSolving)return;
-
   stopIfSolving();
 });
-tpsDiv.onclick=()=>{
-  if(isSolving){
-    manualStop();
-  }
-};
+
 function finishSolve(stopTime,manual){
 if(!isSolving)return;
 
@@ -595,17 +581,21 @@ updateAlgorithmStats();
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js");
 }
-clearHistoryBtn.onclick=()=>{
+
+function clearHistory(){
   const ok=confirm("Opravdu vymazat všechny uložené časy?");
   if(!ok)return;
 
   savedSolves=[];
   saveSolves(savedSolves);
-  renderHistory(historyList, savedSolves, showSolveDetail);
+  renderHistory(historyList,savedSolves,showSolveDetail);
   updateStats();
   updateStatistics();
   updateAlgorithmStats();
-};
+}
+
+clearHistoryBtn.onclick=clearHistory;
+settingsClearBtn.onclick=clearHistory;
 
 function showSolveDetail(solve){
   solveDetailContent.innerHTML = `
