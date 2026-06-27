@@ -762,3 +762,10 @@ Open Window detail solve
 .stats-grid-screen .stat-card div{
   font-size:28px;
 }
+#algorithm-section{
+  margin-top:28px;
+}
+
+#algorithm-stats .stat-card{
+  margin-bottom:14px;
+}
