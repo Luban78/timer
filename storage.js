@@ -21,13 +21,13 @@ const DEFAULT_PROFILE = {
   achievements: []
 };
 
-function loadProfile(){
+export function loadProfile(){
   return JSON.parse(
     localStorage.getItem("playerProfile")
   ) || {...DEFAULT_PROFILE};
 }
 
-function saveProfile(profile){
+export function saveProfile(profile){
   localStorage.setItem(
     "playerProfile",
     JSON.stringify(profile)

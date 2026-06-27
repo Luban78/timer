@@ -8,7 +8,7 @@ import { resetStatsUI, clearCanvas } from "./ui.js";
 import { initAudio, beep } from "./sound.js";
 import { drawGraph, resizeGraphCanvas } from "./graph.js";
 import { renderHistory } from "./history.js";
-import { loadSolves, saveSolves } from "./storage.js";
+import { loadSolves, saveSolves, loadProfile, saveProfile } from "./storage.js";
 import { connectCube } from "./cubeConnection.js";
 import { pllAlgs } from "./algorithms.js";
 
@@ -264,9 +264,8 @@ settingsImportBtn.onclick=()=>{
   importHistoryBtn.onclick();
 };
 
-settingsClearBtn.onclick=()=>{
-  clearHistoryBtn.onclick();
-};
+settingsClearBtn.onclick=clearHistory;
+
 closeExportBtn.onclick=()=>{
   exportModal.style.display="none";
 };
