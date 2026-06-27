@@ -43,8 +43,8 @@ const solveDetailContent=document.getElementById("solve-detail-content");
 const closeDetailBtn=document.getElementById("close-detail-btn");
 const exportHistoryBtn=document.getElementById("export-history-btn");
 
-exportHistoryBtn.onclick=()=>{
-  alert("Export připravujeme");
+exportHistoryBtn.onclick = () => {
+  alert("Export jako text doplníme teď.");
 };
 
 let seq=[];
