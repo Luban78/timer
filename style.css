@@ -742,3 +742,23 @@ Open Window detail solve
   padding-bottom:110px;
   box-sizing:border-box;
 }
+
+.stats-grid-screen{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.stats-grid-screen .stat-card{
+  margin-bottom:0;
+  padding:12px 8px;
+}
+
+.stats-grid-screen .stat-card h3{
+  font-size:16px;
+  line-height:1.2;
+}
+
+.stats-grid-screen .stat-card div{
+  font-size:28px;
+}
