@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="MG Trainer">
-<title>MG3i Trainer v0.21 </title>
+<title>MG3i Trainer v0.34 </title>
 
 <link rel="stylesheet" href="style.css">
 </head>
@@ -20,7 +20,7 @@
 <body>
 
 <div id="app">
-<button id="btn">PŘIPOJIT KOSTKU v9</button>
+<button id="btn">PŘIPOJIT KOSTKU v10</button>
 
 <div id="modeButtons">
 <button class="modeBtn" id="ollBtn">OLL</button>
@@ -107,22 +107,21 @@
 <div id="stats-screen" style="display:none;">
 
   <div class="stat-card" id="xp-card">
-
-    <h3>🏆 Level <span id="player-level">1</span></h3>
-
-    <div class="xp-bar">
-
-        <div id="xp-fill"></div>
-
-    </div>
-
-    <div id="xp-text">
-        0 / 100 XP
-    </div>
-
+  <h3>🏆 Level <span id="player-level">1</span></h3>
+  
+  <div class="xp-bar">
+    <div id="xp-fill"></div>
+  </div>
+  
+  <div id="xp-text">0 / 100 XP</div>
 </div>
-  <h2>📊 Statistiky</h2>
 
+<div class="stat-card daily-card">
+  <h4>🎯 Dnešní úkoly</h4>
+  <div id="daily-list"></div>
+</div>
+
+<h2>📊 Statistiky</h2>
   <div id="stats-content" class="stats-grid-screen">
  
     <div class="stat-card">

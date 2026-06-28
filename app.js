@@ -80,6 +80,55 @@ const settingsResetProfileBtn=document.getElementById("settings-reset-profile-bt
 const achievementList=document.getElementById("achievement-list");
 const recordModal=document.getElementById("record-modal");
 const recordTime=document.getElementById("record-time");
+const dailyList=document.getElementById("daily-list");
+const DAILY_TASKS=[
+
+{
+id:"solve10",
+title:"Udělej 10 solve",
+done:false
+},
+
+{
+id:"pb",
+title:"Překonej osobní rekord",
+done:false
+},
+
+{
+id:"tps5",
+title:"TPS vyšší než 5",
+done:false
+}
+
+];
+
+updateDailyTasks();
+
+function updateDailyTasks() {
+  
+  dailyList.innerHTML =
+    DAILY_TASKS.map(task => `
+
+<div class="achievement-item">
+
+<span>
+
+${task.done?"✅":"⬜"}
+
+</span>
+
+<span>
+
+${task.title}
+
+</span>
+
+</div>
+
+`).join("");
+  
+}
 
 function showRecord(time){
   recordTime.textContent=time.toFixed(2)+" s";

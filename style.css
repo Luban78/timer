@@ -957,3 +957,65 @@ color:#00ff66;
 .achievement-item.unlocked{
   border-color:gold;
 }
+/* deni ukoly*/
+#daily-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+#daily-list .achievement-item {
+  padding: 10px 14px;
+}
+
+#daily-list .achievement-item span{
+  font-size:15px;
+}
+
+#daily-list .achievement-item span:first-child{
+  font-size:15px;
+  width:32px;
+}
+
+#daily-list .achievement-item span:last-child{
+  color:white;
+  line-height:1.2;
+}
+/* * */
+.daily-card {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 18px !important;
+}
+
+.daily-card h4 {
+  font-size: 26px;
+  margin-bottom: 14px;
+}
+
+#daily-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#daily-list .achievement-item {
+  font-size: 18px;
+  padding: 12px 14px;
+  margin: 0;
+}
+
+#daily-list .achievement-item span {
+  font-size: 13px;
+}
+
+#daily-list .achievement-item span:first-child {
+  font-size: 24px;
+  width: 34px;
+  flex-shrink: 0;
+}
+
+#daily-list .achievement-item span:last-child {
+  color: white;
+  line-height: 1.2;
+}
