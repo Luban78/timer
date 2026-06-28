@@ -183,7 +183,14 @@ function resetProfile() {
   
   updateXPUI();
   updateAchievementList();
-  
+  dailyProgress={
+  solve10:false,
+  pb:false,
+  tps5:false
+};
+
+saveDailyProgress();
+updateDailyTasks();
   alert("Profil resetován.");
 }
 
