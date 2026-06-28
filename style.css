@@ -838,3 +838,13 @@ Open Window detail solve
     font-weight:bold;
 
 }
+
+/* resets butons*/
+#settings-screen button{
+  display:block;
+  width:100%;
+  margin:10px 0;
+  padding:14px 12px;
+  font-size:22px;
+  border-radius:14px;
+}

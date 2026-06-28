@@ -730,6 +730,7 @@ function clearHistory(){
 
 clearHistoryBtn.onclick=clearHistory;
 settingsClearBtn.onclick=clearHistory;
+settingsResetProfileBtn.onclick=resetProfile;
 
 function showSolveDetail(solve){
   solveDetailContent.innerHTML = `
