@@ -102,34 +102,30 @@ done:false
 }
 
 ];
+let dailyProgress = JSON.parse(localStorage.getItem("dailyProgress")) || {
+  solve10:false,
+  pb:false,
+  tps5:false
+};
 
+function saveDailyProgress(){
+  localStorage.setItem("dailyProgress", JSON.stringify(dailyProgress));
+}
 updateDailyTasks();
 
 function updateDailyTasks() {
-  
   dailyList.innerHTML =
-    DAILY_TASKS.map(task => `
-
-<div class="achievement-item">
-
-<span>
-
-${task.done?"✅":"⬜"}
-
-</span>
-
-<span>
-
-${task.title}
-
-</span>
-
-</div>
-
-`).join("");
-  
+    DAILY_TASKS.map(task => {
+      const done = dailyProgress[task.id];
+      
+      return `
+        <div class="achievement-item ${done ? "unlocked" : "locked"}">
+          <span>${done ? "✅" : "⬜"}</span>
+          <span>${task.title}</span>
+        </div>
+      `;
+    }).join("");
 }
-
 function showRecord(time){
   recordTime.textContent=time.toFixed(2)+" s";
   recordModal.style.display="block";
@@ -139,7 +135,17 @@ function showRecord(time){
   },2200);
 }
 
+function completeDailyTask(id,xp){
+  if(dailyProgress[id]) return;
 
+  dailyProgress[id]=true;
+  saveDailyProgress();
+
+  addXP(xp);
+  updateDailyTasks();
+
+  alert("🎯 Denní úkol splněn!\n\n+"+xp+" XP");
+}
 const ACHIEVEMENTS=[
   {id:"first_solve", title:"První solve"},
   {id:"level_2", title:"Level 2"},
@@ -727,7 +733,7 @@ saveSolve(finalTime, totalMoves, finalAvg);
 if (finalTime < oldBest) {
   
   showRecord(finalTime);
-  
+  completeDailyTask("pb",100);
   unlockAchievement(
     "new_pb",
     "Nový osobní rekord",
@@ -735,6 +741,13 @@ if (finalTime < oldBest) {
   );
 }
 addXP(10);
+if(savedSolves.length>=10){
+  completeDailyTask("solve10",50);
+}
+
+if(finalAvg>=5){
+  completeDailyTask("tps5",75);
+}
 if(savedSolves.length===1){
   unlockAchievement(
     "first_solve",
