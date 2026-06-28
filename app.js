@@ -576,10 +576,11 @@ stateMsg.innerText=manual
 
 stateMsg.style.color="yellow";
 
-saveSolve(finalTime,totalMoves,finalAvg);
+saveSolve(finalTime, totalMoves, finalAvg);
 
-beep(880,.2);
 addXP(10);
+
+beep(880, .2);
 }
 
 function updateStats(){
