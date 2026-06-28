@@ -74,7 +74,34 @@ const xpFill=document.getElementById("xp-fill");
 const xpText=document.getElementById("xp-text");
 const levelModal=document.getElementById("level-modal");
 const levelNumber=document.getElementById("level-number");
+const achievementModal=document.getElementById("achievement-modal");
+const achievementTitle=document.getElementById("achievement-title");
 
+function showAchievement(title){
+
+    achievementTitle.textContent=title;
+
+    achievementModal.style.display="block";
+
+    setTimeout(()=>{
+
+        achievementModal.style.display="none";
+
+    },2200);
+
+}
+
+function unlockAchievement(id,title){
+
+    if(playerProfile.achievements.includes(id))
+        return;
+
+    playerProfile.achievements.push(id);
+
+    saveProfile(playerProfile);
+
+    showAchievement(title);
+}
 function showLevelUp(level){
   levelNumber.textContent="Level "+level;
   levelModal.style.display="block";
@@ -590,7 +617,14 @@ stateMsg.style.color="yellow";
 saveSolve(finalTime, totalMoves, finalAvg);
 
 addXP(10);
+if(savedSolves.length===1){
 
+    unlockAchievement(
+        "first_solve",
+        "První solve"
+    );
+
+}
 beep(880, .2);
 }
 
