@@ -112,25 +112,7 @@ function showAchievement(title){
 
 }
 
-function unlockAchievement(id,title){
 
-    if(playerProfile.achievements.includes(id))
-        return;
-
-    playerProfile.achievements.push(id);
-
-    saveProfile(playerProfile);
-
-    showAchievement(title);
-}
-function showLevelUp(level){
-  levelNumber.textContent="Level "+level;
-  levelModal.style.display="block";
-
-  setTimeout(()=>{
-    levelModal.style.display="none";
-  },1800);
-}
 
 function updateXPUI(){
 
@@ -162,6 +144,18 @@ function addXP(amount){
   saveProfile(playerProfile);
   updateXPUI();
 }
+
+function unlockAchievement(id,title,xp){
+  if(playerProfile.achievements.includes(id)) return;
+
+  playerProfile.achievements.push(id);
+  saveProfile(playerProfile);
+
+  addXP(xp);
+
+  alert("🏅 Nový odznak!\n\n"+title+"\n\n+"+xp+" XP");
+}
+
 function updateCoach(){
   const algStats=getAlgorithmStats(savedSolves);
 
@@ -596,18 +590,17 @@ function stopIfSolving(){
   }
 }
 
-document.addEventListener("pointerdown", e=>{
-  if(!isSolving)return;
-
-  if(e.target.closest("#bottom-nav"))return;
-  if(e.target.closest("#modal"))return;
-  if(e.target.closest("#solve-detail"))return;
-  if(e.target.closest("#export-modal"))return;
-  if(e.target.closest("#import-modal"))return;
-
+document.addEventListener("pointerdown", e => {
+  if (!isSolving) return;
+  
+  if (e.target.closest("#bottom-nav")) return;
+  if (e.target.closest("#modal")) return;
+  if (e.target.closest("#solve-detail")) return;
+  if (e.target.closest("#export-modal")) return;
+  if (e.target.closest("#import-modal")) return;
+  
   stopIfSolving();
 });
-
 document.addEventListener("keydown", e=>{
   if(!isSolving)return;
   stopIfSolving();
@@ -639,15 +632,15 @@ saveSolve(finalTime, totalMoves, finalAvg);
 
 addXP(10);
 if(savedSolves.length===1){
-
-    unlockAchievement(
-        "first_solve",
-        "První solve"
-    );
-
+  unlockAchievement(
+    "first_solve",
+    "První solve",
+    50
+  );
 }
 beep(880, .2);
 }
+
 
 function updateStats(){
   const times=savedSolves.map(s=>Number(s.time)).filter(t=>t>0);
