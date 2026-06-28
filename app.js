@@ -77,22 +77,45 @@ const levelNumber=document.getElementById("level-number");
 const achievementModal=document.getElementById("achievement-modal");
 const achievementTitle=document.getElementById("achievement-title");
 const settingsResetProfileBtn=document.getElementById("settings-reset-profile-btn");
+const achievementList=document.getElementById("achievement-list");
 
-function resetProfile(){
-  const ok=confirm("Opravdu vymazat XP, level a achievementy?");
-  if(!ok)return;
+const ACHIEVEMENTS=[
+  {id:"first_solve", title:"První solve"},
+  {id:"level_2", title:"Level 2"},
+  {id:"ten_solves", title:"10 solve"},
+  {id:"sub_5", title:"Sub 5"},
+  {id:"tps_5", title:"TPS 5+"}
+];
 
-  playerProfile={
-    xp:0,
-    level:1,
-    streak:0,
-    totalXP:0,
-    achievements:[]
+function updateAchievementList(){
+  achievementList.innerHTML=ACHIEVEMENTS.map(a=>{
+    const unlocked=playerProfile.achievements.includes(a.id);
+
+    return `
+      <div class="achievement-item ${unlocked ? "unlocked" : "locked"}">
+        <span>${unlocked ? "✅" : "🔒"}</span>
+        <span>${a.title}</span>
+      </div>
+    `;
+  }).join("");
+}
+function resetProfile() {
+  const ok = confirm("Opravdu vymazat XP, level a achievementy?");
+  if (!ok) return;
+  
+  playerProfile = {
+    xp: 0,
+    level: 1,
+    streak: 0,
+    totalXP: 0,
+    achievements: []
   };
-
+  
   saveProfile(playerProfile);
+  
   updateXPUI();
-
+  updateAchievementList();
+  
   alert("Profil resetován.");
 }
 
@@ -314,6 +337,7 @@ runImportBtn.onclick=()=>{
     updateStatistics();
     updateAlgorithmStats();
     updateCoach();
+    updateAchievementList();
     importModal.style.display="none";
 
     alert("Import dokončen.");
@@ -708,6 +732,7 @@ updateStats();
 updateStatistics();
 updateAlgorithmStats();
 updateCoach();
+updateAchievementList();
 }
 
 
@@ -726,6 +751,7 @@ function clearHistory(){
   updateStatistics();
   updateAlgorithmStats();
   updateCoach();
+  updateAchievementList();
 }
 
 clearHistoryBtn.onclick=clearHistory;
@@ -772,3 +798,4 @@ updateStats();
 updateStatistics();
 updateAlgorithmStats(); 
 updateCoach();
+updateAchievementList();
