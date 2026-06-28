@@ -132,6 +132,18 @@ function showAchievement(title){
         achievementModal.style.display="none";
 
     },2200);
+    
+    function showRecord(time, oldBest){
+  achievementTitle.textContent =
+    "🎉 Nový rekord!\n" +
+    time.toFixed(2) + " s";
+
+  achievementModal.style.display="block";
+
+  setTimeout(()=>{
+    achievementModal.style.display="none";
+  },2200);
+}
 
 }
 
@@ -667,10 +679,10 @@ const oldBest = savedSolves.length ?
   
 saveSolve(finalTime, totalMoves, finalAvg);
 
-if (finalTime < oldBest) {
-  
-  showAchievement("🎉 Nový rekord!");
-  
+if(finalTime < oldBest){
+
+  showRecord(finalTime, oldBest);
+
   unlockAchievement(
     "new_pb",
     "Nový osobní rekord",
