@@ -168,9 +168,11 @@ function updateAchievementList(){
   }).join("");
 }
 function resetProfile() {
+  
   const ok = confirm("Opravdu vymazat XP, level a achievementy?");
   if (!ok) return;
   
+  // Profil
   playerProfile = {
     xp: 0,
     level: 1,
@@ -181,19 +183,22 @@ function resetProfile() {
   
   saveProfile(playerProfile);
   
+  // Denní úkoly
+  localStorage.removeItem("dailyProgress");
+  
+  dailyProgress.solve10 = false;
+  dailyProgress.pb = false;
+  dailyProgress.tps5 = false;
+  
+  saveDailyProgress();
+  
+  // Obnov UI
   updateXPUI();
   updateAchievementList();
-  dailyProgress={
-  solve10:false,
-  pb:false,
-  tps5:false
-};
-
-saveDailyProgress();
-updateDailyTasks();
+  updateDailyTasks();
+  
   alert("Profil resetován.");
 }
-
 settingsResetProfileBtn.onclick=resetProfile;
 
 function showAchievement(title) {
