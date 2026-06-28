@@ -1,6 +1,7 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
+import { DAILY_TASKS } from "./dailyTasks.js";
 import { getAlgorithmStats } from "./algorithmStats.js";
 import { drawDetailGraph } from "./detailGraph.js";
 import { openPLLMenu } from "./algMenu.js";
@@ -81,7 +82,7 @@ const achievementList=document.getElementById("achievement-list");
 const recordModal=document.getElementById("record-modal");
 const recordTime=document.getElementById("record-time");
 const dailyList=document.getElementById("daily-list");
-const DAILY_TASKS=[
+/*const DAILY_TASKS=[
 
 {
 id:"solve10",
@@ -101,7 +102,7 @@ title:"TPS vyšší než 5",
 done:false
 }
 
-];
+];*/
 let dailyProgress = JSON.parse(localStorage.getItem("dailyProgress")) || {
   solve10:false,
   pb:false,
@@ -733,7 +734,7 @@ saveSolve(finalTime, totalMoves, finalAvg);
 if (finalTime < oldBest) {
   
   showRecord(finalTime);
-  completeDailyTask("pb",100);
+  
   unlockAchievement(
     "new_pb",
     "Nový osobní rekord",
