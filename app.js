@@ -72,6 +72,17 @@ const coachDetail=document.getElementById("coach-detail");
 const playerLevel=document.getElementById("player-level");
 const xpFill=document.getElementById("xp-fill");
 const xpText=document.getElementById("xp-text");
+const levelModal=document.getElementById("level-modal");
+const levelNumber=document.getElementById("level-number");
+
+function showLevelUp(level){
+  levelNumber.textContent="Level "+level;
+  levelModal.style.display="block";
+
+  setTimeout(()=>{
+    levelModal.style.display="none";
+  },1800);
+}
 
 function updateXPUI(){
 
@@ -97,7 +108,7 @@ function addXP(amount){
 
     playerProfile.level++;
 
-    alert("🎉 LEVEL UP!\n\nLevel "+playerProfile.level);
+    showLevelUp(playerProfile.level);
   }
 
   saveProfile(playerProfile);

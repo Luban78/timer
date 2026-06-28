@@ -803,3 +803,26 @@ Open Window detail solve
     transition:width .35s;
 
 }
+
+.level-box{
+  text-align:center;
+  animation:levelPop .35s ease;
+}
+
+#level-number{
+  font-size:48px;
+  color:#00e5ff;
+  font-weight:bold;
+  margin-top:18px;
+}
+
+@keyframes levelPop{
+  from{
+    transform:scale(.8);
+    opacity:0;
+  }
+  to{
+    transform:scale(1);
+    opacity:1;
+  }
+}
