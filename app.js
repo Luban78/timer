@@ -78,6 +78,18 @@ const achievementModal=document.getElementById("achievement-modal");
 const achievementTitle=document.getElementById("achievement-title");
 const settingsResetProfileBtn=document.getElementById("settings-reset-profile-btn");
 const achievementList=document.getElementById("achievement-list");
+const recordModal=document.getElementById("record-modal");
+const recordTime=document.getElementById("record-time");
+
+function showRecord(time){
+  recordTime.textContent=time.toFixed(2)+" s";
+  recordModal.style.display="block";
+
+  setTimeout(()=>{
+    recordModal.style.display="none";
+  },2200);
+}
+
 
 const ACHIEVEMENTS=[
   {id:"first_solve", title:"První solve"},
@@ -665,7 +677,7 @@ saveSolve(finalTime, totalMoves, finalAvg);
 
 if (finalTime < oldBest) {
   
-  alert("🎉 Nový rekord!\n\n" + finalTime.toFixed(2) + " s");
+  showRecord(finalTime);
   
   unlockAchievement(
     "new_pb",
