@@ -76,6 +76,27 @@ const levelModal=document.getElementById("level-modal");
 const levelNumber=document.getElementById("level-number");
 const achievementModal=document.getElementById("achievement-modal");
 const achievementTitle=document.getElementById("achievement-title");
+const settingsResetProfileBtn=document.getElementById("settings-reset-profile-btn");
+
+function resetProfile(){
+  const ok=confirm("Opravdu vymazat XP, level a achievementy?");
+  if(!ok)return;
+
+  playerProfile={
+    xp:0,
+    level:1,
+    streak:0,
+    totalXP:0,
+    achievements:[]
+  };
+
+  saveProfile(playerProfile);
+  updateXPUI();
+
+  alert("Profil resetován.");
+}
+
+settingsResetProfileBtn.onclick=resetProfile;
 
 function showAchievement(title){
 
