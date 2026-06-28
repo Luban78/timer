@@ -121,30 +121,13 @@ function resetProfile() {
 
 settingsResetProfileBtn.onclick=resetProfile;
 
-function showAchievement(title){
-
-    achievementTitle.textContent=title;
-
-    achievementModal.style.display="block";
-
-    setTimeout(()=>{
-
-        achievementModal.style.display="none";
-
-    },2200);
-    
-    function showRecord(time, oldBest){
-  achievementTitle.textContent =
-    "🎉 Nový rekord!\n" +
-    time.toFixed(2) + " s";
-
-  achievementModal.style.display="block";
-
-  setTimeout(()=>{
-    achievementModal.style.display="none";
-  },2200);
-}
-
+function showAchievement(title) {
+  achievementTitle.textContent = title;
+  achievementModal.style.display = "block";
+  
+  setTimeout(() => {
+    achievementModal.style.display = "none";
+  }, 2200);
 }
 
 
@@ -190,15 +173,16 @@ function showLevelUp(level){
     levelModal.style.display="none";
   },1800);
 }
-function unlockAchievement(id,title,xp){
-  if(playerProfile.achievements.includes(id)) return;
-
+function unlockAchievement(id, title, xp) {
+  if (playerProfile.achievements.includes(id)) return;
+  
   playerProfile.achievements.push(id);
-  saveProfile(playerProfile);
-
+  
   addXP(xp);
-
-  alert("🏅 Nový odznak!\n\n"+title+"\n\n+"+xp+" XP");
+  saveProfile(playerProfile);
+  updateAchievementList();
+  
+  showAchievement(title);
 }
 
 function updateCoach(){
@@ -679,10 +663,10 @@ const oldBest = savedSolves.length ?
   
 saveSolve(finalTime, totalMoves, finalAvg);
 
-if(finalTime < oldBest){
-
-  showRecord(finalTime, oldBest);
-
+if (finalTime < oldBest) {
+  
+  alert("🎉 Nový rekord!\n\n" + finalTime.toFixed(2) + " s");
+  
   unlockAchievement(
     "new_pb",
     "Nový osobní rekord",
