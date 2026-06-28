@@ -667,8 +667,15 @@ const oldBest = savedSolves.length ?
   
 saveSolve(finalTime, totalMoves, finalAvg);
 
-if(finalTime < oldBest){
-  unlockAchievement("new_pb","Nový osobní rekord",100);
+if (finalTime < oldBest) {
+  
+  showAchievement("🎉 Nový rekord!");
+  
+  unlockAchievement(
+    "new_pb",
+    "Nový osobní rekord",
+    100
+  );
 }
 addXP(10);
 if(savedSolves.length===1){
