@@ -144,7 +144,14 @@ function addXP(amount){
   saveProfile(playerProfile);
   updateXPUI();
 }
+function showLevelUp(level){
+  levelNumber.textContent="Level "+level;
+  levelModal.style.display="block";
 
+  setTimeout(()=>{
+    levelModal.style.display="none";
+  },1800);
+}
 function unlockAchievement(id,title,xp){
   if(playerProfile.achievements.includes(id)) return;
 
