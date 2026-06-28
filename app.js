@@ -84,9 +84,9 @@ const ACHIEVEMENTS=[
   {id:"level_2", title:"Level 2"},
   {id:"ten_solves", title:"10 solve"},
   {id:"sub_5", title:"Sub 5"},
-  {id:"tps_5", title:"TPS 5+"}
+  {id:"tps_5", title:"TPS 5+"},
+  {id:"new_pb", title:"Nový osobní rekord"}
 ];
-
 function updateAchievementList(){
   achievementList.innerHTML=ACHIEVEMENTS.map(a=>{
     const unlocked=playerProfile.achievements.includes(a.id);
@@ -162,6 +162,9 @@ function addXP(amount){
     playerProfile.level++;
 
     showLevelUp(playerProfile.level);
+    if(playerProfile.level>=2){
+  unlockAchievement("level_2","Level 2",50);
+}
   }
 
   saveProfile(playerProfile);
@@ -658,9 +661,15 @@ stateMsg.innerText=manual
 :"HOTOVO - OTOČ PRO DALŠÍ";
 
 stateMsg.style.color="yellow";
-
+const oldBest = savedSolves.length ?
+  Math.min(...savedSolves.map(s => Number(s.time) || 999)) :
+  Infinity;
+  
 saveSolve(finalTime, totalMoves, finalAvg);
 
+if(finalTime < oldBest){
+  unlockAchievement("new_pb","Nový osobní rekord",100);
+}
 addXP(10);
 if(savedSolves.length===1){
   unlockAchievement(
