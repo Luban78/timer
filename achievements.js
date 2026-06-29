@@ -19,3 +19,30 @@ export function updateAchievementList(achievementList, playerProfile){
     `;
   }).join("");
 }
+
+export function unlockAchievement(
+  id,
+  title,
+  xp,
+  playerProfile,
+  saveProfile,
+  addXP,
+  showAchievement,
+  updateAchievementList,
+  achievementList
+){
+  if(playerProfile.achievements.includes(id)) return;
+
+  playerProfile.achievements.push(id);
+
+  saveProfile(playerProfile);
+
+  addXP(xp);
+
+  updateAchievementList(
+    achievementList,
+    playerProfile
+  );
+
+  showAchievement(title);
+}

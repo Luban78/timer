@@ -3,7 +3,8 @@
 //v4
 import {
   ACHIEVEMENTS,
-  updateAchievementList
+  updateAchievementList,
+  unlockAchievement
 } from "./achievements.js";
 
 import {
@@ -173,7 +174,17 @@ function addXP(amount){
 
     showLevelUp(playerProfile.level);
     if(playerProfile.level>=2){
-  unlockAchievement("level_2","Level 2",50);
+  unlockAchievement(
+  "level_2",
+  "Level 2",
+  50,
+  playerProfile,
+  saveProfile,
+  addXP,
+  showAchievement,
+  updateAchievementList,
+  achievementList
+);
 }
   }
 
@@ -187,17 +198,6 @@ function showLevelUp(level){
   setTimeout(()=>{
     levelModal.style.display="none";
   },1800);
-}
-function unlockAchievement(id, title, xp) {
-  if (playerProfile.achievements.includes(id)) return;
-  
-  playerProfile.achievements.push(id);
-  
-  addXP(xp);
-  saveProfile(playerProfile);
-  updateAchievementList(achievementList, playerProfile);
-  
-  showAchievement(title);
 }
 
 function updateCoach(){
@@ -776,18 +776,30 @@ function finishSolve(stopTime, manual) {
     showRecord(finalTime);
     
     unlockAchievement(
-      "new_pb",
-      "Nový osobní rekord",
-      100
-    );
+  "new_pb",
+  "Nový osobní rekord",
+  100,
+  playerProfile,
+  saveProfile,
+  addXP,
+  showAchievement,
+  updateAchievementList,
+  achievementList
+);
   }
   
   if (savedSolves.length === 1) {
     unlockAchievement(
-      "first_solve",
-      "První solve",
-      50
-    );
+  "first_solve",
+  "První solve",
+  50,
+  playerProfile,
+  saveProfile,
+  addXP,
+  showAchievement,
+  updateAchievementList,
+  achievementList
+);
   }
   
   beep(880, .2);
