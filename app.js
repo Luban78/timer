@@ -91,36 +91,7 @@ const recordTime=document.getElementById("record-time");
 const dailyList=document.getElementById("daily-list");
 const normalCubeBtn=document.getElementById("normalCubeBtn");
 
-/*const DAILY_TASKS=[
 
-{
-id:"solve10",
-title:"Udělej 10 solve",
-done:false
-},
-
-{
-id:"pb",
-title:"Překonej osobní rekord",
-done:false
-},
-
-{
-id:"tps5",
-title:"TPS vyšší než 5",
-done:false
-}
-
-];*/
-/*let dailyProgress = JSON.parse(localStorage.getItem("dailyProgress")) || {
-  solve10:false,
-  pb:false,
-  tps5:false
-};*/
-
-/*function saveDailyProgress(){
-  localStorage.setItem("dailyProgress", JSON.stringify(dailyProgress));
-}*/
 updateDailyTasks();
 
 function updateDailyTasks() {
@@ -357,6 +328,7 @@ function setActiveNav(activeBtn){
 }
 
 function showScreen(screen) {
+  activeScreen=screen;
   appScreen.style.display = screen === "timer" ? "flex" : "none";
   historyPanel.style.display = screen === "timer" ? "block" : "none";
   settingsScreen.style.display = screen === "settings" ? "block" : "none";
@@ -487,6 +459,7 @@ exportModal.onclick=e=>{
     exportModal.style.display="none";
   }
 };
+let activeScreen="timer";
 let cubeMode=localStorage.getItem("cubeMode") || "smart";
 let seq=[];
 let moveTimes=[];
@@ -720,6 +693,7 @@ function stopIfSolving(){
 }
 
 document.addEventListener("pointerdown", e => {
+  if(activeScreen!=="timer")return;
   if (e.target.closest("button")) return;
   if (e.target.closest("#bottom-nav")) return;
   if (e.target.closest("#modal")) return;
@@ -746,6 +720,7 @@ document.addEventListener("pointerdown", e => {
 });
 
 document.addEventListener("keydown", e => {
+  if(activeScreen!=="timer")return;
   if (cubeMode === "normal") {
     if (!isSolving) {
       startSolve(performance.now());
