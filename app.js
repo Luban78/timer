@@ -858,7 +858,13 @@ if (finalTime < oldBest) {
   );
 }
 addXP(10);
-completeDailyTask("solve10", 50, dailyList, addXP);
+const todaySolves = savedSolves.filter(s => {
+  return new Date(s.date).toDateString() === new Date().toDateString();
+}).length;
+
+if (todaySolves >= 10) {
+  completeDailyTask("solve10", 50, dailyList, addXP);
+}
 completeDailyTask("tps5", 75, dailyList, addXP);
 completeDailyTask("pb", 100, dailyList, addXP);
 
