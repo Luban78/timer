@@ -18,7 +18,8 @@ const FILES_TO_CACHE = [
   "./manifest.json",
   "./dailyTasks.js",
   "./achievements.js",
-  "./xp.js"
+  "./xp.js",
+  "./statistics.js"
 ];
 
 self.addEventListener("install", event=>{

@@ -823,7 +823,7 @@ function finishSolve(stopTime, manual) {
   
   beep(880, .2);
 }
-
+/*
 function updateStats(){
   const times=savedSolves.map(s=>Number(s.time)).filter(t=>t>0);
 
@@ -840,7 +840,7 @@ function updateStats(){
 
   statAo5.innerText=calcAverage(times,5);
   statAo12.innerText=calcAverage(times,12);
-}
+}*/
 
 function calcAverage(times,count){
   if(times.length<count)return "-";
