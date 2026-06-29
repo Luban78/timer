@@ -100,20 +100,7 @@ const normalCubeBtn=document.getElementById("normalCubeBtn");
 
 
 updateDailyTasks(dailyList);
-/*
-function updateDailyTasks() {
-  dailyList.innerHTML =
-    DAILY_TASKS.map(task => {
-      const done = dailyProgress[task.id];
-      
-      return `
-        <div class="achievement-item ${done ? "unlocked" : "locked"}">
-          <span>${done ? "✅" : "⬜"}</span>
-          <span>${task.title}</span>
-        </div>
-      `;
-    }).join("");
-}*/
+
 function showRecord(time){
   recordTime.textContent=time.toFixed(2)+" s";
   recordModal.style.display="block";
@@ -122,40 +109,7 @@ function showRecord(time){
     recordModal.style.display="none";
   },2200);
 }
-/*
-function completeDailyTask(id,xp){
-  if(dailyProgress[id]) return;
 
-  dailyProgress[id]=true;
-  saveDailyProgress();
-
-  addXP(xp);
-  updateDailyTasks(dailyList);
-
-  alert("🎯 Denní úkol splněn!\n\n+"+xp+" XP");
-}*/
-/*
-const ACHIEVEMENTS=[
-  {id:"first_solve", title:"První solve"},
-  {id:"level_2", title:"Level 2"},
-  {id:"ten_solves", title:"10 solve"},
-  {id:"sub_5", title:"Sub 5"},
-  {id:"tps_5", title:"TPS 5+"},
-  {id:"new_pb", title:"Nový osobní rekord"}
-];*/
-/*
-function updateAchievementList(){
-  achievementList.innerHTML=ACHIEVEMENTS.map(a=>{
-    const unlocked=playerProfile.achievements.includes(a.id);
-
-    return `
-      <div class="achievement-item ${unlocked ? "unlocked" : "locked"}">
-        <span>${unlocked ? "✅" : "🔒"}</span>
-        <span>${a.title}</span>
-      </div>
-    `;
-  }).join("");
-}*/
 function resetProfile() {
   
   const ok = confirm("Opravdu vymazat XP, level a achievementy?");
@@ -192,8 +146,6 @@ function showAchievement(title) {
     achievementModal.style.display = "none";
   }, 2200);
 }
-
-
 
 function updateXPUI(){
 
@@ -750,54 +702,7 @@ document.addEventListener("keydown", e => {
     manualStop();
   }
 });
-/*
-document.addEventListener("pointerdown", e => {
-  if(activeScreen!=="timer")return;
-  if(e.target.closest("#history"))return;
-if(e.target.closest("#history-list"))return;
-if(e.target.closest(".history-item"))return;
-  if (e.target.closest("button")) return;
-  if (e.target.closest("#bottom-nav")) return;
-  if (e.target.closest("#modal")) return;
-  if (e.target.closest("#solve-detail")) return;
-  if (e.target.closest("#export-modal")) return;
-  if (e.target.closest("#import-modal")) return;
-  if (e.target.closest("#level-modal")) return;
-  if (e.target.closest("#achievement-modal")) return;
-  if (e.target.closest("#record-modal")) return;
-  
-  if (cubeMode === "normal") {
-    if (!isSolving) {
-      startSolve(performance.now());
-      return;
-    }
-    
-    manualStop();
-    return;
-  }
-  
-  if (isSolving) {
-    stopIfSolving();
-  }
-});*/
 
-/*
-document.addEventListener("keydown", e => {
-  if(activeScreen!=="timer")return;
-  if (cubeMode === "normal") {
-    if (!isSolving) {
-      startSolve(performance.now());
-      return;
-    }
-    
-    manualStop();
-    return;
-  }
-  
-  if (isSolving) {
-    stopIfSolving();
-  }
-});*/
 function getNormalMoveCount(){
   const algText = selectedAlg.innerText || "";
   const parts = algText.split(":");
