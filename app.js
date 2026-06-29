@@ -1,6 +1,7 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
+
 import {
   DAILY_TASKS,
   dailyProgress,
@@ -88,6 +89,8 @@ const achievementList=document.getElementById("achievement-list");
 const recordModal=document.getElementById("record-modal");
 const recordTime=document.getElementById("record-time");
 const dailyList=document.getElementById("daily-list");
+const normalCubeBtn=document.getElementById("normalCubeBtn");
+
 /*const DAILY_TASKS=[
 
 {
@@ -425,6 +428,22 @@ runImportBtn.onclick=()=>{
     alert("Import se nepodařil.");
   }
 };
+
+normalCubeBtn.onclick=()=>{
+  cubeMode="normal";
+  localStorage.setItem("cubeMode",cubeMode);
+
+  isConnected=true;
+
+  btn.style.display="none";
+  normalCubeBtn.style.display="none";
+  modeButtons.style.display="grid";
+
+  status.innerText="Normal Cube režim";
+  stateMsg.innerText="Vyber algoritmus a klepni pro start";
+  stateMsg.style.color="yellow";
+};
+
 /* end run import button*/
 function showExportModal(){
   exportText.value=JSON.stringify(savedSolves,null,2);
@@ -468,7 +487,7 @@ exportModal.onclick=e=>{
     exportModal.style.display="none";
   }
 };
-
+let cubeMode=localStorage.getItem("cubeMode") || "smart";
 let seq=[];
 let moveTimes=[];
 let tpsHistory=[];
