@@ -1,6 +1,7 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
+import { ACHIEVEMENTS } from "./achievements.js";
 
 import {
   DAILY_TASKS,
@@ -130,6 +131,7 @@ function completeDailyTask(id,xp){
 
   alert("🎯 Denní úkol splněn!\n\n+"+xp+" XP");
 }*/
+/*
 const ACHIEVEMENTS=[
   {id:"first_solve", title:"První solve"},
   {id:"level_2", title:"Level 2"},
@@ -137,7 +139,7 @@ const ACHIEVEMENTS=[
   {id:"sub_5", title:"Sub 5"},
   {id:"tps_5", title:"TPS 5+"},
   {id:"new_pb", title:"Nový osobní rekord"}
-];
+];*/
 function updateAchievementList(){
   achievementList.innerHTML=ACHIEVEMENTS.map(a=>{
     const unlocked=playerProfile.achievements.includes(a.id);
