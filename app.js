@@ -497,6 +497,8 @@ btn.onclick=async(e)=>{
     });
 
     isConnected=true;
+    cubeMode="smart";
+localStorage.setItem("cubeMode",cubeMode);
     btn.style.display="none";
     modeButtons.style.display="grid";
     status.innerText="Připojeno, začni otočením kostky";
