@@ -6,7 +6,8 @@ import {
   DAILY_TASKS,
   dailyProgress,
   saveDailyProgress,
-  resetDailyProgress
+  resetDailyProgress,
+  updateDailyTasks
 } from "./dailyTasks.js";
 
 import { getAlgorithmStats } from "./algorithmStats.js";
@@ -92,8 +93,8 @@ const dailyList=document.getElementById("daily-list");
 const normalCubeBtn=document.getElementById("normalCubeBtn");
 
 
-updateDailyTasks();
-
+updateDailyTasks(dailyList);
+/*
 function updateDailyTasks() {
   dailyList.innerHTML =
     DAILY_TASKS.map(task => {
@@ -106,7 +107,7 @@ function updateDailyTasks() {
         </div>
       `;
     }).join("");
-}
+}*/
 function showRecord(time){
   recordTime.textContent=time.toFixed(2)+" s";
   recordModal.style.display="block";
@@ -123,7 +124,7 @@ function completeDailyTask(id,xp){
   saveDailyProgress();
 
   addXP(xp);
-  updateDailyTasks();
+  updateDailyTasks(dailyList);
 
   alert("🎯 Denní úkol splněn!\n\n+"+xp+" XP");
 }
@@ -169,7 +170,7 @@ function resetProfile() {
   // Překreslení celé obrazovky
   updateXPUI();
   updateAchievementList();
-  updateDailyTasks();
+  updateDailyTasks(dailyList);
   
   alert("Profil resetován.");
 }

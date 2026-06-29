@@ -24,3 +24,17 @@ export function resetDailyProgress() {
   
   saveDailyProgress();
 }
+
+export function updateDailyTasks(dailyList){
+  dailyList.innerHTML =
+    DAILY_TASKS.map(task=>{
+      const done=dailyProgress[task.id];
+
+      return `
+        <div class="achievement-item ${done ? "unlocked" : "locked"}">
+          <span>${done ? "✅" : "⬜"}</span>
+          <span>${task.title}</span>
+        </div>
+      `;
+    }).join("");
+}
