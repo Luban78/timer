@@ -7,7 +7,8 @@ import {
   dailyProgress,
   saveDailyProgress,
   resetDailyProgress,
-  updateDailyTasks
+  updateDailyTasks,
+  completeDailyTask
 } from "./dailyTasks.js";
 
 import { getAlgorithmStats } from "./algorithmStats.js";
@@ -116,7 +117,7 @@ function showRecord(time){
     recordModal.style.display="none";
   },2200);
 }
-
+/*
 function completeDailyTask(id,xp){
   if(dailyProgress[id]) return;
 
@@ -127,7 +128,7 @@ function completeDailyTask(id,xp){
   updateDailyTasks(dailyList);
 
   alert("🎯 Denní úkol splněn!\n\n+"+xp+" XP");
-}
+}*/
 const ACHIEVEMENTS=[
   {id:"first_solve", title:"První solve"},
   {id:"level_2", title:"Level 2"},
@@ -857,13 +858,10 @@ if (finalTime < oldBest) {
   );
 }
 addXP(10);
-if(savedSolves.length>=10){
-  completeDailyTask("solve10",50);
-}
+completeDailyTask("solve10", 50, dailyList, addXP);
+completeDailyTask("tps5", 75, dailyList, addXP);
+completeDailyTask("pb", 100, dailyList, addXP);
 
-if(finalAvg>=5){
-  completeDailyTask("tps5",75);
-}
 if(savedSolves.length===1){
   unlockAchievement(
     "first_solve",

@@ -38,3 +38,16 @@ export function updateDailyTasks(dailyList){
       `;
     }).join("");
 }
+
+
+export function completeDailyTask(id, xp, dailyList, addXP){
+  if(dailyProgress[id]) return;
+
+  dailyProgress[id]=true;
+  saveDailyProgress();
+
+  addXP(xp);
+  updateDailyTasks(dailyList);
+
+  alert("🎯 Denní úkol splněn!\n\n+"+xp+" XP");
+}

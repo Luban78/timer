@@ -1,4 +1,4 @@
-const CACHE_NAME = "mg3i-trainer-v044";
+const CACHE_NAME = "mg3i-trainer-v045";
 
 const FILES_TO_CACHE = [
   "./",
