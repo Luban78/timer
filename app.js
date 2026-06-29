@@ -720,21 +720,46 @@ function stopIfSolving(){
 }
 
 document.addEventListener("pointerdown", e => {
-  if (!isSolving) return;
-  
+  if (e.target.closest("button")) return;
   if (e.target.closest("#bottom-nav")) return;
   if (e.target.closest("#modal")) return;
   if (e.target.closest("#solve-detail")) return;
   if (e.target.closest("#export-modal")) return;
   if (e.target.closest("#import-modal")) return;
+  if (e.target.closest("#level-modal")) return;
+  if (e.target.closest("#achievement-modal")) return;
+  if (e.target.closest("#record-modal")) return;
   
-  stopIfSolving();
-});
-document.addEventListener("keydown", e=>{
-  if(!isSolving)return;
-  stopIfSolving();
+  if (cubeMode === "normal") {
+    if (!isSolving) {
+      startSolve(performance.now());
+      return;
+    }
+    
+    manualStop();
+    return;
+  }
+  
+  if (isSolving) {
+    stopIfSolving();
+  }
 });
 
+document.addEventListener("keydown", e => {
+  if (cubeMode === "normal") {
+    if (!isSolving) {
+      startSolve(performance.now());
+      return;
+    }
+    
+    manualStop();
+    return;
+  }
+  
+  if (isSolving) {
+    stopIfSolving();
+  }
+});
 function finishSolve(stopTime,manual){
 if(!isSolving)return;
 
