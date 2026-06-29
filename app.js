@@ -559,6 +559,7 @@ function direction(move){return String(move).includes("'")?-1:1;}
 function makeDoubleMove(move){return baseFace(move)+"2";}
 
 function handleRawMove(move){
+  if(activeScreen!=="timer")return;
 const now=performance.now();
 
 if(!isSolving && seq.length>0){
@@ -694,6 +695,9 @@ function stopIfSolving(){
 
 document.addEventListener("pointerdown", e => {
   if(activeScreen!=="timer")return;
+  if(e.target.closest("#history"))return;
+if(e.target.closest("#history-list"))return;
+if(e.target.closest(".history-item"))return;
   if (e.target.closest("button")) return;
   if (e.target.closest("#bottom-nav")) return;
   if (e.target.closest("#modal")) return;
