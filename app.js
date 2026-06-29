@@ -1,7 +1,13 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
-import { DAILY_TASKS } from "./dailyTasks.js";
+import {
+  DAILY_TASKS,
+  dailyProgress,
+  saveDailyProgress,
+  resetDailyProgress
+} from "./dailyTasks.js";
+
 import { getAlgorithmStats } from "./algorithmStats.js";
 import { drawDetailGraph } from "./detailGraph.js";
 import { openPLLMenu } from "./algMenu.js";
@@ -103,15 +109,15 @@ done:false
 }
 
 ];*/
-let dailyProgress = JSON.parse(localStorage.getItem("dailyProgress")) || {
+/*let dailyProgress = JSON.parse(localStorage.getItem("dailyProgress")) || {
   solve10:false,
   pb:false,
   tps5:false
-};
+};*/
 
-function saveDailyProgress(){
+/*function saveDailyProgress(){
   localStorage.setItem("dailyProgress", JSON.stringify(dailyProgress));
-}
+}*/
 updateDailyTasks();
 
 function updateDailyTasks() {
@@ -172,7 +178,7 @@ function resetProfile() {
   const ok = confirm("Opravdu vymazat XP, level a achievementy?");
   if (!ok) return;
   
-  // Profil
+  // Reset profilu hráče
   playerProfile = {
     xp: 0,
     level: 1,
@@ -183,16 +189,10 @@ function resetProfile() {
   
   saveProfile(playerProfile);
   
-  // Denní úkoly
-  localStorage.removeItem("dailyProgress");
+  // Reset denních úkolů
+  resetDailyProgress();
   
-  dailyProgress.solve10 = false;
-  dailyProgress.pb = false;
-  dailyProgress.tps5 = false;
-  
-  saveDailyProgress();
-  
-  // Obnov UI
+  // Překreslení celé obrazovky
   updateXPUI();
   updateAchievementList();
   updateDailyTasks();
