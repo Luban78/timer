@@ -760,15 +760,44 @@ document.addEventListener("keydown", e => {
     stopIfSolving();
   }
 });
-function finishSolve(stopTime,manual){
-if(!isSolving)return;
+function getNormalMoveCount(){
+  const algText = selectedAlg.innerText || "";
+  const parts = algText.split(":");
+  const alg = parts[1] ? parts[1].trim() : "";
 
-isSolving=false;
-clearInterval(uiTimer);
-clearTimeout(stopTimer);
+  if(!alg)return 0;
 
-const finalTime=(stopTime-startTime)/1000;
-const finalAvg=finalTime>0?totalMoves/finalTime:0;
+  return alg
+    .split(/\s+/)
+    .filter(m=>m.length>0)
+    .length;
+}
+function finishSolve(stopTime, manual) {
+  if (!isSolving) return;
+  
+  const finalTime = (stopTime - startTime) / 1000;
+  
+  if (finalTime < 0.5) {
+    isSolving = false;
+    clearInterval(uiTimer);
+    clearTimeout(stopTimer);
+    resetTimerUI();
+    return;
+  }
+  
+  isSolving = false;
+  clearInterval(uiTimer);
+  clearTimeout(stopTimer);
+  
+  let finalMoves = totalMoves;
+
+if (cubeMode === "normal") {
+  finalMoves = getNormalMoveCount();
+  totalMoves = finalMoves;
+  movesVal.innerText = finalMoves;
+}
+
+const finalAvg = finalTime > 0 ? finalMoves / finalTime : 0;
 
 timeVal.innerText=finalTime.toFixed(2)+"s";
 avgVal.innerText=finalAvg.toFixed(1);
@@ -785,7 +814,7 @@ const oldBest = savedSolves.length ?
   Math.min(...savedSolves.map(s => Number(s.time) || 999)) :
   Infinity;
   
-saveSolve(finalTime, totalMoves, finalAvg);
+saveSolve(finalTime, finalMoves, finalAvg);
 
 if (finalTime < oldBest) {
   
@@ -813,6 +842,8 @@ if(savedSolves.length===1){
   );
 }
 beep(880, .2);
+
+
 }
 
 
