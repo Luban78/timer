@@ -560,6 +560,8 @@ function makeDoubleMove(move){return baseFace(move)+"2";}
 
 function handleRawMove(move){
   if(activeScreen!=="timer")return;
+if(cubeMode==="normal")return;
+  
 const now=performance.now();
 
 if(!isSolving && seq.length>0){
@@ -692,7 +694,52 @@ function stopIfSolving(){
     manualStop();
   }
 }
+document.addEventListener("pointerdown", e=>{
+  if(activeScreen!=="timer")return;
 
+  if(e.target.closest("button"))return;
+  if(e.target.closest("#history"))return;
+  if(e.target.closest("#history-list"))return;
+  if(e.target.closest(".hist-row"))return;
+  if(e.target.closest("#bottom-nav"))return;
+  if(e.target.closest("#modal"))return;
+  if(e.target.closest("#solve-detail"))return;
+  if(e.target.closest("#export-modal"))return;
+  if(e.target.closest("#import-modal"))return;
+  if(e.target.closest("#level-modal"))return;
+  if(e.target.closest("#achievement-modal"))return;
+  if(e.target.closest("#record-modal"))return;
+
+  if(cubeMode==="normal"){
+    if(!isSolving){
+      startSolve(performance.now());
+    }else{
+      manualStop();
+    }
+    return;
+  }
+
+  if(cubeMode==="smart" && isSolving){
+    manualStop();
+  }
+});
+document.addEventListener("keydown", e => {
+  if (activeScreen !== "timer") return;
+  
+  if (cubeMode === "normal") {
+    if (!isSolving) {
+      startSolve(performance.now());
+    } else {
+      manualStop();
+    }
+    return;
+  }
+  
+  if (cubeMode === "smart" && isSolving) {
+    manualStop();
+  }
+});
+/*
 document.addEventListener("pointerdown", e => {
   if(activeScreen!=="timer")return;
   if(e.target.closest("#history"))return;
@@ -721,8 +768,9 @@ if(e.target.closest(".history-item"))return;
   if (isSolving) {
     stopIfSolving();
   }
-});
+});*/
 
+/*
 document.addEventListener("keydown", e => {
   if(activeScreen!=="timer")return;
   if (cubeMode === "normal") {
@@ -738,7 +786,7 @@ document.addEventListener("keydown", e => {
   if (isSolving) {
     stopIfSolving();
   }
-});
+});*/
 function getNormalMoveCount(){
   const algText = selectedAlg.innerText || "";
   const parts = algText.split(":");
