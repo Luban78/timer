@@ -51,3 +51,17 @@ export function completeDailyTask(id, xp, dailyList, addXP){
 
   alert("🎯 Denní úkol splněn!\n\n+"+xp+" XP");
 }
+
+export function checkDailyTasks(savedSolves, finalAvg, isPB, dailyList, addXP){
+  if(savedSolves.length>=10){
+    completeDailyTask("solve10",50,dailyList,addXP);
+  }
+
+  if(isPB){
+    completeDailyTask("pb",100,dailyList,addXP);
+  }
+
+  if(finalAvg>=5){
+    completeDailyTask("tps5",75,dailyList,addXP);
+  }
+}

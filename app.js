@@ -8,7 +8,8 @@ import {
   saveDailyProgress,
   resetDailyProgress,
   updateDailyTasks,
-  completeDailyTask
+  completeDailyTask,
+  checkDailyTasks
 } from "./dailyTasks.js";
 
 import { getAlgorithmStats } from "./algorithmStats.js";
@@ -821,65 +822,65 @@ function finishSolve(stopTime, manual) {
   clearTimeout(stopTimer);
   
   let finalMoves = totalMoves;
-
-if (cubeMode === "normal") {
-  finalMoves = getNormalMoveCount();
-  totalMoves = finalMoves;
-  movesVal.innerText = finalMoves;
-}
-
-const finalAvg = finalTime > 0 ? finalMoves / finalTime : 0;
-
-timeVal.innerText=finalTime.toFixed(2)+"s";
-avgVal.innerText=finalAvg.toFixed(1);
-
-moveTimes=[];
-tpsDiv.innerText="0.0";
-
-stateMsg.innerText=manual
-?"ZASTAVENO - OTOČ PRO DALŠÍ"
-:"HOTOVO - OTOČ PRO DALŠÍ";
-
-stateMsg.style.color="yellow";
-const oldBest = savedSolves.length ?
-  Math.min(...savedSolves.map(s => Number(s.time) || 999)) :
-  Infinity;
   
-saveSolve(finalTime, finalMoves, finalAvg);
-
-if (finalTime < oldBest) {
+  if (cubeMode === "normal") {
+    finalMoves = getNormalMoveCount();
+    totalMoves = finalMoves;
+    movesVal.innerText = finalMoves;
+  }
   
-  showRecord(finalTime);
+  const finalAvg = finalTime > 0 ? finalMoves / finalTime : 0;
   
-  unlockAchievement(
-    "new_pb",
-    "Nový osobní rekord",
-    100
+  timeVal.innerText = finalTime.toFixed(2) + "s";
+  avgVal.innerText = finalAvg.toFixed(1);
+  
+  moveTimes = [];
+  tpsDiv.innerText = "0.0";
+  
+  stateMsg.innerText = manual ?
+    "ZASTAVENO - OTOČ PRO DALŠÍ" :
+    "HOTOVO - OTOČ PRO DALŠÍ";
+  
+  stateMsg.style.color = "yellow";
+  
+  const oldBest = savedSolves.length ?
+    Math.min(...savedSolves.map(s => Number(s.time) || 999)) :
+    Infinity;
+  
+  const isPB = finalTime < oldBest;
+  
+  saveSolve(finalTime, finalMoves, finalAvg);
+  
+  addXP(10);
+  
+  checkDailyTasks(
+    savedSolves,
+    finalAvg,
+    isPB,
+    dailyList,
+    addXP
   );
+  
+  if (isPB) {
+    showRecord(finalTime);
+    
+    unlockAchievement(
+      "new_pb",
+      "Nový osobní rekord",
+      100
+    );
+  }
+  
+  if (savedSolves.length === 1) {
+    unlockAchievement(
+      "first_solve",
+      "První solve",
+      50
+    );
+  }
+  
+  beep(880, .2);
 }
-addXP(10);
-const todaySolves = savedSolves.filter(s => {
-  return new Date(s.date).toDateString() === new Date().toDateString();
-}).length;
-
-if (todaySolves >= 10) {
-  completeDailyTask("solve10", 50, dailyList, addXP);
-}
-completeDailyTask("tps5", 75, dailyList, addXP);
-completeDailyTask("pb", 100, dailyList, addXP);
-
-if(savedSolves.length===1){
-  unlockAchievement(
-    "first_solve",
-    "První solve",
-    50
-  );
-}
-beep(880, .2);
-
-
-}
-
 
 function updateStats(){
   const times=savedSolves.map(s=>Number(s.time)).filter(t=>t>0);
