@@ -3,18 +3,6 @@
 //v4
 
 import {
-  updateXPUI,
-  showLevelUp,
-  addXP
-} from "./xp.js";
-
-import {
-  ACHIEVEMENTS,
-  updateAchievementList,
-  unlockAchievement
-} from "./achievements.js";
-
-import {
   DAILY_TASKS,
   dailyProgress,
   saveDailyProgress,
@@ -108,7 +96,20 @@ const normalCubeBtn=document.getElementById("normalCubeBtn");
 
 
 updateDailyTasks(dailyList);
-
+/*
+function updateDailyTasks() {
+  dailyList.innerHTML =
+    DAILY_TASKS.map(task => {
+      const done = dailyProgress[task.id];
+      
+      return `
+        <div class="achievement-item ${done ? "unlocked" : "locked"}">
+          <span>${done ? "✅" : "⬜"}</span>
+          <span>${task.title}</span>
+        </div>
+      `;
+    }).join("");
+}*/
 function showRecord(time){
   recordTime.textContent=time.toFixed(2)+" s";
   recordModal.style.display="block";
@@ -117,7 +118,38 @@ function showRecord(time){
     recordModal.style.display="none";
   },2200);
 }
+/*
+function completeDailyTask(id,xp){
+  if(dailyProgress[id]) return;
 
+  dailyProgress[id]=true;
+  saveDailyProgress();
+
+  addXP(xp);
+  updateDailyTasks(dailyList);
+
+  alert("🎯 Denní úkol splněn!\n\n+"+xp+" XP");
+}*/
+const ACHIEVEMENTS=[
+  {id:"first_solve", title:"První solve"},
+  {id:"level_2", title:"Level 2"},
+  {id:"ten_solves", title:"10 solve"},
+  {id:"sub_5", title:"Sub 5"},
+  {id:"tps_5", title:"TPS 5+"},
+  {id:"new_pb", title:"Nový osobní rekord"}
+];
+function updateAchievementList(){
+  achievementList.innerHTML=ACHIEVEMENTS.map(a=>{
+    const unlocked=playerProfile.achievements.includes(a.id);
+
+    return `
+      <div class="achievement-item ${unlocked ? "unlocked" : "locked"}">
+        <span>${unlocked ? "✅" : "🔒"}</span>
+        <span>${a.title}</span>
+      </div>
+    `;
+  }).join("");
+}
 function resetProfile() {
   
   const ok = confirm("Opravdu vymazat XP, level a achievementy?");
@@ -138,8 +170,8 @@ function resetProfile() {
   resetDailyProgress();
   
   // Překreslení celé obrazovky
-  updateXPUI(playerProfile, playerLevel, xpText, xpFill);
-  updateAchievementList(achievementList, playerProfile);
+  updateXPUI();
+  updateAchievementList();
   updateDailyTasks(dailyList);
   
   alert("Profil resetován.");
@@ -153,6 +185,61 @@ function showAchievement(title) {
   setTimeout(() => {
     achievementModal.style.display = "none";
   }, 2200);
+}
+
+
+
+function updateXPUI(){
+
+    playerLevel.textContent=playerProfile.level;
+
+    const need=playerProfile.level*100;
+
+    xpText.textContent=
+        `${playerProfile.xp} / ${need} XP`;
+
+    xpFill.style.width=
+        (playerProfile.xp/need*100)+"%";
+}
+
+function addXP(amount){
+
+  playerProfile.xp += amount;
+  playerProfile.totalXP += amount;
+
+  while(playerProfile.xp >= playerProfile.level*100){
+
+    playerProfile.xp -= playerProfile.level*100;
+
+    playerProfile.level++;
+
+    showLevelUp(playerProfile.level);
+    if(playerProfile.level>=2){
+  unlockAchievement("level_2","Level 2",50);
+}
+  }
+
+  saveProfile(playerProfile);
+  updateXPUI();
+}
+function showLevelUp(level){
+  levelNumber.textContent="Level "+level;
+  levelModal.style.display="block";
+
+  setTimeout(()=>{
+    levelModal.style.display="none";
+  },1800);
+}
+function unlockAchievement(id, title, xp) {
+  if (playerProfile.achievements.includes(id)) return;
+  
+  playerProfile.achievements.push(id);
+  
+  addXP(xp);
+  saveProfile(playerProfile);
+  updateAchievementList();
+  
+  showAchievement(title);
 }
 
 function updateCoach(){
@@ -307,7 +394,7 @@ runImportBtn.onclick=()=>{
     updateStatistics();
     updateAlgorithmStats();
     updateCoach();
-    updateAchievementList(achievementList, playerProfile);
+    updateAchievementList();
     importModal.style.display="none";
 
     alert("Import dokončen.");
@@ -657,7 +744,54 @@ document.addEventListener("keydown", e => {
     manualStop();
   }
 });
+/*
+document.addEventListener("pointerdown", e => {
+  if(activeScreen!=="timer")return;
+  if(e.target.closest("#history"))return;
+if(e.target.closest("#history-list"))return;
+if(e.target.closest(".history-item"))return;
+  if (e.target.closest("button")) return;
+  if (e.target.closest("#bottom-nav")) return;
+  if (e.target.closest("#modal")) return;
+  if (e.target.closest("#solve-detail")) return;
+  if (e.target.closest("#export-modal")) return;
+  if (e.target.closest("#import-modal")) return;
+  if (e.target.closest("#level-modal")) return;
+  if (e.target.closest("#achievement-modal")) return;
+  if (e.target.closest("#record-modal")) return;
+  
+  if (cubeMode === "normal") {
+    if (!isSolving) {
+      startSolve(performance.now());
+      return;
+    }
+    
+    manualStop();
+    return;
+  }
+  
+  if (isSolving) {
+    stopIfSolving();
+  }
+});*/
 
+/*
+document.addEventListener("keydown", e => {
+  if(activeScreen!=="timer")return;
+  if (cubeMode === "normal") {
+    if (!isSolving) {
+      startSolve(performance.now());
+      return;
+    }
+    
+    manualStop();
+    return;
+  }
+  
+  if (isSolving) {
+    stopIfSolving();
+  }
+});*/
 function getNormalMoveCount(){
   const algText = selectedAlg.innerText || "";
   const parts = algText.split(":");
@@ -717,18 +851,7 @@ function finishSolve(stopTime, manual) {
   
   saveSolve(finalTime, finalMoves, finalAvg);
   
-  addXP(
-  10,
-  playerProfile,
-  saveProfile,
-  updateXPUI,
-  playerLevel,
-  xpText,
-  xpFill,
-  showLevelUp,
-  levelModal,
-  levelNumber
-);
+  addXP(10);
   
   checkDailyTasks(
     savedSolves,
@@ -742,33 +865,39 @@ function finishSolve(stopTime, manual) {
     showRecord(finalTime);
     
     unlockAchievement(
-  "new_pb",
-  "Nový osobní rekord",
-  100,
-  playerProfile,
-  saveProfile,
-  addXP,
-  showAchievement,
-  updateAchievementList,
-  achievementList
-);
+      "new_pb",
+      "Nový osobní rekord",
+      100
+    );
   }
   
   if (savedSolves.length === 1) {
     unlockAchievement(
-  "first_solve",
-  "První solve",
-  50,
-  playerProfile,
-  saveProfile,
-  addXP,
-  showAchievement,
-  updateAchievementList,
-  achievementList
-);
+      "first_solve",
+      "První solve",
+      50
+    );
   }
   
   beep(880, .2);
+}
+
+function updateStats(){
+  const times=savedSolves.map(s=>Number(s.time)).filter(t=>t>0);
+
+  statCount.innerText=times.length;
+
+  if(times.length===0){
+    statBest.innerText="-";
+    statAo5.innerText="-";
+    statAo12.innerText="-";
+    return;
+  }
+
+  statBest.innerText=Math.min(...times).toFixed(2)+"s";
+
+  statAo5.innerText=calcAverage(times,5);
+  statAo12.innerText=calcAverage(times,12);
 }
 
 function calcAverage(times,count){
@@ -812,7 +941,7 @@ updateStats();
 updateStatistics();
 updateAlgorithmStats();
 updateCoach();
-updateAchievementList(achievementList, playerProfile);
+updateAchievementList();
 }
 
 
@@ -831,7 +960,7 @@ function clearHistory(){
   updateStatistics();
   updateAlgorithmStats();
   updateCoach();
-  updateAchievementList(achievementList, playerProfile);
+  updateAchievementList();
 }
 
 clearHistoryBtn.onclick=clearHistory;
@@ -878,4 +1007,4 @@ updateStats();
 updateStatistics();
 updateAlgorithmStats(); 
 updateCoach();
-updateAchievementList(achievementList, playerProfile);
+updateAchievementList();
