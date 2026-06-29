@@ -6,3 +6,16 @@ export const ACHIEVEMENTS = [
   { id: "tps_5", title: "TPS 5+" },
   { id: "new_pb", title: "Nový osobní rekord" }
 ];
+
+export function updateAchievementList(achievementList, playerProfile){
+  achievementList.innerHTML=ACHIEVEMENTS.map(a=>{
+    const unlocked=playerProfile.achievements.includes(a.id);
+
+    return `
+      <div class="achievement-item ${unlocked ? "unlocked" : "locked"}">
+        <span>${unlocked ? "✅" : "🔒"}</span>
+        <span>${a.title}</span>
+      </div>
+    `;
+  }).join("");
+}

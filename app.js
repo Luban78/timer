@@ -1,7 +1,10 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
-import { ACHIEVEMENTS } from "./achievements.js";
+import {
+  ACHIEVEMENTS,
+  updateAchievementList
+} from "./achievements.js";
 
 import {
   DAILY_TASKS,
@@ -140,6 +143,7 @@ const ACHIEVEMENTS=[
   {id:"tps_5", title:"TPS 5+"},
   {id:"new_pb", title:"Nový osobní rekord"}
 ];*/
+/*
 function updateAchievementList(){
   achievementList.innerHTML=ACHIEVEMENTS.map(a=>{
     const unlocked=playerProfile.achievements.includes(a.id);
@@ -151,7 +155,7 @@ function updateAchievementList(){
       </div>
     `;
   }).join("");
-}
+}*/
 function resetProfile() {
   
   const ok = confirm("Opravdu vymazat XP, level a achievementy?");
@@ -173,7 +177,7 @@ function resetProfile() {
   
   // Překreslení celé obrazovky
   updateXPUI();
-  updateAchievementList();
+  updateAchievementList(achievementList, playerProfile);
   updateDailyTasks(dailyList);
   
   alert("Profil resetován.");
@@ -239,7 +243,7 @@ function unlockAchievement(id, title, xp) {
   
   addXP(xp);
   saveProfile(playerProfile);
-  updateAchievementList();
+  updateAchievementList(achievementList, playerProfile);
   
   showAchievement(title);
 }
@@ -396,7 +400,7 @@ runImportBtn.onclick=()=>{
     updateStatistics();
     updateAlgorithmStats();
     updateCoach();
-    updateAchievementList();
+    updateAchievementList(achievementList, playerProfile);
     importModal.style.display="none";
 
     alert("Import dokončen.");
@@ -943,7 +947,7 @@ updateStats();
 updateStatistics();
 updateAlgorithmStats();
 updateCoach();
-updateAchievementList();
+updateAchievementList(achievementList, playerProfile);
 }
 
 
@@ -962,7 +966,7 @@ function clearHistory(){
   updateStatistics();
   updateAlgorithmStats();
   updateCoach();
-  updateAchievementList();
+  updateAchievementList(achievementList, playerProfile);
 }
 
 clearHistoryBtn.onclick=clearHistory;
@@ -1009,4 +1013,4 @@ updateStats();
 updateStatistics();
 updateAlgorithmStats(); 
 updateCoach();
-updateAchievementList();
+updateAchievementList(achievementList, playerProfile);
