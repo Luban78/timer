@@ -1,6 +1,13 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
+
+import {
+  updateXPUI,
+  showLevelUp,
+  addXP
+} from "./xp.js";
+
 import {
   ACHIEVEMENTS,
   updateAchievementList,
@@ -131,7 +138,7 @@ function resetProfile() {
   resetDailyProgress();
   
   // Překreslení celé obrazovky
-  updateXPUI();
+  updateXPUI(playerProfile, playerLevel, xpText, xpFill);
   updateAchievementList(achievementList, playerProfile);
   updateDailyTasks(dailyList);
   
@@ -147,7 +154,7 @@ function showAchievement(title) {
     achievementModal.style.display = "none";
   }, 2200);
 }
-
+/*
 function updateXPUI(){
 
     playerLevel.textContent=playerProfile.level;
@@ -159,9 +166,9 @@ function updateXPUI(){
 
     xpFill.style.width=
         (playerProfile.xp/need*100)+"%";
-}
-
-function addXP(amount){
+}*/
+/*
+functionaddXP(amount){
 
   playerProfile.xp += amount;
   playerProfile.totalXP += amount;
@@ -172,7 +179,7 @@ function addXP(amount){
 
     playerProfile.level++;
 
-    showLevelUp(playerProfile.level);
+    showLevelUp(playerProfile.level, levelModal, levelNumber);
     if(playerProfile.level>=2){
   unlockAchievement(
   "level_2",
@@ -189,8 +196,9 @@ function addXP(amount){
   }
 
   saveProfile(playerProfile);
-  updateXPUI();
-}
+  updateXPUI(playerProfile, playerLevel, xpText, xpFill);
+}*/
+/*
 function showLevelUp(level){
   levelNumber.textContent="Level "+level;
   levelModal.style.display="block";
@@ -198,7 +206,7 @@ function showLevelUp(level){
   setTimeout(()=>{
     levelModal.style.display="none";
   },1800);
-}
+}*/
 
 function updateCoach(){
   const algStats=getAlgorithmStats(savedSolves);
@@ -762,7 +770,18 @@ function finishSolve(stopTime, manual) {
   
   saveSolve(finalTime, finalMoves, finalAvg);
   
-  addXP(10);
+  addXP(
+  10,
+  playerProfile,
+  saveProfile,
+  updateXPUI,
+  playerLevel,
+  xpText,
+  xpFill,
+  showLevelUp,
+  levelModal,
+  levelNumber
+);
   
   checkDailyTasks(
     savedSolves,

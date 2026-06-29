@@ -1,4 +1,4 @@
-const CACHE_NAME = "mg3i-trainer-v050";
+const CACHE_NAME = "mg3i-trainer-v051";
 
 const FILES_TO_CACHE = [
   "./",
@@ -17,7 +17,8 @@ const FILES_TO_CACHE = [
   "./algorithms.js",
   "./manifest.json",
   "./dailyTasks.js",
-  "./achievements.js"
+  "./achievements.js",
+  "./xp.js"
 ];
 
 self.addEventListener("install", event=>{
