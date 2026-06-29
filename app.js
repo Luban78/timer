@@ -737,7 +737,6 @@ function finishSolve(stopTime, manual) {
   const isPB = finalTime < oldBest;
   
   saveSolve(finalTime, finalMoves, finalAvg);
-  //alert("po saveSolve");
 giveXP(10);
   
   giveXP(10);
@@ -783,7 +782,6 @@ giveXP(10);
   beep(880, .2);
 }
 
-
 function saveSolve(time,moves,avg){
   
 console.log("saveSolve start");
@@ -795,8 +793,6 @@ const solve={
   tps:Number(avg.toFixed(1)),
   peakTPS:Number(maxTPS.toFixed(1)),
   longestPause:Number(longestPause.toFixed(2)),
-  /*notation:currentMoves.map(m=>m.move),
-  moves:[...currentMoves],*/
   notation: Array.isArray(currentMoves)
   ? currentMoves.map(m=>m.move)
   : [],
@@ -806,16 +802,9 @@ moves: Array.isArray(currentMoves)
   : [],
   date:new Date().toLocaleString("cs-CZ")
 };
-//alert("saveSolve je hotovy");
 savedSolves.unshift(solve);
-//alert("unshift hotový");
-
 savedSolves=savedSolves.slice(0,200);
-//alert("slice hotový");
-
-//saveSolves(savedSolves);
 renderHistory(historyList, savedSolves, showSolveDetail);
-//alert("renderHistory hotový");
 updateStats(
   savedSolves,
   statCount,
@@ -824,15 +813,10 @@ updateStats(
   statAo12,
   calcAverage
 );
-//alert("updateStats hotový");
-/*updateStatistics();
-updateAlgorithmStats();
-updateCoach();*/
+
 saveSolves(savedSolves);
-//alert("1 po saveSolves");
 
 renderHistory(historyList, savedSolves, showSolveDetail);
-//alert("2 po renderHistory");
 
 updateStats(
   savedSolves,
@@ -842,28 +826,15 @@ updateStats(
   statAo12,
   calcAverage
 );
-//alert("3 po updateStats");
 
 updateStatistics();
-//alert("4 po updateStatistics");
-
 updateAlgorithmStats();
-//alert("5 po updateAlgorithmStats");
-
 updateCoach();
-//alert("6 po updateCoach");
 
 updateAchievementList(achievementList, playerProfile);
-//alert("7 po updateAchievementList");
-/*
-
-*/
-
-
 
 updateAchievementList(achievementList, playerProfile);
 }
-
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js");
