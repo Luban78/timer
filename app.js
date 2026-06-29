@@ -154,59 +154,6 @@ function showAchievement(title) {
     achievementModal.style.display = "none";
   }, 2200);
 }
-/*
-function updateXPUI(){
-
-    playerLevel.textContent=playerProfile.level;
-
-    const need=playerProfile.level*100;
-
-    xpText.textContent=
-        `${playerProfile.xp} / ${need} XP`;
-
-    xpFill.style.width=
-        (playerProfile.xp/need*100)+"%";
-}*/
-/*
-functionaddXP(amount){
-
-  playerProfile.xp += amount;
-  playerProfile.totalXP += amount;
-
-  while(playerProfile.xp >= playerProfile.level*100){
-
-    playerProfile.xp -= playerProfile.level*100;
-
-    playerProfile.level++;
-
-    showLevelUp(playerProfile.level, levelModal, levelNumber);
-    if(playerProfile.level>=2){
-  unlockAchievement(
-  "level_2",
-  "Level 2",
-  50,
-  playerProfile,
-  saveProfile,
-  addXP,
-  showAchievement,
-  updateAchievementList,
-  achievementList
-);
-}
-  }
-
-  saveProfile(playerProfile);
-  updateXPUI(playerProfile, playerLevel, xpText, xpFill);
-}*/
-/*
-function showLevelUp(level){
-  levelNumber.textContent="Level "+level;
-  levelModal.style.display="block";
-
-  setTimeout(()=>{
-    levelModal.style.display="none";
-  },1800);
-}*/
 
 function updateCoach(){
   const algStats=getAlgorithmStats(savedSolves);
@@ -823,24 +770,6 @@ function finishSolve(stopTime, manual) {
   
   beep(880, .2);
 }
-/*
-function updateStats(){
-  const times=savedSolves.map(s=>Number(s.time)).filter(t=>t>0);
-
-  statCount.innerText=times.length;
-
-  if(times.length===0){
-    statBest.innerText="-";
-    statAo5.innerText="-";
-    statAo12.innerText="-";
-    return;
-  }
-
-  statBest.innerText=Math.min(...times).toFixed(2)+"s";
-
-  statAo5.innerText=calcAverage(times,5);
-  statAo12.innerText=calcAverage(times,12);
-}*/
 
 function calcAverage(times,count){
   if(times.length<count)return "-";
