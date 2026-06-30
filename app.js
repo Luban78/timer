@@ -753,9 +753,6 @@ function finishSolve(stopTime, manual) {
   
   saveSolve(finalTime, finalMoves, finalAvg);
 giveXP(10);
-  
-  giveXP(10);
-  
   checkDailyTasks(
     savedSolves,
     finalAvg,
