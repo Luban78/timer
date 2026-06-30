@@ -13,7 +13,7 @@ export function renderAlgorithmPreview(selectedAlg) {
     return;
   }
   
-  trainerMoves = alg.split(/\s+/);
+  trainerMoves = expandAlgorithm(alg.split(/\s+/));
   trainerIndex = 0;
   
   renderTrainer(selectedAlg);
@@ -68,4 +68,16 @@ export function checkMove(move, selectedAlg){
   }
 
   return "wrong";
+}
+
+function expandMove(move){
+  if(move==="M") return ["L'","R"];
+  if(move==="M'") return ["R'","L"];
+  if(move==="M2") return ["R'","L","R'","L"];
+
+  return [move];
+}
+
+function expandAlgorithm(moves){
+  return moves.flatMap(expandMove);
 }
