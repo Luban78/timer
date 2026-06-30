@@ -191,13 +191,9 @@ tlačítko clear history
 /* -----------------------------------------------------
    Velké aktuální TPS číslo
 ----------------------------------------------------- */
-#tps{
-  font-size:96px;
-  font-weight:bold;
-  color:var(--cyan);
-  line-height:.9;
-  margin:0;
-  text-align:center;
+#tps {
+  font-size: 69px !important;
+  line-height: .9 !important;
 }
 
 
@@ -1058,11 +1054,17 @@ color:#00ff66;
 }
 
 #selectedAlg{
-  height:64px !important;
-  min-height:64px !important;
-  max-height:64px !important;
-  overflow-y:auto !important;
-  padding:8px 14px !important;
-  font-size:20px !important;
+  height:auto !important;
+  min-height:58px !important;
+  max-height:none !important;
+  overflow:visible !important;
+  font-size:18px !important;
   line-height:1.2 !important;
+  padding:8px 12px !important;
+}
+
+#state-msg{
+  font-size:18px !important;
+  line-height:1.05 !important;
+  margin:8px 0 !important;
 }
