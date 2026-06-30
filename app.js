@@ -407,6 +407,7 @@ btn.onclick=async(e)=>{
     updateModeLabel();
 localStorage.setItem("cubeMode",cubeMode);
     btn.style.display="none";
+    normalCubeBtn.style.display="none";
     modeButtons.style.display="grid";
     status.innerText="Připojeno, začni otočením kostky";
     stateMsg.innerText="PŘIPRAVEN";

@@ -1100,3 +1100,36 @@ color:#00ff66;
   line-height:.85 !important;
   margin:0 !important;
 }
+
+.preview-mode #notation{
+  min-height:120px;
+}
+
+.preview-mode #state-msg{
+  font-size:24px !important;
+}
+
+.preview-mode #tps{
+  font-size:82px !important;
+}
+
+.preview-mode #notation{
+  min-height:90px !important;
+  height:90px !important;
+}
+
+.preview-mode #selectedAlg{
+  min-height:44px !important;
+  height:auto !important;
+  padding:6px 10px !important;
+}
+
+.preview-mode #state-msg{
+  font-size:22px !important;
+  margin:4px 0 !important;
+}
+
+.preview-mode #tps{
+  font-size:72px !important;
+  line-height:.85 !important;
+}
