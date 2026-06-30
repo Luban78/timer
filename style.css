@@ -78,8 +78,9 @@ button{
 ----------------------------------------------------- */
 #btn{
   width:100%;
-  padding:18px 10px;
-  font-size:26px;
+  height:90px;
+  padding:10px;
+  font-size:22px;
   line-height:1.15;
   margin:0;
 }
@@ -429,8 +430,8 @@ canvas{
 
   #selectedAlg{
     font-size:18px;
-    min-height:50px;
-    padding:8px;
+min-height:42px;
+padding:6px 10px;
   }
 
   #notation{
@@ -468,10 +469,6 @@ canvas{
 ===================================================== */
 @media (max-height:660px){
 
-  #btn{
-    padding:14px 10px;
-    font-size:22px;
-  }
 
   .modeBtn{
     padding:14px 6px;
@@ -1018,4 +1015,54 @@ color:#00ff66;
 #daily-list .achievement-item span:last-child {
   color: white;
   line-height: 1.2;
+}
+
+
+#mode-label{
+  text-align:center;
+  color:#00e5ff;
+  font-size:18px;
+  margin:10px 0;
+  font-weight:bold;
+}
+
+#btn,
+#normalCubeBtn {
+  width: 100%;
+  height: 35px;
+  padding: 6px;
+  font-size: 24px;
+  line-height: 1.1;
+  font-weight: bold;
+  border-radius: 22px;
+}
+
+#normalCubeBtn {
+  margin-top: 8px;
+}
+
+
+#btn,
+#normalCubeBtn{
+  width:100%;
+  height:54px;
+  padding:6px 10px;
+  font-size:24px;
+  line-height:1.1;
+  font-weight:bold;
+  border-radius:22px;
+}
+
+#normalCubeBtn{
+  margin-top:8px;
+}
+
+#selectedAlg{
+  height:64px !important;
+  min-height:64px !important;
+  max-height:64px !important;
+  overflow-y:auto !important;
+  padding:8px 14px !important;
+  font-size:20px !important;
+  line-height:1.2 !important;
 }

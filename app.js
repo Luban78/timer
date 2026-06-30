@@ -107,7 +107,14 @@ const recordModal=document.getElementById("record-modal");
 const recordTime=document.getElementById("record-time");
 const dailyList=document.getElementById("daily-list");
 const normalCubeBtn=document.getElementById("normalCubeBtn");
+const modeLabel=document.getElementById("mode-label");
 
+function updateModeLabel(){
+  modeLabel.innerText =
+    cubeMode==="normal"
+      ? "Režim: Normal Cube"
+      : "Režim: Smart Cube";
+}
 
 updateDailyTasks(dailyList);
 /*
@@ -397,6 +404,7 @@ btn.onclick=async(e)=>{
 
     isConnected=true;
     cubeMode="smart";
+    updateModeLabel();
 localStorage.setItem("cubeMode",cubeMode);
     btn.style.display="none";
     modeButtons.style.display="grid";
@@ -753,6 +761,7 @@ function finishSolve(stopTime, manual) {
   
   saveSolve(finalTime, finalMoves, finalAvg);
 giveXP(10);
+
   checkDailyTasks(
     savedSolves,
     finalAvg,
