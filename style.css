@@ -1133,3 +1133,17 @@ color:#00ff66;
   font-size:72px !important;
   line-height:.85 !important;
 }
+
+.modeBtn{
+  height:54px !important;
+  padding:6px 8px !important;
+  font-size:28px !important;
+  border-radius:18px !important;
+}
+#notation{
+  height:130px !important;
+  min-height:130px !important;
+  max-height:130px !important;
+  overflow-y:auto !important;
+  box-sizing:border-box !important;
+}

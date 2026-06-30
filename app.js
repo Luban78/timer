@@ -398,7 +398,7 @@ btn.onclick=async(e)=>{
     await connectCube({
       onMove: move => handleRawMove(move),
       onFacelets: () => {
-        status.innerText="Připojeno + stav načten";
+        status.innerText="Smart cube připojena";
       }
     });
 
