@@ -1,7 +1,10 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
-import { renderAlgorithmPreview } from "./moveTrainer.js";
+import {
+  renderAlgorithmPreview,
+  nextTrainerMove
+} from "./moveTrainer.js";
 import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";
 import { updateStats, calcAverage } from "./statistics.js";
@@ -446,6 +449,10 @@ pllBtn.onclick=e=>{
   renderAlgorithmPreview(selectedAlg);
 }
   });
+};
+
+selectedAlg.onclick = () => {
+  nextTrainerMove(selectedAlg);
 };
 
 function prepareNext(){
