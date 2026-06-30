@@ -1,6 +1,7 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
+import { updateCoach } from "./coach.js";
 import { updateStats, calcAverage } from "./statistics.js";
 import { stopIfSolving } from "./timer.js";
 import {
@@ -156,33 +157,9 @@ function showAchievement(title) {
   }, 2200);
 }
 
-function updateCoach(){
-  const algStats=getAlgorithmStats(savedSolves);
 
-  if(algStats.length===0){
-    coachAlg.textContent="-";
-    coachDetail.textContent="Zatím nemám žádný uložený algoritmus.";
-    return;
-  }
 
-  const ready=algStats.filter(a=>a.count>=5);
-
-  if(ready.length===0){
-    const closest=[...algStats].sort((a,b)=>b.count-a.count)[0];
-    const missing=5-closest.count;
-
-    coachAlg.textContent=closest.name;
-    coachDetail.textContent=
-      `Přidej ještě ${missing} solve, pak začnu doporučovat trénink.`;
-    return;
-  }
-
-  const weakest=ready.sort((a,b)=>b.avg-a.avg)[0];
-
-  coachAlg.textContent=weakest.name;
-  coachDetail.textContent=
-    `Dnes trénuj ${weakest.name}. Průměr ${weakest.avg.toFixed(2)} s • ${weakest.count} solve`;
-}
+  
 
 function updateAlgorithmStats(){
   const algStats=getAlgorithmStats(savedSolves);
@@ -307,7 +284,12 @@ runImportBtn.onclick=()=>{
     updateStats();
     updateStatistics();
     updateAlgorithmStats();
-    updateCoach();
+    updateCoach(
+  savedSolves,
+  getAlgorithmStats,
+  coachAlg,
+  coachDetail
+);
     updateAchievementList(achievementList, playerProfile);
     importModal.style.display="none";
 
@@ -829,7 +811,12 @@ updateStats(
 
 updateStatistics();
 updateAlgorithmStats();
-updateCoach();
+updateCoach(
+  savedSolves,
+  getAlgorithmStats,
+  coachAlg,
+  coachDetail
+);
 
 updateAchievementList(achievementList, playerProfile);
 
@@ -850,7 +837,12 @@ function clearHistory(){
   updateStats();
   updateStatistics();
   updateAlgorithmStats();
-  updateCoach();
+  updateCoach(
+  savedSolves,
+  getAlgorithmStats,
+  coachAlg,
+  coachDetail
+);
   updateAchievementList(achievementList, playerProfile);
 }
 
@@ -897,5 +889,10 @@ renderHistory(historyList, savedSolves, showSolveDetail);
 updateStats();
 updateStatistics();
 updateAlgorithmStats(); 
-updateCoach();
+updateCoach(
+  savedSolves,
+  getAlgorithmStats,
+  coachAlg,
+  coachDetail
+);
 updateAchievementList(achievementList, playerProfile);
