@@ -605,9 +605,17 @@ currentMoves.push({
 if(seq.length>24)seq.shift();
 notation.innerText="Notace:\n"+seq.join(" ");
 
-const trainerOk = checkMove(move, selectedAlg);
+const trainerResult = checkMove(move, selectedAlg);
 
-console.log("Trainer:", move, trainerOk);
+if (trainerResult === "wrong") {
+  failSolve();
+  return;
+}
+
+if (trainerResult === "finished") {
+  finishSolve(performance.now(), false);
+  return;
+}
 
 
 
@@ -824,6 +832,23 @@ giveXP(10);
   }
   
   beep(880, .2);
+}
+
+function failSolve(){
+
+  if(!isSolving)return;
+
+  isSolving=false;
+
+  clearInterval(uiTimer);
+  clearTimeout(stopTimer);
+
+  moveTimes=[];
+
+  stateMsg.innerText="INCORRECT";
+  stateMsg.style.color="red";
+
+  beep(220,.35);
 }
 
 function saveSolve(time,moves,avg){

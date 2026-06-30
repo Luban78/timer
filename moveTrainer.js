@@ -49,14 +49,23 @@ export function nextTrainerMove(selectedAlg) {
 
 export function checkMove(move, selectedAlg){
 
-  if(trainerMoves.length===0){
-    return false;
+  if(trainerMoves.length === 0){
+    return "none";
   }
 
-  if(move===trainerMoves[trainerIndex]){
-    nextTrainerMove(selectedAlg);
-    return true;
+  if(move === trainerMoves[trainerIndex]){
+
+    trainerIndex++;
+
+    if(trainerIndex >= trainerMoves.length){
+      trainerIndex = trainerMoves.length;
+      renderTrainer(selectedAlg);
+      return "finished";
+    }
+
+    renderTrainer(selectedAlg);
+    return "correct";
   }
 
-  return false;
+  return "wrong";
 }
