@@ -3,7 +3,8 @@
 //v4
 import {
   renderAlgorithmPreview,
-  nextTrainerMove
+  nextTrainerMove,
+  checkMove
 } from "./moveTrainer.js";
 import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";
@@ -452,9 +453,14 @@ pllBtn.onclick=e=>{
 };
 
 selectedAlg.addEventListener("pointerdown", e => {
-  e.stopPropagation();
-  nextTrainerMove(selectedAlg);
+    e.stopPropagation();
+
+    const ok = checkMove("R", selectedAlg);
+
+    console.log(ok);
 });
+console.log(checkMove("R", selectedAlg));
+console.log(checkMove("U", selectedAlg));
 
 function prepareNext(){
 seq=[];moveTimes=[];tpsHistory=[];
@@ -598,6 +604,12 @@ currentMoves.push({
 });
 if(seq.length>24)seq.shift();
 notation.innerText="Notace:\n"+seq.join(" ");
+
+const trainerOk = checkMove(move, selectedAlg);
+
+console.log("Trainer:", move, trainerOk);
+
+
 
 moveTimes.push(now);
 clearTimeout(stopTimer);

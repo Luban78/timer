@@ -42,3 +42,17 @@ export function nextTrainerMove(selectedAlg) {
   
   renderTrainer(selectedAlg);
 }
+
+export function checkMove(move, selectedAlg){
+
+  if(trainerMoves.length===0){
+    return false;
+  }
+
+  if(move===trainerMoves[trainerIndex]){
+    nextTrainerMove(selectedAlg);
+    return true;
+  }
+
+  return false;
+}
