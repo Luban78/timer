@@ -13,7 +13,7 @@ export function startSolve(
   state.tpsHistory.length=0;
   state.seq.length=0;
 
-  state.stateMsg.innerText="SKLÁDÁŠ... KLEPNI PRO STOP";
+  state.stateMsg.innerText="SKLÁDÁŠ..";
   state.stateMsg.style.color="#00e676";
 
   state.timeVal.innerText="0.00s";

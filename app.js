@@ -748,8 +748,8 @@ function finishSolve(stopTime, manual) {
   tpsDiv.innerText = "0.0";
   
   stateMsg.innerText = manual ?
-    "ZASTAVENO - OTOČ PRO DALŠÍ" :
-    "HOTOVO - OTOČ PRO DALŠÍ";
+    "ZASTAVENO" :
+    "HOTOVO";
   
   stateMsg.style.color = "yellow";
   
