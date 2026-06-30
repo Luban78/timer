@@ -451,9 +451,10 @@ pllBtn.onclick=e=>{
   });
 };
 
-selectedAlg.onclick = () => {
+selectedAlg.addEventListener("pointerdown", e => {
+  e.stopPropagation();
   nextTrainerMove(selectedAlg);
-};
+});
 
 function prepareNext(){
 seq=[];moveTimes=[];tpsHistory=[];
