@@ -19,14 +19,18 @@ export function renderAlgorithmPreview(selectedAlg) {
   renderTrainer(selectedAlg);
 }
 
-export function renderTrainer(selectedAlg) {
+export function renderTrainer(selectedAlg){
   selectedAlg.innerHTML =
     "Algoritmus:<br>" +
-    trainerMoves.map((move, index) => {
-      if (index === trainerIndex) {
+    trainerMoves.map((move,index)=>{
+      if(index < trainerIndex){
+        return `<span class="done-move">${move}</span>`;
+      }
+
+      if(index === trainerIndex){
         return `<span class="next-move">${move}</span>`;
       }
-      
+
       return `<span class="alg-move">${move}</span>`;
     }).join(" ");
 }

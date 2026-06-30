@@ -1149,7 +1149,7 @@ color:#00ff66;
   box-sizing:border-box !important;
 }
 #notation{
-  height:130px !important;
+  height:150px !important;
   min-height:130px !important;
   max-height:130px !important;
   overflow-y:hidden !important;
@@ -1168,5 +1168,15 @@ color:#00ff66;
   border-radius:8px;
   background:#ffd54f;
   color:#111;
+  font-weight:bold;
+}
+
+.done-move{
+  display:inline-block;
+  margin:2px 3px;
+  padding:2px 6px;
+  border-radius:8px;
+  background:#00c853;
+  color:white;
   font-weight:bold;
 }
