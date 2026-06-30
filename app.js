@@ -29,7 +29,7 @@ import {
 import { getAlgorithmStats } from "./algorithmStats.js";
 import { drawDetailGraph } from "./detailGraph.js";
 import { openPLLMenu } from "./algMenu.js";
-import { resetStatsUI, clearCanvas } from "./ui.js";
+import { resetStatsUI, clearCanvas, showRecord } from "./ui.js";
 import { initAudio, beep } from "./sound.js";
 import { drawGraph, resizeGraphCanvas } from "./graph.js";
 import { renderHistory } from "./history.js";
@@ -110,7 +110,7 @@ const normalCubeBtn=document.getElementById("normalCubeBtn");
 
 
 updateDailyTasks(dailyList);
-
+/*
 function showRecord(time){
   recordTime.textContent=time.toFixed(2)+" s";
   recordModal.style.display="block";
@@ -118,7 +118,7 @@ function showRecord(time){
   setTimeout(()=>{
     recordModal.style.display="none";
   },2200);
-}
+}*/
 
 function resetProfile() {
   
@@ -765,7 +765,7 @@ giveXP(10);
   );
   
   if (isPB) {
-    showRecord(finalTime);
+    showRecord(finalTime, recordTime, recordModal);
     
     unlockAchievement(
   "new_pb",

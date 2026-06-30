@@ -26,16 +26,3 @@ export function startSolve(
   clearInterval(state.uiTimer);
   state.uiTimer=setInterval(state.updateUI,100);
 }
-
-export function getNormalMoveCount(selectedAlg){
-  const algText = selectedAlg.innerText || "";
-  const parts = algText.split(":");
-  const alg = parts[1] ? parts[1].trim() : "";
-
-  if(!alg)return 0;
-
-  return alg
-    .split(/\s+/)
-    .filter(m=>m.length>0)
-    .length;
-}

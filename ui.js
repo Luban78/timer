@@ -27,3 +27,11 @@ export function resetStatsUI({
   maxVal.innerText = "0.0";
   pauseVal.innerText = "0.00s";
 }
+export function showRecord(time, recordTime, recordModal){
+  recordTime.textContent=time.toFixed(2)+" s";
+  recordModal.style.display="block";
+
+  setTimeout(()=>{
+    recordModal.style.display="none";
+  },2200);
+}
