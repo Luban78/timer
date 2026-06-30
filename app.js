@@ -1,9 +1,9 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
+import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";
 import { updateStats, calcAverage } from "./statistics.js";
-import { stopIfSolving } from "./timer.js";
 import {
   updateXPUI,
   showLevelUp,
@@ -497,7 +497,7 @@ pendingMove=null;
 }
 },DOUBLE_MOVE_WINDOW);
 }
-
+/*
 function startSolve(now){
 currentMoves=[];
 isSolving=true;
@@ -518,11 +518,48 @@ notation.innerText="Notace:";
 
 clearInterval(uiTimer);
 uiTimer=setInterval(updateUI,100);
+}*/
+function runStartSolve(now){
+  startSolve(now,{
+    currentMoves,
+    isSolving,
+    startTime,
+    lastMoveTime,
+    totalMoves,
+    maxTPS,
+    longestPause,
+    moveTimes,
+    tpsHistory,
+    seq,
+    stateMsg,
+    timeVal,
+    movesVal,
+    avgVal,
+    maxVal,
+    pauseVal,
+    notation,
+    uiTimer,
+    updateUI
+  });
+
+  isSolving=true;
+  startTime=now;
+  lastMoveTime=now;
+  totalMoves=0;
+  maxTPS=0;
+  longestPause=0;
+  currentMoves=[];
+  moveTimes=[];
+  tpsHistory=[];
+  seq=[];
+
+  clearInterval(uiTimer);
+  uiTimer=setInterval(updateUI,100);
 }
 
 function commitMove(move,now){
 if(!isSolving){
-startSolve(now);
+runStartSolve(now);
 }else{
 const pause=(now-lastMoveTime)/1000;
 if(totalMoves>0&&pause>longestPause){
@@ -590,11 +627,7 @@ pendingMove=null;
 
 finishSolve(stopTime,true);
 }
-/*function stopIfSolving(){
-  if(isSolving){
-    manualStop();
-  }
-}*/
+
 document.addEventListener("pointerdown", e=>{
   if(activeScreen!=="timer")return;
 
@@ -613,7 +646,7 @@ document.addEventListener("pointerdown", e=>{
 
   if(cubeMode==="normal"){
     if(!isSolving){
-      startSolve(performance.now());
+      runStartSolve(performance.now());
     }else{
       manualStop();
     }
@@ -629,7 +662,7 @@ document.addEventListener("keydown", e => {
   
   if (cubeMode === "normal") {
     if (!isSolving) {
-      startSolve(performance.now());
+      runStartSolve(performance.now());
     } else {
       manualStop();
     }
