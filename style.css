@@ -1134,11 +1134,12 @@ color:#00ff66;
   line-height:.85 !important;
 }
 */
-.modeBtn{
-  height:54px !important;
-  padding:6px 8px !important;
-  font-size:28px !important;
-  border-radius:18px !important;
+.modeBtn {
+  height: 48px !important;
+  padding: 4px 8px !important;
+  font-size: 24px !important;
+  line-height: 1.1 !important;
+  border-radius: 18px !important;
 }
 #notation{
   height:130px !important;
