@@ -583,6 +583,7 @@ function runStartSolve(now){
 }
 
 function commitMove(move,now){
+  console.log("MOVE:", move);
 if(!isSolving){
 runStartSolve(now);
 }else{
