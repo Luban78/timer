@@ -1147,3 +1147,10 @@ color:#00ff66;
   overflow-y:auto !important;
   box-sizing:border-box !important;
 }
+#notation{
+  height:130px !important;
+  min-height:130px !important;
+  max-height:130px !important;
+  overflow-y:hidden !important;
+  box-sizing:border-box !important;
+}

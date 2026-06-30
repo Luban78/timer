@@ -867,25 +867,36 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js");
 }
 
-function clearHistory(){
-  const ok=confirm("Opravdu vymazat všechny uložené časy?");
-  if(!ok)return;
-
-  savedSolves=[];
+function clearHistory() {
+  const ok = confirm("Opravdu vymazat všechny uložené časy?");
+  if (!ok) return;
+  
+  savedSolves = [];
   saveSolves(savedSolves);
-  renderHistory(historyList,savedSolves,showSolveDetail);
-  updateStats();
+  
+  renderHistory(historyList, savedSolves, showSolveDetail);
+  
+  updateStats(
+    savedSolves,
+    statCount,
+    statBest,
+    statAo5,
+    statAo12,
+    calcAverage
+  );
+  
   updateStatistics();
   updateAlgorithmStats();
+  
   updateCoach(
-  savedSolves,
-  getAlgorithmStats,
-  coachAlg,
-  coachDetail
-);
+    savedSolves,
+    getAlgorithmStats,
+    coachAlg,
+    coachDetail
+  );
+  
   updateAchievementList(achievementList, playerProfile);
 }
-
 clearHistoryBtn.onclick=clearHistory;
 settingsClearBtn.onclick=clearHistory;
 settingsResetProfileBtn.onclick=resetProfile;
