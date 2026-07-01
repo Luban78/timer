@@ -118,6 +118,7 @@ const devCorrect=document.getElementById("dev-correct");
 const devWrong=document.getElementById("dev-wrong");
 
 //**""""*"*********"
+let mDebugMoves = [];
 let trainerLocked = false;
 let trainingMode = "single";
 const singleModeBtn = document.getElementById("singleModeBtn");
@@ -698,6 +699,10 @@ totalMoves++;
 movesVal.innerText=totalMoves;
 
 seq.push(move);
+
+mDebugMoves.push(move);
+if(mDebugMoves.length > 8) mDebugMoves.shift();
+console.log("M DEBUG:", mDebugMoves.join(" "));
 currentMoves.push({
   move:move,
   time:Number(((now-startTime)/1000).toFixed(3))

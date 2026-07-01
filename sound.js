@@ -18,7 +18,7 @@ export function beep(freq = 240, dur = 0.12){
     const g = audioCtx.createGain();
 
     o.frequency.value = freq;
-    g.gain.setValueAtTime(0.06, audioCtx.currentTime);
+    g.gain.setValueAtTime(0.25, audioCtx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + dur);
 
     o.connect(g);
@@ -31,10 +31,10 @@ export function beep(freq = 240, dur = 0.12){
 
 export function playErrorSound(){
   if(navigator.vibrate){
-    navigator.vibrate([180,80,180]);
+    navigator.vibrate(500);
   }
 
-  beep(900,0.12);
-  setTimeout(()=>beep(300,0.18),120);
-  setTimeout(()=>beep(900,0.12),320);
+  beep(1200,0.18);
+  setTimeout(()=>beep(1200,0.18),220);
+  setTimeout(()=>beep(1200,0.25),460);
 }
