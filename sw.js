@@ -1,4 +1,9 @@
-const CACHE_NAME = "mg3i-trainer-v054";
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(reg => reg.unregister());
+  });
+}
+/*const CACHE_NAME = "mg3i-trainer-v054";
 
 const FILES_TO_CACHE = [
   "./",
@@ -63,4 +68,4 @@ self.addEventListener("fetch", event=>{
         return caches.match(event.request);
       })
   );
-});
+});*/
