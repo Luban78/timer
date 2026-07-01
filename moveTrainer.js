@@ -35,6 +35,8 @@ let displayMoves = [];
 let checkMoves = [];
 let displayIndex = 0;
 let checkIndex = 0;
+let wrongDisplayIndex = -1;
+
 
 export function renderAlgorithmPreview(selectedAlg){
   const text = selectedAlg.innerText || "";
@@ -45,6 +47,9 @@ export function renderAlgorithmPreview(selectedAlg){
   checkMoves = [];
   displayIndex = 0;
   checkIndex = 0;
+  
+  wrongDisplayIndex = -1;
+  
   selectedAlg.innerHTML = "Algoritmus:<br><span class='wrong-move'>M tahy zatím nejsou podporované</span>";
   return;
 }
@@ -71,6 +76,9 @@ export function renderTrainer(selectedAlg){
   selectedAlg.innerHTML =
     "Algoritmus:<br>" +
     displayMoves.map((move,index)=>{
+      if(index === wrongDisplayIndex){
+  return `<span class="wrong-move">${move}</span>`;
+}
       if(index < displayIndex){
         return `<span class="done-move">${move}</span>`;
       }
@@ -107,8 +115,11 @@ export function checkMove(move, selectedAlg){
   }
 
   if(move !== expected.move){
-    return "wrong";
-  }
+  wrongDisplayIndex = expected.displayIndex;
+  renderTrainer(selectedAlg);
+  return "wrong";
+}
+
 
   checkIndex++;
 
