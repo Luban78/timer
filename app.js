@@ -116,6 +116,9 @@ const normalCubeBtn=document.getElementById("normalCubeBtn");
 const modeLabel=document.getElementById("mode-label");
 const devCorrect=document.getElementById("dev-correct");
 const devWrong=document.getElementById("dev-wrong");
+const mDebug = document.getElementById("m-debug");
+
+
 
 //**""""*"*********"
 let mDebugMoves = [];
