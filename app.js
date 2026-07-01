@@ -583,7 +583,7 @@ function runStartSolve(now){
 }
 
 function commitMove(move,now){
-  console.log("MOVE:", move);
+  
 if(!isSolving){
 runStartSolve(now);
 }else{
@@ -614,11 +614,12 @@ if (trainerResult === "wrong") {
 }
 
 if (trainerResult === "finished") {
+  stateMsg.innerText = "🏆 PERFECT!";
+  stateMsg.style.color = "#00e676";
+  
   finishSolve(performance.now(), false);
   return;
 }
-
-
 
 moveTimes.push(now);
 clearTimeout(stopTimer);
