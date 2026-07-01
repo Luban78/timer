@@ -1200,3 +1200,42 @@ color:#00ff66;
   color:white;
   font-weight:bold;
 }
+
+#dev-controls{
+  display:flex;
+  gap:8px;
+  margin:6px 0;
+}
+
+#dev-controls button{
+  flex:1;
+  height:36px;
+  font-size:18px;
+}
+
+
+#notation{
+  display:none !important;
+}
+
+#selectedAlg{
+  min-height:150px !important;
+  height:auto !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
+
+.alg-move,
+.next-move,
+.done-move,
+.wrong-move{
+  display:inline-flex;
+  width:34px;
+  height:34px;
+  align-items:center;
+  justify-content:center;
+  margin:2px;
+  padding:0 !important;
+  border-radius:8px;
+  box-sizing:border-box;
+}

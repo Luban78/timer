@@ -3,8 +3,9 @@
 //v4
 import {
   renderAlgorithmPreview,
-  nextTrainerMove,
-  checkMove
+  checkMove,
+  getExpectedMove,
+  resetTrainer
 } from "./moveTrainer.js";
 import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";
@@ -113,6 +114,29 @@ const recordTime=document.getElementById("record-time");
 const dailyList=document.getElementById("daily-list");
 const normalCubeBtn=document.getElementById("normalCubeBtn");
 const modeLabel=document.getElementById("mode-label");
+const devCorrect=document.getElementById("dev-correct");
+const devWrong=document.getElementById("dev-wrong");
+
+
+const DEV_MODE = true;
+
+if (DEV_MODE) {
+  devCorrect.onclick = e => {
+    e.stopPropagation();
+    const move = getExpectedMove();
+    if (!move) return;
+    commitMove(move, performance.now());
+  };
+  
+  devWrong.onclick = e => {
+    e.stopPropagation();
+    commitMove("F", performance.now());
+  };
+} else {
+  document.getElementById("dev-controls").style.display = "none";
+}
+
+
 
 function updateModeLabel(){
   modeLabel.innerText =
@@ -387,6 +411,8 @@ let currentAlgorithmName="Nevybráno";
 let savedSolves = loadSolves();
 
 let playerProfile = loadProfile();
+//const DEV_MODE = true;
+
 const DOUBLE_MOVE_WINDOW=280;
 const TPS_WINDOW=2000;
 
@@ -451,7 +477,7 @@ pllBtn.onclick=e=>{
 }
   });
 };
-
+/*
 selectedAlg.addEventListener("pointerdown", e => {
     e.stopPropagation();
 
@@ -461,6 +487,39 @@ selectedAlg.addEventListener("pointerdown", e => {
 });
 console.log(checkMove("R", selectedAlg));
 console.log(checkMove("U", selectedAlg));
+*/
+/*
+if(DEV_MODE){
+  selectedAlg.onclick = () => {
+    const move = prompt("Zadej tah:", "R");
+    if(!move) return;
+
+    commitMove(move, performance.now());
+  };
+}*/
+
+
+/*
+if(DEV_MODE){
+  document.addEventListener("keydown", e=>{
+
+    if(e.key.toLowerCase()==="s"){
+      const move = getExpectedMove();
+      if(!move) return;
+
+      commitMove(move, performance.now());
+    }
+
+    if(e.key.toLowerCase()==="w"){
+      commitMove("F", performance.now());
+    }
+
+  });
+}*/
+function prepareNextTrainerRun(){
+  resetTrainer(selectedAlg);
+  prepareNext();
+}
 
 function prepareNext(){
 seq=[];moveTimes=[];tpsHistory=[];
@@ -522,28 +581,7 @@ pendingMove=null;
 }
 },DOUBLE_MOVE_WINDOW);
 }
-/*
-function startSolve(now){
-currentMoves=[];
-isSolving=true;
-startTime=now;
-lastMoveTime=now;
-totalMoves=0;maxTPS=0;longestPause=0;
-moveTimes=[];tpsHistory=[];seq=[];
 
-stateMsg.innerText="SKLÁDÁŠ... KLEPNI PRO STOP";
-stateMsg.style.color="#00e676";
-
-timeVal.innerText="0.00s";
-movesVal.innerText="0";
-avgVal.innerText="0.0";
-maxVal.innerText="0.0";
-pauseVal.innerText="0.00s";
-notation.innerText="Notace:";
-
-clearInterval(uiTimer);
-uiTimer=setInterval(updateUI,100);
-}*/
 function runStartSolve(now){
   startSolve(now,{
     currentMoves,
@@ -610,14 +648,13 @@ const trainerResult = checkMove(move, selectedAlg);
 
 if (trainerResult === "wrong") {
   failSolve();
+  setTimeout(prepareNextTrainerRun, 800);
   return;
 }
 
 if (trainerResult === "finished") {
-  stateMsg.innerText = "🏆 PERFECT!";
-  stateMsg.style.color = "#00e676";
-  
   finishSolve(performance.now(), false);
+  setTimeout(prepareNextTrainerRun, 800);
   return;
 }
 

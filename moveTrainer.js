@@ -135,3 +135,20 @@ export function checkMove(move, selectedAlg){
   renderTrainer(selectedAlg);
   return "finished";
 }
+
+export function getExpectedMove(){
+  if(checkMoves.length === 0) return null;
+
+  const expected = checkMoves[checkIndex];
+  if(!expected) return null;
+
+  return expected.move;
+}
+
+export function resetTrainer(selectedAlg){
+  displayIndex = 0;
+  checkIndex = 0;
+  wrongDisplayIndex = -1;
+
+  renderTrainer(selectedAlg);
+}
