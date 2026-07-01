@@ -124,6 +124,7 @@ const mDebug = document.getElementById("m-debug");
 
 
 //**""""*"*********"
+let faceletCount = 0;
 let mDebugMoves = [];
 let trainerLocked = false;
 let trainingMode = "single";
@@ -472,10 +473,12 @@ btn.onclick=async(e)=>{
       onMove: move => handleRawMove(move),
       onFacelets: event => {
   
+  faceletCount++;
+  
   setCurrentFacelets(event.facelets);
   
   status.innerText =
-    "FACELETS:\n" + event.facelets;
+    "FACELETS " + faceletCount + ":\n" + event.facelets;
 }
     });
 
