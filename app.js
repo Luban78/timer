@@ -467,9 +467,9 @@ btn.onclick=async(e)=>{
 
     await connectCube({
       onMove: move => handleRawMove(move),
-      onFacelets: facelets => {
+      onFacelets: event => {
   status.innerText =
-    "FACELETS: " + JSON.stringify(facelets).slice(0, 80);
+    "FACELETS:\n" + event.facelets;
 }
     });
 
