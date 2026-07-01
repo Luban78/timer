@@ -17,6 +17,14 @@ export function getStartFacelets() {
   return startFacelets;
 }
 
-export function isBackToStart() {
-  return currentFacelets !== "" && currentFacelets === startFacelets;
+export function isBackToStart(){
+  return compareFacelets(currentFacelets, startFacelets);
+}
+
+export function compareFacelets(faceletsA, faceletsB){
+  if(!faceletsA || !faceletsB){
+    return false;
+  }
+
+  return faceletsA === faceletsB;
 }

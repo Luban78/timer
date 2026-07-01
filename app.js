@@ -4,7 +4,8 @@
 
 import {
   setCurrentFacelets,
-  saveStartFacelets
+  saveStartFacelets,
+  isBackToStart
 } from "./cubeState.js";
 
 import {
@@ -479,8 +480,10 @@ btn.onclick=async(e)=>{
   
   setCurrentFacelets(event.facelets);
   
+  const stateText = isBackToStart() ? " ✅ START" : " 🔄 ZMĚNA";
+  
   status.innerText =
-    "FACELETS " + faceletCount + ":\n" + event.facelets;
+    "FACELETS " + faceletCount + stateText + ":\n" + event.facelets;
 }
     });
 
