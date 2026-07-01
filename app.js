@@ -134,6 +134,10 @@ let trainerLocked = false;
 let trainingMode = "single";
 const singleModeBtn = document.getElementById("singleModeBtn");
 const randomModeBtn = document.getElementById("randomModeBtn");
+
+
+//console.log("CUBING TEST:", testCubingAlg());
+
 function updateTrainingButtons(){
   singleModeBtn.classList.toggle(
     "active",

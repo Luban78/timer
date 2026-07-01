@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <title>Cube Engine Test</title>
+</head>
+<body>
+  <h2>Cube Engine Test</h2>
+  <button id="run">Spustit test</button>
+  <pre id="out"></pre>
+
+  <script type="module">
+    const out = document.getElementById("out");
+    const btn = document.getElementById("run");
+
+    btn.onclick = async () => {
+      out.textContent = "Testuji engine...";
+
+      try {
+        const puzzles = await import("https://cdn.cubing.net/js/cubing/puzzles");
+        const algMod = await import("https://cdn.cubing.net/js/cubing/alg");
+
+        const kpuzzle = await puzzles.cube3x3x3.kpuzzle();
+        const solved = kpuzzle.defaultPattern();
+
+        const tests = [
+          ["R test", () => solved.applyAlg("R")],
+          ["M test", () => solved.applyAlg("M M'")],
+          ["M2 test", () => solved.applyAlg("M2 M2")],
+          ["T-perm test", () => solved.applyAlg("R U R' U' R' F R2 U' R' U' R U R' F'")]
+        ];
+
+        let result = "";
+
+        for (const [name, fn] of tests) {
+          try {
+            const after = fn();
+            result += name + ": OK, solved=" + after.experimentalIsSolved({
+              ignorePuzzleOrientation: true
+            }) + "\n";
+          } catch (e) {
+            result += name + ": CHYBA - " + e.message + "\n";
+          }
+        }
+
+        out.textContent = result;
+
+      } catch (e) {
+        out.textContent = "CHYBA:\n" + e.message;
+      }
+    };
+  </script>
+</body>
+</html>
