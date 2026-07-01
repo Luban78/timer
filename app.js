@@ -683,6 +683,7 @@ function runStartSolve(now){
 }
 
 function commitMove(move,now){
+  alert("commitMove: " + move);
   if(trainerLocked){
   return;
 }
