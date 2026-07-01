@@ -28,3 +28,13 @@ export function beep(freq = 240, dur = 0.12){
     o.stop(audioCtx.currentTime + dur);
   }catch(e){}
 }
+
+export function playErrorSound(){
+  if(navigator.vibrate){
+    navigator.vibrate([180,80,180]);
+  }
+
+  beep(900,0.12);
+  setTimeout(()=>beep(300,0.18),120);
+  setTimeout(()=>beep(900,0.12),320);
+}

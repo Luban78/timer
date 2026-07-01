@@ -36,7 +36,7 @@ import { getAlgorithmStats } from "./algorithmStats.js";
 import { drawDetailGraph } from "./detailGraph.js";
 import { openPLLMenu } from "./algMenu.js";
 import { resetStatsUI, clearCanvas, showRecord } from "./ui.js";
-import { initAudio, beep } from "./sound.js";
+import { initAudio, beep, playErrorSound } from "./sound.js";
 import { drawGraph, resizeGraphCanvas } from "./graph.js";
 import { renderHistory } from "./history.js";
 import { loadSolves, saveSolves, loadProfile, saveProfile } from "./storage.js";
@@ -679,6 +679,9 @@ function runStartSolve(now){
 }
 
 function commitMove(move,now){
+  if(trainerLocked){
+  return;
+}
   
 if(!isSolving){
 runStartSolve(now);
@@ -707,18 +710,20 @@ if (!trainerLocked) {
   const trainerResult = checkMove(move, selectedAlg);
   
   if (trainerResult === "wrong") {
-    
-    trainerLocked = true;
-    
-    failSolve();
-    
-    setTimeout(() => {
-      prepareNextTrainerRun();
-      trainerLocked = false;
-    }, 1800);
-    
-    return;
-  }
+  
+  trainerLocked = true;
+  
+  playErrorSound();
+  
+  failSolve();
+  
+  setTimeout(() => {
+    prepareNextTrainerRun();
+    trainerLocked = false;
+  }, 1800);
+  
+  return;
+}
   
   if (trainerResult === "finished") {
     
@@ -952,6 +957,9 @@ giveXP(10);
 }
 
 function failSolve(){
+  //alert("failSolve");
+  console.log("failSolve");
+
 
   if(!isSolving)return;
 
@@ -964,9 +972,10 @@ function failSolve(){
 
   stateMsg.innerText="INCORRECT";
   stateMsg.style.color="red";
-
-  beep(120, .45);
-setTimeout(() => beep(90, .45), 120);
+//console.log("beep");
+  //initAudio();
+//beep(120,.6);
+//setTimeout(()=>beep(80,.6),140);
 }
 
 function saveSolve(time,moves,avg){
