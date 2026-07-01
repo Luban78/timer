@@ -40,6 +40,14 @@ export function renderAlgorithmPreview(selectedAlg){
   const text = selectedAlg.innerText || "";
   const parts = text.split(":");
   const alg = parts[1] ? parts[1].trim() : "";
+  if(/\bM2?\b|\bM'\b/.test(alg)){
+  displayMoves = [];
+  checkMoves = [];
+  displayIndex = 0;
+  checkIndex = 0;
+  selectedAlg.innerHTML = "Algoritmus:<br><span class='wrong-move'>M tahy zatím nejsou podporované</span>";
+  return;
+}
 
   if(!alg){
     displayMoves = [];

@@ -1180,3 +1180,13 @@ color:#00ff66;
   color:white;
   font-weight:bold;
 }
+
+.wrong-move{
+  display:inline-block;
+  margin:2px 3px;
+  padding:2px 6px;
+  border-radius:8px;
+  background:#ff1744;
+  color:white;
+  font-weight:bold;
+}
