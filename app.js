@@ -715,7 +715,7 @@ if (!trainerLocked) {
     setTimeout(() => {
       prepareNextTrainerRun();
       trainerLocked = false;
-    }, 800);
+    }, 1800);
     
     return;
   }
@@ -965,7 +965,8 @@ function failSolve(){
   stateMsg.innerText="INCORRECT";
   stateMsg.style.color="red";
 
-  beep(220,.35);
+  beep(120, .45);
+setTimeout(() => beep(90, .45), 120);
 }
 
 function saveSolve(time,moves,avg){
