@@ -1,6 +1,9 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
+
+import { setCurrentFacelets } from "./cubeState.js";
+
 import {
   renderAlgorithmPreview,
   checkMove,
@@ -468,6 +471,9 @@ btn.onclick=async(e)=>{
     await connectCube({
       onMove: move => handleRawMove(move),
       onFacelets: event => {
+  
+  setCurrentFacelets(event.facelets);
+  
   status.innerText =
     "FACELETS:\n" + event.facelets;
 }
