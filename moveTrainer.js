@@ -1,4 +1,17 @@
+//import { expandAlgorithm } from "./trainerNotation.js";
+function expandMove(move){
+  if(move === "M") return ["L'", "R"];
+  if(move === "M'") return ["R'", "L"];
+  if(move === "M2") return ["R'", "L", "R'", "L"];
+
+  return [move];
+}
+
+function expandAlgorithm(moves){
+  return moves.flatMap(move => expandMove(move));
+}
 let trainerMoves = [];
+let checkMoves = [];
 let trainerIndex = 0;
 
 export function renderAlgorithmPreview(selectedAlg) {
@@ -7,15 +20,18 @@ export function renderAlgorithmPreview(selectedAlg) {
   const alg = parts[1] ? parts[1].trim() : "";
   
   if (!alg) {
-    trainerMoves = [];
-    trainerIndex = 0;
-    selectedAlg.innerHTML = "Algoritmus: nevybráno";
-    return;
-  }
-  
-  trainerMoves = expandAlgorithm(alg.split(/\s+/));
+  trainerMoves = [];
+  checkMoves = [];
   trainerIndex = 0;
+  selectedAlg.innerHTML = "Algoritmus: nevybráno";
+  return;
+}
   
+  trainerMoves = alg.split(/\s+/);
+checkMoves = expandAlgorithm(trainerMoves);
+trainerIndex = 0;
+
+
   renderTrainer(selectedAlg);
 }
 
@@ -53,11 +69,11 @@ export function checkMove(move, selectedAlg){
     return "none";
   }
 
-  if(move === trainerMoves[trainerIndex]){
+  if(move === checkMoves[trainerIndex]){
 
     trainerIndex++;
 
-    if(trainerIndex >= trainerMoves.length){
+    if(trainerIndex >= checkMoves.length){
       trainerIndex = trainerMoves.length;
       renderTrainer(selectedAlg);
       return "finished";
@@ -68,16 +84,4 @@ export function checkMove(move, selectedAlg){
   }
 
   return "wrong";
-}
-
-function expandMove(move){
-  if(move==="M") return ["L'","R"];
-  if(move==="M'") return ["R'","L"];
-  if(move==="M2") return ["R'","L","R'","L"];
-
-  return [move];
-}
-
-function expandAlgorithm(moves){
-  return moves.flatMap(expandMove);
 }
