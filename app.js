@@ -467,9 +467,10 @@ btn.onclick=async(e)=>{
 
     await connectCube({
       onMove: move => handleRawMove(move),
-      onFacelets: () => {
-        status.innerText="Smart cube připojena";
-      }
+      onFacelets: facelets => {
+  status.innerText =
+    "FACELETS: " + JSON.stringify(facelets).slice(0, 80);
+}
     });
 
     isConnected=true;
@@ -683,7 +684,7 @@ function runStartSolve(now){
 }
 
 function commitMove(move,now){
-  alert("commitMove: " + move);
+  mDebug.innerText("commitMove: " + move);
   if(trainerLocked){
   return;
 }

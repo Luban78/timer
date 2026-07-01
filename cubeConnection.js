@@ -5,7 +5,10 @@ export async function connectCube({ onMove, onFacelets }){
 
   cube.events$.subscribe(event=>{
     if(event.type === "MOVE") onMove(event.move);
-    if(event.type === "FACELETS") onFacelets();
+
+    if(event.type === "FACELETS"){
+      onFacelets(event);
+    }
   });
 
   if(typeof cube.sendCubeCommand === "function"){
