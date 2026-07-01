@@ -1239,3 +1239,45 @@ color:#00ff66;
   border-radius:8px;
   box-sizing:border-box;
 }
+
+#app-version{
+  position:absolute;
+  top:6px;
+  right:12px;
+  font-size:11px;
+  color:#888;
+  font-weight:600;
+  user-select:none;
+  z-index:100;
+}
+
+#training-mode{
+  display:flex;
+  gap:6px;
+  margin:6px 0;
+}
+
+#training-mode button{
+  flex:1;
+  height:30px;
+  font-size:14px;
+  border-radius:12px;
+  font-weight:bold;
+}
+
+#singleModeBtn.active,
+#randomModeBtn.active{
+  background:#00e676;
+  color:#111;
+}
+#training-mode button{
+  background:#263238;
+  color:white;
+  border:1px solid #455a64;
+}
+
+#singleModeBtn.active,
+#randomModeBtn.active{
+  background:#00e676;
+  color:#111;
+}

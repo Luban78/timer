@@ -59,6 +59,8 @@ export function renderAlgorithmPreview(selectedAlg){
     checkMoves = [];
     displayIndex = 0;
     checkIndex = 0;
+    wrongDisplayIndex = -1;
+  
     selectedAlg.innerHTML = "Algoritmus: nevybráno";
     return;
   }
@@ -68,7 +70,8 @@ export function renderAlgorithmPreview(selectedAlg){
 
   displayIndex = 0;
   checkIndex = 0;
-
+wrongDisplayIndex = -1;
+  
   renderTrainer(selectedAlg);
 }
 

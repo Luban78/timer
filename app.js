@@ -117,6 +117,41 @@ const modeLabel=document.getElementById("mode-label");
 const devCorrect=document.getElementById("dev-correct");
 const devWrong=document.getElementById("dev-wrong");
 
+//**""""*"*********"
+let trainerLocked = false;
+let trainingMode = "single";
+const singleModeBtn = document.getElementById("singleModeBtn");
+const randomModeBtn = document.getElementById("randomModeBtn");
+function updateTrainingButtons(){
+  singleModeBtn.classList.toggle(
+    "active",
+    trainingMode==="single"
+  );
+
+  randomModeBtn.classList.toggle(
+    "active",
+    trainingMode==="random"
+  );
+}
+
+singleModeBtn.onclick=e=>{
+  e.stopPropagation();
+  trainingMode="single";
+  updateTrainingButtons();
+  console.log("trainingMode:", trainingMode);
+};
+
+randomModeBtn.onclick=e=>{
+  e.stopPropagation();
+  trainingMode="random";
+  updateTrainingButtons();
+  console.log("trainingMode:", trainingMode);
+};
+
+updateTrainingButtons();
+//$$$$$$$$$$$$$$$$$$
+
+
 
 const DEV_MODE = true;
 
@@ -516,7 +551,30 @@ if(DEV_MODE){
 
   });
 }*/
-function prepareNextTrainerRun(){
+function pickRandomPLL(){
+  const names = Object.keys(pllAlgs);
+  const randomName = names[Math.floor(Math.random() * names.length)];
+
+  currentAlgorithmName = randomName;
+  selectedAlg.innerText = "Algoritmus: " + pllAlgs[randomName];
+
+  prepareNext();
+  renderAlgorithmPreview(selectedAlg);
+}
+
+
+
+function prepareNextTrainerRun() {
+  console.log("prepareNextTrainerRun");
+
+  if (trainingMode === "random") {
+    console.log("Random mode");
+    pickRandomPLL();
+    return;
+  } else {
+    console.log("Single mode");
+  }
+
   resetTrainer(selectedAlg);
   prepareNext();
 }
@@ -644,18 +702,38 @@ currentMoves.push({
 if(seq.length>24)seq.shift();
 notation.innerText="Notace:\n"+seq.join(" ");
 
-const trainerResult = checkMove(move, selectedAlg);
-
-if (trainerResult === "wrong") {
-  failSolve();
-  setTimeout(prepareNextTrainerRun, 800);
-  return;
-}
-
-if (trainerResult === "finished") {
-  finishSolve(performance.now(), false);
-  setTimeout(prepareNextTrainerRun, 800);
-  return;
+if (!trainerLocked) {
+  
+  const trainerResult = checkMove(move, selectedAlg);
+  
+  if (trainerResult === "wrong") {
+    
+    trainerLocked = true;
+    
+    failSolve();
+    
+    setTimeout(() => {
+      prepareNextTrainerRun();
+      trainerLocked = false;
+    }, 800);
+    
+    return;
+  }
+  
+  if (trainerResult === "finished") {
+    
+    trainerLocked = true;
+    
+    finishSolve(performance.now(), false);
+    
+    setTimeout(() => {
+      prepareNextTrainerRun();
+      trainerLocked = false;
+    }, 800);
+    
+    return;
+  }
+  
 }
 
 moveTimes.push(now);
