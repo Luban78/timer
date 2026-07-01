@@ -2,7 +2,10 @@
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
 
-import { setCurrentFacelets } from "./cubeState.js";
+import {
+  setCurrentFacelets,
+  saveStartFacelets
+} from "./cubeState.js";
 
 import {
   renderAlgorithmPreview,
@@ -697,9 +700,10 @@ function commitMove(move,now){
   return;
 }
   
-if(!isSolving){
-runStartSolve(now);
-}else{
+if (!isSolving) {
+  saveStartFacelets();
+  runStartSolve(now);
+} else {
 const pause=(now-lastMoveTime)/1000;
 if(totalMoves>0&&pause>longestPause){
 longestPause=pause;
