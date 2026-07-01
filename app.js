@@ -684,7 +684,7 @@ function runStartSolve(now){
 }
 
 function commitMove(move,now){
-  mDebug.innerText("commitMove: " + move);
+//  mDebug.innerText("commitMove: " + move);
   if(trainerLocked){
   return;
 }
@@ -705,9 +705,9 @@ movesVal.innerText=totalMoves;
 
 seq.push(move);
 
-mDebugMoves.push(move);
-if(mDebugMoves.length > 8) mDebugMoves.shift();
-console.log("M DEBUG:", mDebugMoves.join(" "));
+//mDebugMoves.push(move);
+//if(mDebugMoves.length > 8) mDebugMoves.shift();
+//console.log("M DEBUG:", mDebugMoves.join(" "));
 currentMoves.push({
   move:move,
   time:Number(((now-startTime)/1000).toFixed(3))
