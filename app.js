@@ -472,7 +472,6 @@ btn.onclick=async(e)=>{
     await connectCube({
       onMove: move => handleRawMove(move),
       onFacelets: event => {
-  
   faceletCount++;
   
   setCurrentFacelets(event.facelets);
