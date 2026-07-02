@@ -28,8 +28,9 @@ export async function connectCube({ onMove, onFacelets }) {
     }
     
     if (event.type === "FACELETS") {
-      onFacelets(event);
-    }
+  alert(JSON.stringify(event, null, 2));
+  onFacelets(event);
+}
   });
   
   // první načtení stavu po připojení
