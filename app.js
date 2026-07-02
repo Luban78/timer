@@ -2,6 +2,11 @@
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
 import {
+  saveMoveMap,
+  getMoveMaps
+} from "./moveMaps.js";
+
+import {
   saveBaseFacelets,
   diffFacelets,
   getBaseFacelets
@@ -136,6 +141,8 @@ const devCorrect=document.getElementById("dev-correct");
 const devWrong=document.getElementById("dev-wrong");
 const mDebug = document.getElementById("m-debug");
 const devSaveFacelets = document.getElementById("dev-save-facelets");
+const devExportMap =
+  document.getElementById("dev-export-map");
 
 
 //**""""*"*********"
@@ -205,6 +212,18 @@ if (DEV_MODE) {
     e.stopPropagation();
     commitMove("F", performance.now());
   };
+  devExportMap.addEventListener("pointerdown", e => {
+  e.stopPropagation();
+  e.preventDefault();
+
+  alert(
+    JSON.stringify(
+      getMoveMaps(),
+      null,
+      2
+    )
+  );
+});
   document.getElementById("dev-controls").addEventListener("pointerdown", e => {
   e.stopPropagation();
   e.preventDefault();
