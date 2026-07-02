@@ -209,9 +209,23 @@ if (DEV_MODE) {
   
   if (e.target.id !== "dev-save-facelets") return;
   
-  alert("BASE klik");
-  alert("typ: " + typeof getCurrentFacelets);
-  status.innerText = "BASE uloženo";
+  try {
+    const facelets = getCurrentFacelets();
+    
+    alert(
+      "Typ: " + typeof facelets +
+      "\n\nDélka: " + (facelets ? facelets.length : "null") +
+      "\n\nHodnota:\n" + facelets
+    );
+    
+  } catch (err) {
+    alert(
+      "CHYBA:\n\n" +
+      err.message +
+      "\n\n" +
+      err.stack
+    );
+  }
 });
 } else {
   document.getElementById("dev-controls").style.display = "none";
