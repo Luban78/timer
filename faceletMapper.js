@@ -25,3 +25,7 @@ export function diffFacelets(currentFacelets) {
   
   return diffs;
 }
+
+export function clearBaseFacelets(){
+  baseFacelets = "";
+}

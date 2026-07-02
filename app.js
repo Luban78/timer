@@ -9,7 +9,8 @@ import {
 import {
   saveBaseFacelets,
   diffFacelets,
-  getBaseFacelets
+  getBaseFacelets,
+  clearBaseFacelets
 } from "./faceletMapper.js";
 
 import {
@@ -238,7 +239,7 @@ if (DEV_MODE) {
     if (!move) return;
     
     saveMoveMap(move.toUpperCase(), diffs);
-    
+clearBaseFacelets();
     alert("Mapa pro " + move + " uložena.");
   });
   
