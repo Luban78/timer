@@ -1,4 +1,10 @@
-const moveMaps = {};
+const STORAGE_KEY = "mg3i_move_maps";
+
+let moveMaps = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+
+function saveToStorage() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(moveMaps));
+}
 
 function normalizeDiffs(diffs) {
   return diffs
@@ -9,6 +15,7 @@ function normalizeDiffs(diffs) {
 
 export function saveMoveMap(move, diffs) {
   moveMaps[move] = diffs;
+  saveToStorage();
 }
 
 export function getMoveMaps() {
@@ -28,5 +35,6 @@ export function recognizeMove(diffs) {
 }
 
 export function clearMoveMaps() {
-  Object.keys(moveMaps).forEach(key => delete moveMaps[key]);
+  moveMaps = {};
+  saveToStorage();
 }
