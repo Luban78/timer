@@ -209,6 +209,8 @@ if (DEV_MODE) {
   
   if (e.target.id !== "dev-save-facelets") return;
   
+  alert("BASE klik");
+  
   saveBaseFacelets(getCurrentFacelets());
   status.innerText = "BASE uloženo";
 });
