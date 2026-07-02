@@ -277,12 +277,16 @@ if (DEV_MODE) {
     
     const basePattern = createPatternFromGanState(getBaseCubeState());
     const currentPattern = createPatternFromGanState(currentState);
-    const expectedR = applyAlgorithm(basePattern, "R");
-    
-    alert(
-      "Test R:\ncurrent == base+R ? " +
-      patternsIdentical(currentPattern, expectedR)
-    );
+    const tests = ["R", "R'", "R2", "L", "L'", "U", "U'", "F", "F'", "B", "B'", "D", "D'"];
+
+let result = "";
+
+for (const alg of tests) {
+  const expected = applyAlgorithm(basePattern, alg);
+  result += alg + ": " + patternsIdentical(currentPattern, expected) + "\n";
+}
+
+alert(result);
     
   } catch (err) {
     alert("CHYBA MAP:\n" + err.message);
