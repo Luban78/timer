@@ -201,30 +201,26 @@ updateTrainingButtons();
 const DEV_MODE = true;
 
 if (DEV_MODE) {
-  devCorrect.onclick = e => {
+  devCorrect.addEventListener("pointerdown", e => {
     e.stopPropagation();
+    e.preventDefault();
+    
     const move = getExpectedMove();
     if (!move) return;
-    commitMove(move, performance.now());
-  };
-  
-  devWrong.onclick = e => {
-    e.stopPropagation();
-    commitMove("F", performance.now());
-  };
-  
-  devExportMap.addEventListener("pointerdown", e => {
-    e.stopPropagation();
-    e.preventDefault();
     
-    alert(JSON.stringify(getMoveMaps(), null, 2));
+    commitMove(move, performance.now());
   });
   
-  document.getElementById("dev-controls").addEventListener("pointerdown", e => {
+  devWrong.addEventListener("pointerdown", e => {
     e.stopPropagation();
     e.preventDefault();
     
-    if (e.target.id !== "dev-save-facelets") return;
+    commitMove("F", performance.now());
+  });
+  
+  devSaveFacelets.addEventListener("pointerdown", e => {
+    e.stopPropagation();
+    e.preventDefault();
     
     const facelets = getCurrentFacelets();
     
@@ -235,19 +231,27 @@ if (DEV_MODE) {
     }
     
     const diffs = diffFacelets(facelets);
-    alert("Diffs: " + diffs.length);
-    const move = prompt("Jaký tah jsi udělal?");
     
-    if (move) {
-      saveMoveMap(move.toUpperCase(), diffs);
-      alert("Mapa pro " + move + " uložena.");
-    }
+    alert("Diffs: " + diffs.length);
+    
+    const move = prompt("Jaký tah jsi udělal?");
+    if (!move) return;
+    
+    saveMoveMap(move.toUpperCase(), diffs);
+    
+    alert("Mapa pro " + move + " uložena.");
+  });
+  
+  devExportMap.addEventListener("pointerdown", e => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    alert(JSON.stringify(getMoveMaps(), null, 2));
   });
   
 } else {
   document.getElementById("dev-controls").style.display = "none";
 }
-
 
 function updateModeLabel(){
   modeLabel.innerText =
