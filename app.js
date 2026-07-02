@@ -239,8 +239,14 @@ if (DEV_MODE) {
   }
   
   const diffs = diffFacelets(facelets);
-  
-  alert(JSON.stringify(diffs, null, 2));
+
+const move = prompt("Jaký tah jsi udělal?");
+
+if (move) {
+  saveMoveMap(move.toUpperCase(), diffs);
+}
+
+alert("Mapa pro " + move + " uložena.");
 });
 } else {
   document.getElementById("dev-controls").style.display = "none";
