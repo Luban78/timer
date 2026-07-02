@@ -26,8 +26,11 @@ import {
   setCurrentFacelets,
   getCurrentFacelets,
   saveStartFacelets,
-  isBackToStart
-  
+  isBackToStart,
+  setCurrentCubeState,
+  getCurrentCubeState,
+  saveBaseCubeState,
+  getBaseCubeState
 } from "./cubeState.js";
 import {
   renderAlgorithmPreview,
