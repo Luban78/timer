@@ -253,7 +253,13 @@ if (DEV_MODE) {
     e.stopPropagation();
     e.preventDefault();
     
-    alert(JSON.stringify(getMoveMaps(), null, 2));
+    const txt = JSON.stringify(getMoveMaps(), null, 2);
+
+console.log(txt);
+
+navigator.clipboard.writeText(txt);
+
+alert("Mapa zkopírována do schránky");
   });
   
 } else {
