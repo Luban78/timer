@@ -204,6 +204,7 @@ if (DEV_MODE) {
     commitMove("F", performance.now());
   };
   devSaveFacelets.onclick = e => {
+  alert("BASE klik");
   e.stopPropagation();
   saveBaseFacelets(getCurrentFacelets());
   status.innerText = "BASE uloženo";
