@@ -261,32 +261,36 @@ if (DEV_MODE) {
   
   
   devExportMap.addEventListener("pointerdown", e => {
-  alert("MAP klik");
-  
   e.stopPropagation();
   e.preventDefault();
   
   try {
-    alert("typeof getBaseCubeState: " + typeof getBaseCubeState);
-    alert("typeof getCurrentCubeState: " + typeof getCurrentCubeState);
-    
-    const baseState = getBaseCubeState();
     const currentState = getCurrentCubeState();
     
+    if (!currentState) {
+      alert("currentState je null - čekám na FACELETS");
+      return;
+    }
+    
+    if (!getBaseCubeState()) {
+      saveBaseCubeState();
+      alert("BASE CUBE STATE uloženo");
+      return;
+    }
+    
+    const basePattern = createPatternFromGanState(getBaseCubeState());
+    const currentPattern = createPatternFromGanState(currentState);
+    const expectedR = applyAlgorithm(basePattern, "R");
+    
     alert(
-      "baseState:\n" + JSON.stringify(baseState) +
-      "\n\ncurrentState:\n" + JSON.stringify(currentState)
+      "Test R:\ncurrent == base+R ? " +
+      patternsIdentical(currentPattern, expectedR)
     );
     
   } catch (err) {
     alert("CHYBA MAP:\n" + err.message);
   }
 });
-  
-} else {
-  document.getElementById("dev-controls").style.display = "none";
-}
-
 function updateModeLabel(){
   modeLabel.innerText =
     cubeMode==="normal"
@@ -581,6 +585,7 @@ btn.onclick=async(e)=>{
   faceletCount++;
   
   setCurrentFacelets(event.facelets);
+setCurrentCubeState(event.state);
   
   const stateText = isBackToStart() ? " ✅ START" : " 🔄 ZMĚNA";
   
