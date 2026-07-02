@@ -1,7 +1,12 @@
 // app.js
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
-
+import {
+  initCubeEngine,
+  createSolvedPattern,
+  applyAlgorithm,
+  isPatternSolved
+} from "./cubeEngine.js";
 import {
   setCurrentFacelets,
   saveStartFacelets,
@@ -135,7 +140,15 @@ let trainingMode = "single";
 const singleModeBtn = document.getElementById("singleModeBtn");
 const randomModeBtn = document.getElementById("randomModeBtn");
 
+initCubeEngine().then(()=>{
+  const solved = createSolvedPattern();
+  const afterM = applyAlgorithm(solved, "M M'");
 
+  console.log(
+    "CubeEngine M test:",
+    isPatternSolved(afterM)
+  );
+});
 //console.log("CUBING TEST:", testCubingAlg());
 
 function updateTrainingButtons(){

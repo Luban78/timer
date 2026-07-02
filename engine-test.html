@@ -14,36 +14,29 @@
     const btn = document.getElementById("run");
 
     btn.onclick = async () => {
-      out.textContent = "Testuji engine...";
+      out.textContent = "Testuji ruční vytvoření KPattern...";
 
       try {
         const puzzles = await import("https://cdn.cubing.net/js/cubing/puzzles");
-        const algMod = await import("https://cdn.cubing.net/js/cubing/alg");
+        const kpuzzleMod = await import("https://cdn.cubing.net/js/cubing/kpuzzle");
 
         const kpuzzle = await puzzles.cube3x3x3.kpuzzle();
         const solved = kpuzzle.defaultPattern();
 
-        const tests = [
-          ["R test", () => solved.applyAlg("R")],
-          ["M test", () => solved.applyAlg("M M'")],
-          ["M2 test", () => solved.applyAlg("M2 M2")],
-          ["T-perm test", () => solved.applyAlg("R U R' U' R' F R2 U' R' U' R U R' F'")]
-        ];
+        const solvedJson = solved.toJSON();
 
-        let result = "";
+        const pattern = new kpuzzleMod.KPattern(
+          kpuzzle,
+          solvedJson.patternData
+        );
 
-        for (const [name, fn] of tests) {
-          try {
-            const after = fn();
-            result += name + ": OK, solved=" + after.experimentalIsSolved({
-              ignorePuzzleOrientation: true
-            }) + "\n";
-          } catch (e) {
-            result += name + ": CHYBA - " + e.message + "\n";
-          }
-        }
-
-        out.textContent = result;
+        out.textContent =
+          "KPattern create OK\n" +
+          "Solved? " +
+          pattern.experimentalIsSolved({
+            ignorePuzzleOrientation: true,
+            ignoreCenterOrientation: true
+          });
 
       } catch (e) {
         out.textContent = "CHYBA:\n" + e.message;
