@@ -148,7 +148,7 @@ const mDebug = document.getElementById("m-debug");
 const devSaveFacelets = document.getElementById("dev-save-facelets");
 const devExportMap =
   document.getElementById("dev-export-map");
-
+//devExportMap.addEventListener("pointerdown", e => {alert("MAP button: " + devExportMap);
 
 //**""""*"*********"
 let faceletCount = 0;
@@ -254,6 +254,11 @@ if (DEV_MODE) {
   
   
   devExportMap.addEventListener("pointerdown", e => {
+    alert("MAP klik");
+    alert(
+  "baseState: " + JSON.stringify(getBaseCubeState()) +
+  "\n\ncurrentState: " + JSON.stringify(getCurrentCubeState())
+);
   e.stopPropagation();
   e.preventDefault();
 
