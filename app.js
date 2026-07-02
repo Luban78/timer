@@ -2,6 +2,10 @@
 // Hlavní logika aplikace: připojení kostky, měření solve, historie a UI.
 //v4
 import {
+  saveBaseFacelets,
+  diffFacelets
+} from "./faceletMapper.js";
+import {
   initCubeEngine,
   createSolvedPattern,
   applyAlgorithm,
@@ -139,6 +143,9 @@ let trainerLocked = false;
 let trainingMode = "single";
 const singleModeBtn = document.getElementById("singleModeBtn");
 const randomModeBtn = document.getElementById("randomModeBtn");
+const devSaveFacelets = document.getElementById("dev-save-facelets");
+
+
 
 initCubeEngine().then(()=>{
   const solved = createSolvedPattern();
@@ -196,6 +203,11 @@ if (DEV_MODE) {
     e.stopPropagation();
     commitMove("F", performance.now());
   };
+  devSaveFacelets.onclick = e => {
+  e.stopPropagation();
+  saveBaseFacelets(getCurrentFacelets());
+  status.innerText = "BASE uloženo";
+};
 } else {
   document.getElementById("dev-controls").style.display = "none";
 }
