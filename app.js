@@ -235,6 +235,7 @@ if (DEV_MODE) {
     }
     
     const diffs = diffFacelets(facelets);
+    alert("Diffs: " + diffs.length);
     const move = prompt("Jaký tah jsi udělal?");
     
     if (move) {
