@@ -209,10 +209,15 @@ if (DEV_MODE) {
   
   if (e.target.id !== "dev-save-facelets") return;
   
-  alert("BASE klik");
-  
   saveBaseFacelets(getCurrentFacelets());
-  status.innerText = "BASE uloženo";
+
+status.innerText =
+  "BASE uloženo\n\n" +
+  JSON.stringify(
+    diffFacelets(getCurrentFacelets()),
+    null,
+    2
+  );
 });
 } else {
   document.getElementById("dev-controls").style.display = "none";
