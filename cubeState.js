@@ -7,7 +7,7 @@ export function setCurrentFacelets(facelets) {
   currentFacelets = facelets || "";
 }
 
-export function getCurrentFacelets(){
+export function getCurrentFacelets() {
   return currentFacelets;
 }
 
@@ -73,7 +73,6 @@ export function applyR(facelets){
 
   return arr.join("");
 }
-
 let currentCubeState = null;
 let baseCubeState = null;
 
