@@ -13,6 +13,7 @@ import {
 } from "./cubeEngine.js";
 import {
   setCurrentFacelets,
+  getCurrentFacelets,
   saveStartFacelets,
   isBackToStart
 } from "./cubeState.js";
