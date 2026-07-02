@@ -209,23 +209,16 @@ if (DEV_MODE) {
   
   if (e.target.id !== "dev-save-facelets") return;
   
-  try {
-    const facelets = getCurrentFacelets();
-    
-    alert(
-      "Typ: " + typeof facelets +
-      "\n\nDélka: " + (facelets ? facelets.length : "null") +
-      "\n\nHodnota:\n" + facelets
-    );
-    
-  } catch (err) {
-    alert(
-      "CHYBA:\n\n" +
-      err.message +
-      "\n\n" +
-      err.stack
-    );
-  }
+  const facelets = getCurrentFacelets();
+  
+  alert(
+    "Typ: " + typeof facelets +
+    "\nDélka: " + facelets.length +
+    "\nHodnota:\n" + facelets
+  );
+  
+  saveBaseFacelets(facelets);
+  status.innerText = "BASE uloženo";
 });
 } else {
   document.getElementById("dev-controls").style.display = "none";
