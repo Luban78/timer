@@ -17,7 +17,6 @@ import {
   saveStartFacelets,
   isBackToStart
 } from "./cubeState.js";
-
 import {
   renderAlgorithmPreview,
   checkMove,
@@ -211,8 +210,7 @@ if (DEV_MODE) {
   if (e.target.id !== "dev-save-facelets") return;
   
   alert("BASE klik");
-  alert(getCurrentFacelets());
-  saveBaseFacelets(getCurrentFacelets());
+  alert("typ: " + typeof getCurrentFacelets);
   status.innerText = "BASE uloženo";
 });
 } else {
