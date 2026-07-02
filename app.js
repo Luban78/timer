@@ -18,13 +18,16 @@ import {
   initCubeEngine,
   createSolvedPattern,
   applyAlgorithm,
-  isPatternSolved
+  isPatternSolved,
+  createPatternFromGanState,
+patternsIdentical
 } from "./cubeEngine.js";
 import {
   setCurrentFacelets,
   getCurrentFacelets,
   saveStartFacelets,
   isBackToStart
+  
 } from "./cubeState.js";
 import {
   renderAlgorithmPreview,
@@ -233,13 +236,9 @@ if (DEV_MODE) {
   }
   
   const diffs = diffFacelets(facelets);
-const recognized = recognizeMove(diffs);
-
-const move = prompt(
-  "Diffs: " + diffs.length +
-  "\nRozpoznáno: " + (recognized || "?") +
-  "\n\nUložit jako? prázdné = neukládat",
-  recognized || ""
+  const move = prompt(
+  "Diffs: " + diffs.length + "\nJaký tah jsi udělal?",
+  "R"
 );
   
   
@@ -257,11 +256,26 @@ const move = prompt(
   devExportMap.addEventListener("pointerdown", e => {
   e.stopPropagation();
   e.preventDefault();
-  
-  const txt = getCurrentFacelets();
-  
-  navigator.clipboard.writeText(txt);
-  alert("Facelets zkopírovány:\n" + txt);
+
+  const baseState = getBaseCubeState();
+  const currentState = getCurrentCubeState();
+
+  if(!baseState){
+    saveBaseCubeState();
+    alert("BASE CUBE STATE uloženo");
+    return;
+  }
+
+  const basePattern = createPatternFromGanState(baseState);
+  const currentPattern = createPatternFromGanState(currentState);
+
+  const expectedR = applyAlgorithm(basePattern, "R");
+
+  alert(
+    "Test R:\n" +
+    "current == base+R ? " +
+    patternsIdentical(currentPattern, expectedR)
+  );
 });
   
 } else {

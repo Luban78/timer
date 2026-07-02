@@ -36,3 +36,28 @@ export function isPatternSolved(pattern) {
 }
 
 export { Alg };
+
+export function createPatternFromGanState(state){
+  if(!kpuzzle || !state) return null;
+
+  return createPatternFromData({
+    EDGES: {
+      pieces: state.EP,
+      orientation: state.EO
+    },
+    CORNERS: {
+      pieces: state.CP,
+      orientation: state.CO
+    },
+    CENTERS: {
+      pieces: [0,1,2,3,4,5],
+      orientation: [0,0,0,0,0,0],
+      orientationMod: [1,1,1,1,1,1]
+    }
+  });
+}
+
+export function patternsIdentical(a,b){
+  if(!a || !b) return false;
+  return a.isIdentical(b);
+}

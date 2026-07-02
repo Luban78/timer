@@ -74,3 +74,21 @@ export function applyR(facelets){
   return arr.join("");
 }
 
+let currentCubeState = null;
+let baseCubeState = null;
+
+export function setCurrentCubeState(state){
+  currentCubeState = state || null;
+}
+
+export function getCurrentCubeState(){
+  return currentCubeState;
+}
+
+export function saveBaseCubeState(){
+  baseCubeState = currentCubeState;
+}
+
+export function getBaseCubeState(){
+  return baseCubeState;
+}
