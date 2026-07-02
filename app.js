@@ -253,34 +253,31 @@ if (DEV_MODE) {
   
   
   
+  
+  
+  
+  
   devExportMap.addEventListener("pointerdown", e => {
-    alert("MAP klik");
-    alert(
-  "baseState: " + JSON.stringify(getBaseCubeState()) +
-  "\n\ncurrentState: " + JSON.stringify(getCurrentCubeState())
-);
+  alert("MAP klik");
+  
   e.stopPropagation();
   e.preventDefault();
-
-  const baseState = getBaseCubeState();
-  const currentState = getCurrentCubeState();
-
-  if (!baseState) {
-    saveBaseCubeState();
-    alert("BASE CUBE STATE uloženo");
-    return;
+  
+  try {
+    alert("typeof getBaseCubeState: " + typeof getBaseCubeState);
+    alert("typeof getCurrentCubeState: " + typeof getCurrentCubeState);
+    
+    const baseState = getBaseCubeState();
+    const currentState = getCurrentCubeState();
+    
+    alert(
+      "baseState:\n" + JSON.stringify(baseState) +
+      "\n\ncurrentState:\n" + JSON.stringify(currentState)
+    );
+    
+  } catch (err) {
+    alert("CHYBA MAP:\n" + err.message);
   }
-
-  const basePattern = createPatternFromGanState(baseState);
-  const currentPattern = createPatternFromGanState(currentState);
-
-  const expectedR = applyAlgorithm(basePattern, "R");
-
-  alert(
-    "Test R:\n" +
-    "current == base+R ? " +
-    patternsIdentical(currentPattern, expectedR)
-  );
 });
   
 } else {
