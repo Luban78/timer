@@ -260,7 +260,7 @@ if (DEV_MODE) {
   const baseState = getBaseCubeState();
   const currentState = getCurrentCubeState();
 
-  if(!baseState){
+  if (!baseState) {
     saveBaseCubeState();
     alert("BASE CUBE STATE uloženo");
     return;
