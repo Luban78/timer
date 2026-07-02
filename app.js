@@ -203,12 +203,14 @@ if (DEV_MODE) {
     e.stopPropagation();
     commitMove("F", performance.now());
   };
-  devSaveFacelets.onclick = e => {
+  devSaveFacelets.addEventListener("pointerdown", e => {
   alert("BASE klik");
   e.stopPropagation();
+  e.preventDefault();
+  
   saveBaseFacelets(getCurrentFacelets());
   status.innerText = "BASE uloženo";
-};
+});
 } else {
   document.getElementById("dev-controls").style.display = "none";
 }
