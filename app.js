@@ -203,10 +203,13 @@ if (DEV_MODE) {
     e.stopPropagation();
     commitMove("F", performance.now());
   };
-  devSaveFacelets.addEventListener("pointerdown", e => {
-  alert("BASE klik");
+  document.getElementById("dev-controls").addEventListener("pointerdown", e => {
   e.stopPropagation();
   e.preventDefault();
+  
+  if (e.target.id !== "dev-save-facelets") return;
+  
+  alert("BASE klik");
   
   saveBaseFacelets(getCurrentFacelets());
   status.innerText = "BASE uloženo";
