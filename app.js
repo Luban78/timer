@@ -255,17 +255,14 @@ const move = prompt(
   
   
   devExportMap.addEventListener("pointerdown", e => {
-    e.stopPropagation();
-    e.preventDefault();
-    
-    const txt = JSON.stringify(getMoveMaps(), null, 2);
-
-console.log(txt);
-
-navigator.clipboard.writeText(txt);
-
-alert("Mapa zkopírována do schránky");
-  });
+  e.stopPropagation();
+  e.preventDefault();
+  
+  const txt = getCurrentFacelets();
+  
+  navigator.clipboard.writeText(txt);
+  alert("Facelets zkopírovány:\n" + txt);
+});
   
 } else {
   document.getElementById("dev-controls").style.display = "none";
