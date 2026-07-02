@@ -212,46 +212,40 @@ if (DEV_MODE) {
     e.stopPropagation();
     commitMove("F", performance.now());
   };
+  
   devExportMap.addEventListener("pointerdown", e => {
-  e.stopPropagation();
-  e.preventDefault();
-
-  alert(
-    JSON.stringify(
-      getMoveMaps(),
-      null,
-      2
-    )
-  );
-});
+    e.stopPropagation();
+    e.preventDefault();
+    
+    alert(JSON.stringify(getMoveMaps(), null, 2));
+  });
+  
   document.getElementById("dev-controls").addEventListener("pointerdown", e => {
-  e.stopPropagation();
-  e.preventDefault();
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (e.target.id !== "dev-save-facelets") return;
+    
+    const facelets = getCurrentFacelets();
+    
+    if (!getBaseFacelets()) {
+      saveBaseFacelets(facelets);
+      status.innerText = "BASE uloženo";
+      return;
+    }
+    
+    const diffs = diffFacelets(facelets);
+    const move = prompt("Jaký tah jsi udělal?");
+    
+    if (move) {
+      saveMoveMap(move.toUpperCase(), diffs);
+      alert("Mapa pro " + move + " uložena.");
+    }
+  });
   
-  if (e.target.id !== "dev-save-facelets") return;
-  
-  const facelets = getCurrentFacelets();
-  
-  if (!getBaseFacelets()) {
-    saveBaseFacelets(facelets);
-    status.innerText = "BASE uloženo";
-    return;
-  }
-  
-  const diffs = diffFacelets(facelets);
-
-const move = prompt("Jaký tah jsi udělal?");
-
-if (move) {
-  saveMoveMap(move.toUpperCase(), diffs);
-}
-
-alert("Mapa pro " + move + " uložena.");
-});
 } else {
   document.getElementById("dev-controls").style.display = "none";
 }
-
 
 
 function updateModeLabel(){
