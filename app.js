@@ -3,8 +3,10 @@
 //v4
 import {
   saveBaseFacelets,
-  diffFacelets
+  diffFacelets,
+  getBaseFacelets
 } from "./faceletMapper.js";
+
 import {
   initCubeEngine,
   createSolvedPattern,
@@ -211,14 +213,15 @@ if (DEV_MODE) {
   
   const facelets = getCurrentFacelets();
   
-  alert(
-    "Typ: " + typeof facelets +
-    "\nDélka: " + facelets.length +
-    "\nHodnota:\n" + facelets
-  );
+  if (!getBaseFacelets()) {
+    saveBaseFacelets(facelets);
+    status.innerText = "BASE uloženo";
+    return;
+  }
   
-  saveBaseFacelets(facelets);
-  status.innerText = "BASE uloženo";
+  const diffs = diffFacelets(facelets);
+  
+  alert(JSON.stringify(diffs, null, 2));
 });
 } else {
   document.getElementById("dev-controls").style.display = "none";
