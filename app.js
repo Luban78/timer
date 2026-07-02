@@ -133,7 +133,7 @@ const modeLabel=document.getElementById("mode-label");
 const devCorrect=document.getElementById("dev-correct");
 const devWrong=document.getElementById("dev-wrong");
 const mDebug = document.getElementById("m-debug");
-
+const devSaveFacelets = document.getElementById("dev-save-facelets");
 
 
 //**""""*"*********"
@@ -143,7 +143,7 @@ let trainerLocked = false;
 let trainingMode = "single";
 const singleModeBtn = document.getElementById("singleModeBtn");
 const randomModeBtn = document.getElementById("randomModeBtn");
-const devSaveFacelets = document.getElementById("dev-save-facelets");
+
 
 
 
@@ -204,7 +204,7 @@ if (DEV_MODE) {
     commitMove("F", performance.now());
   };
   devSaveFacelets.onclick = e => {
-  alert("BASE klik");
+  //alert("BASE klik");
   e.stopPropagation();
   saveBaseFacelets(getCurrentFacelets());
   status.innerText = "BASE uloženo";
