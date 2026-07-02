@@ -32,6 +32,7 @@ import {
   saveBaseCubeState,
   getBaseCubeState
 } from "./cubeState.js";
+
 import {
   renderAlgorithmPreview,
   checkMove,
@@ -256,10 +257,6 @@ if (DEV_MODE) {
   
   
   
-  
-  
-  
-  
   devExportMap.addEventListener("pointerdown", e => {
   e.stopPropagation();
   e.preventDefault();
@@ -291,6 +288,12 @@ if (DEV_MODE) {
     alert("CHYBA MAP:\n" + err.message);
   }
 });
+  
+  
+} else {
+  document.getElementById("dev-controls").style.display = "none";
+}
+
 function updateModeLabel(){
   modeLabel.innerText =
     cubeMode==="normal"
