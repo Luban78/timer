@@ -277,7 +277,12 @@ if (DEV_MODE) {
     
     const basePattern = createPatternFromGanState(getBaseCubeState());
     const currentPattern = createPatternFromGanState(currentState);
-    const tests = ["R", "R'", "R2", "L", "L'", "U", "U'", "F", "F'", "B", "B'", "D", "D'"];
+    devExportMap.addEventListener("pointerdown", e => {
+  e.stopPropagation();
+  e.preventDefault();
+  
+  alert("NOVÝ MAP KÓD BĚŽÍ");
+});
 
 let result = "";
 
