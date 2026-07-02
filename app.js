@@ -232,9 +232,12 @@ if (DEV_MODE) {
   }
   
   const diffs = diffFacelets(facelets);
-  const move = prompt("Jaký tah jsi udělal?", "R");
+  const move = prompt(
+  "Diffs: " + diffs.length + "\nJaký tah jsi udělal?",
+  "R"
+);
   
-  alert("Diffs: " + diffs.length + "\nMove: " + move);
+  
   
   if (!move) return;
   
