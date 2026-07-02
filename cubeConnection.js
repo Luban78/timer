@@ -28,14 +28,7 @@ export async function connectCube({ onMove, onFacelets }) {
     }
     
     if (event.type === "FACELETS") {
-  alert("CP:\n" + JSON.stringify(event.state.CP));
-
-alert("CO:\n" + JSON.stringify(event.state.CO));
-
-alert("EP:\n" + JSON.stringify(event.state.EP));
-
-alert("EO:\n" + JSON.stringify(event.state.EO));
-  onFacelets(event);
+      onFacelets(event);
 }
   });
   
@@ -44,3 +37,12 @@ alert("EO:\n" + JSON.stringify(event.state.EO));
   
   return cube;
 }
+
+/*alert("CP:\n" + JSON.stringify(event.state.CP));
+
+alert("CO:\n" + JSON.stringify(event.state.CO));
+
+alert("EP:\n" + JSON.stringify(event.state.EP));
+
+alert("EO:\n" + JSON.stringify(event.state.EO));
+  onFacelets(event);*/
