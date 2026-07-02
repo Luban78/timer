@@ -3,7 +3,8 @@
 //v4
 import {
   saveMoveMap,
-  getMoveMaps
+  getMoveMaps,
+  recognizeMove
 } from "./moveMaps.js";
 
 import {
@@ -232,9 +233,13 @@ if (DEV_MODE) {
   }
   
   const diffs = diffFacelets(facelets);
-  const move = prompt(
-  "Diffs: " + diffs.length + "\nJaký tah jsi udělal?",
-  "R"
+const recognized = recognizeMove(diffs);
+
+const move = prompt(
+  "Diffs: " + diffs.length +
+  "\nRozpoznáno: " + (recognized || "?") +
+  "\n\nUložit jako? prázdné = neukládat",
+  recognized || ""
 );
   
   
