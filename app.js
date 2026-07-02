@@ -220,28 +220,31 @@ if (DEV_MODE) {
   });
   
   devSaveFacelets.addEventListener("pointerdown", e => {
-    e.stopPropagation();
-    e.preventDefault();
-    
-    const facelets = getCurrentFacelets();
-    
-    if (!getBaseFacelets()) {
-      saveBaseFacelets(facelets);
-      status.innerText = "BASE uloženo";
-      return;
-    }
-    
-    const diffs = diffFacelets(facelets);
-    
-    alert("Diffs: " + diffs.length);
-    
-    const move = prompt("Jaký tah jsi udělal?");
-    if (!move) return;
-    
-    saveMoveMap(move.toUpperCase(), diffs);
-clearBaseFacelets();
-    alert("Mapa pro " + move + " uložena.");
-  });
+  e.stopPropagation();
+  e.preventDefault();
+  
+  const facelets = getCurrentFacelets();
+  
+  if (!getBaseFacelets()) {
+    saveBaseFacelets(facelets);
+    alert("BASE uloženo");
+    return;
+  }
+  
+  const diffs = diffFacelets(facelets);
+  const move = prompt("Jaký tah jsi udělal?", "R");
+  
+  alert("Diffs: " + diffs.length + "\nMove: " + move);
+  
+  if (!move) return;
+  
+  saveMoveMap(move.toUpperCase(), diffs);
+  clearBaseFacelets();
+  
+  alert("Mapa uložena: " + move);
+});
+  
+  
   
   devExportMap.addEventListener("pointerdown", e => {
     e.stopPropagation();
