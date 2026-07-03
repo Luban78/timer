@@ -1,25 +1,49 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    
+   <style>
+  body.local-dev #app {
+    width: 380px;
+    max-width: 380px;
+    transform: scale(0.85);
+    transform-origin: top;
+  }
+</style>
+
+<script>
+  if (location.hostname === "localhost") {
+    document.addEventListener("DOMContentLoaded", () => {
+      document.body.classList.add("local-dev");
+    });
+  }
+</script> 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#121212">
 <meta name="mobile-web-app-capable" content="yes"> 
     
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#121212">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="MG Trainer">
 <title>MG3i Trainer v0.34 </title>
-
+<style>
+  @media (max-width: 90px) {
+    html {
+      
+      transform-origin: top left;
+      width: 132vw;
+      height: 132vh;
+      overflow-x: hidden;
+    }
+  }
+</style>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <!--<body class="preview-mode">-->
 <body>
-  <h1 style="color:red">TEST SERVERU</h1>
 <div id="app">
 <div id="app-version">v0.43 live facelets</div>
 

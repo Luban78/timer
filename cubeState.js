@@ -70,7 +70,12 @@ export function applyR(facelets){
   arr[2] = old[51];
   arr[5] = old[48];
   arr[8] = old[45];
+const result = arr.join("");
 
+console.log("ORIGINAL:", facelets);
+console.log("AFTER R :", result);
+
+return result;
   return arr.join("");
 }
 let currentCubeState = null;
