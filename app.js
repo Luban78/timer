@@ -70,7 +70,7 @@ import { renderHistory } from "./history.js";
 import { loadSolves, saveSolves, loadProfile, saveProfile } from "./storage.js";
 import { connectCube } from "./cubeConnection.js";
 import { pllAlgs } from "./algorithms.js";
-
+alert("NAČTEN NOVÝ APP.JS 9999");
 const DEV_MODE = true;
 
 const btn = document.getElementById("btn");
