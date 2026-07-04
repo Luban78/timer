@@ -1,27 +1,4 @@
 function expandMove(move, displayIndex){
-  if(move === "M"){
-    return [
-      { move:"L'", displayIndex },
-      { move:"R", displayIndex }
-    ];
-  }
-
-  if(move === "M'"){
-    return [
-      { move:"R'", displayIndex },
-      { move:"L", displayIndex }
-    ];
-  }
-
-  if(move === "M2"){
-    return [
-      { move:"R'", displayIndex },
-      { move:"L", displayIndex },
-      { move:"R'", displayIndex },
-      { move:"L", displayIndex }
-    ];
-  }
-
   return [
     { move, displayIndex }
   ];
@@ -42,18 +19,6 @@ export function renderAlgorithmPreview(selectedAlg){
   const text = selectedAlg.innerText || "";
   const parts = text.split(":");
   const alg = parts[1] ? parts[1].trim() : "";
-  if(/\bM2?\b|\bM'\b/.test(alg)){
-  displayMoves = [];
-  checkMoves = [];
-  displayIndex = 0;
-  checkIndex = 0;
-  
-  wrongDisplayIndex = -1;
-  
-  selectedAlg.innerHTML = "Algoritmus:<br><span class='wrong-move'>M tahy zatím nejsou podporované</span>";
-  return;
-}
-
   if(!alg){
     displayMoves = [];
     checkMoves = [];

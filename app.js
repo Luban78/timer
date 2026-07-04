@@ -2,7 +2,12 @@
 // Hlavní logika MG3i Traineru
 
 import {
-  recognizeMove
+  makeStateSignature,
+  recognizeStateMove,
+  saveStateMoveMap,
+  exportMoveMapsText,
+  getMoveMapCount,
+  applyStateMoveMap
 } from "./moveMaps.js";
 
 import {
@@ -68,9 +73,11 @@ import { initAudio, beep, playErrorSound } from "./sound.js";
 import { drawGraph, resizeGraphCanvas } from "./graph.js";
 import { renderHistory } from "./history.js";
 import { loadSolves, saveSolves, loadProfile, saveProfile } from "./storage.js";
-import { connectCube } from "./cubeConnection.js";
+import { connectCube } from "./cubeConnection.js?v=19";
 import { pllAlgs } from "./algorithms.js";
-alert("NAČTEN NOVÝ APP.JS 9999");
+/*
+*/
+
 const DEV_MODE = true;
 
 const btn = document.getElementById("btn");
@@ -82,6 +89,7 @@ const algList = document.getElementById("algList");
 const closeModal = document.getElementById("closeModal");
 const status = document.getElementById("status");
 const selectedAlg = document.getElementById("selectedAlg");
+const mDebug = document.getElementById("m-debug");
 const notation = document.getElementById("notation");
 const stateMsg = document.getElementById("state-msg");
 const tpsDiv = document.getElementById("tps");
@@ -121,6 +129,7 @@ const navStats = document.getElementById("nav-stats");
 const navSettings = document.getElementById("nav-settings");
 
 const appScreen = document.getElementById("app");
+const mainLayout = document.getElementById("main-layout");
 const historyPanel = document.getElementById("history");
 const settingsScreen = document.getElementById("settings-screen");
 const statsScreen = document.getElementById("stats-screen");
@@ -164,14 +173,41 @@ const devCorrect = document.getElementById("dev-correct");
 const devWrong = document.getElementById("dev-wrong");
 const devSaveFacelets = document.getElementById("dev-save-facelets");
 const devExportMap = document.getElementById("dev-export-map");
+/*alert(
+  "BASE id = " + devSaveFacelets.id +
+  "\nMAP id = " + devExportMap.id +
+  "\nStejný objekt = " + (devSaveFacelets === devExportMap)
+);
+devSaveFacelets.onclick = () => alert("KLIK BASE");
+devExportMap.onclick = () => alert("KLIK MAP");
+
+*/
+
+
+
 
 const singleModeBtn = document.getElementById("singleModeBtn");
 const randomModeBtn = document.getElementById("randomModeBtn");
+let waitingForStateAfterMove = false;
+let syncBaseFromNextFacelets = false;
+let guidedDoublePending = null;
+let stateDoublePending = null;
+let m2PulsePending = null;
+let guidedCooldownUntil = 0;
+let stateMovePending = false;
+let m2HalfPending = null;
+let mRawSlicePulseCount = 0;
+let lastMRawSlicePulseTime = 0;
+
+// V M algoritmech umí kostka poslat několik RAW MOVE událostí pro jeden fyzický M tah.
+// Proto tyto RAW události slučujeme do krátkých „pulzů“.
+const GUIDED_COOLDOWN_MS = 80;
+const GUIDED_DOUBLE_TIMEOUT_MS = 2200;
 
 let activeScreen = "timer";
 let cubeMode = localStorage.getItem("cubeMode") || "smart";
 let trainingMode = "single";
-
+let lastStateSignature = "";
 let faceletCount = 0;
 let trainerLocked = false;
 
@@ -204,6 +240,129 @@ let playerProfile = loadProfile();
 
 const DOUBLE_MOVE_WINDOW = 280;
 const TPS_WINDOW = 2000;
+let moveBaseState = null;
+
+function cloneState(state) {
+  return JSON.parse(JSON.stringify(state));
+}
+
+function isStateMove(move) {
+  const m = normalizeMove(move);
+  return m === "M" || m === "M'" || m === "M2";
+}
+
+function expectedMoveUsesState() {
+  return isStateMove(getExpectedMove());
+}
+
+function getCurrentAlgorithmText() {
+  if (currentAlgorithmName && pllAlgs[currentAlgorithmName]) {
+    return pllAlgs[currentAlgorithmName];
+  }
+
+  const text = selectedAlg ? (selectedAlg.innerText || "") : "";
+  const parts = text.split(":");
+  return parts[1] ? parts[1].trim() : "";
+}
+
+function selectedAlgorithmUsesM() {
+  return getCurrentAlgorithmText()
+    .split(/\s+/)
+    .map(normalizeMove)
+    .some(isStateMove);
+}
+
+function processCubeStateMove(currentState) {
+  if (trainerLocked) return false;
+  if (!currentState) return false;
+  if (!moveBaseState) return false;
+
+  const expected = normalizeMove(getExpectedMove());
+  if (!isStateMove(expected)) return false;
+
+  const stateNow = JSON.stringify(currentState);
+  if (stateNow === lastStateSignature) return false;
+
+  const signature = makeStateSignature(moveBaseState, currentState);
+  if (!signature) return false;
+
+  const recognized = normalizeMove(recognizeStateMove(signature));
+
+  if (!isStateMove(recognized)) {
+    if (mDebug) {
+      mDebug.innerText = "STATE: čekám " + expected + ", přišlo: " + (recognized || "neznámé");
+    }
+    stateMovePending = false;
+    return true;
+  }
+
+  const now = performance.now();
+
+  if (expected === "M2") {
+    // Rychlé M2: pokud přišly dva oddělené L/R pulzy a state ukazuje M-family,
+    // potvrdíme M2 najednou. U/D/F/B pulzy se sem vůbec nepočítají.
+    if (mRawSlicePulseCount >= 2) {
+      m2HalfPending = null;
+      mRawSlicePulseCount = 0;
+      lastMRawSlicePulseTime = 0;
+      stateMovePending = false;
+      moveBaseState = cloneState(currentState);
+      lastStateSignature = stateNow;
+      if (mDebug) mDebug.innerText = "STATE M2: potvrzeno 2 pulzy";
+      commitMove("M2", now);
+      return true;
+    }
+
+    // Pomalejší M2: první M/M'/M2 je jen půlka, nikdy nezazelená celý M2.
+    if (!m2HalfPending) {
+      m2HalfPending = { move: recognized, time: now };
+      mRawSlicePulseCount = 0;
+      lastMRawSlicePulseTime = 0;
+      stateMovePending = false;
+      moveBaseState = cloneState(currentState);
+      lastStateSignature = stateNow;
+      if (mDebug) mDebug.innerText = "STATE M2: 1/2 (" + recognized + ")";
+      return true;
+    }
+
+    // Druhá půlka M2.
+    m2HalfPending = null;
+    mRawSlicePulseCount = 0;
+    lastMRawSlicePulseTime = 0;
+    stateMovePending = false;
+    moveBaseState = cloneState(currentState);
+    lastStateSignature = stateNow;
+    if (mDebug) mDebug.innerText = "STATE M2: 2/2";
+    commitMove("M2", now);
+    return true;
+  }
+
+  // Jednoduché M/M'. Do traineru pustíme jen M-family potvrzené stavem kostky.
+  m2HalfPending = null;
+  mRawSlicePulseCount = 0;
+  lastMRawSlicePulseTime = 0;
+  stateMovePending = false;
+  moveBaseState = cloneState(currentState);
+  lastStateSignature = stateNow;
+
+  if (recognized !== expected && recognized !== "M2") {
+    commitMove(recognized, now);
+  } else {
+    commitMove(expected, now);
+  }
+  return true;
+}
+
+/*
+document.addEventListener("pointerdown", e => {
+  alert(
+    "TARGET:\n" +
+    "tag: " + e.target.tagName +
+    "\nid: " + e.target.id +
+    "\nclass: " + e.target.className
+  );
+}, true);
+*/
 
 initCubeEngine().then(() => {
   const solved = createSolvedPattern();
@@ -266,103 +425,87 @@ function setupDevButtons() {
     commitMove("F", performance.now());
   });
 
-  devSaveFacelets.addEventListener("pointerdown", e => {
-    e.stopImmediatePropagation();
-    e.preventDefault();
 
-    const facelets = getCurrentFacelets();
 
-    if (!facelets) {
-      alert("Nejdřív připoj kostku a počkej na FACELETS.");
-      return;
-    }
+  devSaveFacelets.addEventListener("click", e => {
+  e.stopImmediatePropagation();
+  e.preventDefault();
+  
+  const state = getCurrentCubeState();
+  
+  if (!state) {
+    alert("Nejdřív připoj kostku a počkej na FACELETS.");
+    return;
+  }
+  
+  moveBaseState = cloneState(state);
+  lastStateSignature = JSON.stringify(state);
+  waitingForStateAfterMove = false;
+  syncBaseFromNextFacelets = false;
+  
+  saveBaseCubeState();
+  
+  status.innerText = "BASE / moveBaseState reset";
+});
 
-    saveBaseFacelets(facelets);
-    saveBaseCubeState();
-
-    status.innerText = "BASE uloženo";
-    alert("BASE uloženo");
-  });
-
-  devExportMap.addEventListener("pointerdown", e => {
-    e.stopImmediatePropagation();
-    e.preventDefault();
-
-    runMapTest();
-  });
+  devExportMap.addEventListener("click", e => {
+  e.stopImmediatePropagation();
+  e.preventDefault();
+  
+  runMapTest();
+});
 }
 
-function runMapTest() {
-  const currentFacelets = getCurrentFacelets();
-  const baseFacelets = getBaseFacelets();
 
-  if (!baseFacelets) {
+
+
+function runMapTest() {
+  alert("Načteno map: " + getMoveMapCount());
+  const baseState = getBaseCubeState();
+  const currentState = getCurrentCubeState();
+
+  if (!baseState) {
     alert("Nejdřív klikni BASE.");
     return;
   }
 
-  if (!currentFacelets) {
-    alert("Nemám aktuální FACELETS.");
+  if (!currentState) {
+    alert("Nemám aktuální cubeState.");
     return;
   }
 
-  const diffs = diffFacelets(currentFacelets);
+  const signature = makeStateSignature(baseState, currentState);
 
-  let result = "";
-  result += "MAP TEST\n";
-  result += "Diffs: " + diffs.length + "\n";
-
-  try {
-    const recognized = recognizeMove(diffs);
-    result += "Facelet mapa: " + (recognized || "?") + "\n";
-  } catch (err) {
-    result += "Facelet mapa chyba: " + err.message + "\n";
-  }
-
-  const baseState = getBaseCubeState();
-  const currentState = getCurrentCubeState();
-
-  if (!baseState || !currentState) {
-    result += "\nCubeState: chybí base/current state";
-    alert(result);
+  if (!signature) {
+    alert("Signature je prázdná. Udělej po BASE jeden skutečný tah.");
     return;
   }
 
-  try {
-    const basePattern = createPatternFromGanState(baseState);
-    const currentPattern = createPatternFromGanState(currentState);
+  const recognized = recognizeStateMove(signature);
 
-    const tests = [
-      "R", "R'", "R2",
-      "L", "L'", "L2",
-      "U", "U'", "U2",
-      "D", "D'", "D2",
-      "F", "F'", "F2",
-      "B", "B'", "B2",
-      "M", "M'", "M2"
-    ];
-
-    result += "\nCubing test:\n";
-
-    for (const alg of tests) {
-      const expected = applyAlgorithm(basePattern, alg);
-      const ok = patternsIdentical(currentPattern, expected);
-
-      if (ok) {
-        result += alg + ": TRUE ✅\n";
-      }
-    }
-
-    if (!result.includes("TRUE")) {
-      result += "Žádný tah nerozpoznán přes KPattern.\n";
-    }
-
-  } catch (err) {
-    result += "\nCubing chyba: " + err.message;
+  if (recognized) {
+    alert("Rozpoznáno: " + recognized);
+    return;
   }
 
-  alert(result);
+  const move = prompt(
+    "Tah neznám.\nSignature:\n" + signature + "\n\nJaký tah jsi udělal?",
+    "R"
+  );
+
+  if (!move) return;
+
+  saveStateMoveMap(move.toUpperCase(), signature);
+
+  alert("Mapa uložena: " + move.toUpperCase());
 }
+
+
+
+
+
+
+
 
 function setupNavigation() {
   navTimer.onclick = () => {
@@ -395,8 +538,12 @@ function setActiveNav(activeBtn) {
 function showScreen(screen) {
   activeScreen = screen;
 
+  if (mainLayout) {
+    mainLayout.style.display = screen === "timer" ? "flex" : "none";
+  }
+
   appScreen.style.display = screen === "timer" ? "flex" : "none";
-  historyPanel.style.display = screen === "timer" ? "block" : "none";
+  historyPanel.style.display = screen === "timer" ? "flex" : "none";
   settingsScreen.style.display = screen === "settings" ? "block" : "none";
   statsScreen.style.display = screen === "stats" ? "block" : "none";
 }
@@ -504,12 +651,57 @@ function setupCubeButtons() {
       status.innerText = "Připojuji...";
 
       await connectCube({
-        onMove: move => handleRawMove(move),
+        onMove: move => {
+          const expected = normalizeMove(getExpectedMove());
+
+          if (selectedAlgorithmUsesM() && isStateMove(expected)) {
+            // M/M'/M2 nikdy netrénujeme podle RAW názvu. RAW jen řekne,
+            // že se kostka pohnula; skutečný M tah potvrdí až STATE/FACELETS.
+            clearPendingMove();
+            registerMSliceRawPulse(move);
+            stateMovePending = true;
+            return;
+          }
+
+          if (selectedAlgorithmUsesM()) {
+            // Po M tazích může GAN poslat fyzické U jako D'. Tady se RAW jen
+            // přemapuje do stejné orientace jako zvolený algoritmus a jede
+            // dál rychlou cestou jako R/U/F/... u normálních PLL.
+            stateMovePending = false;
+            m2HalfPending = null;
+            mRawSlicePulseCount = 0;
+            lastMRawSlicePulseTime = 0;
+            const mapped = mapRawMoveInMAlgorithm(move, expected);
+            handleRawMove(mapped);
+            return;
+          }
+
+          // Běžné PLL bez M jedou rychlou RAW cestou.
+          m2HalfPending = null;
+          mRawSlicePulseCount = 0;
+          lastMRawSlicePulseTime = 0;
+          handleRawMove(move);
+          syncBaseFromNextFacelets = false;
+        },
+
         onFacelets: event => {
           faceletCount++;
 
           setCurrentFacelets(event.facelets);
           setCurrentCubeState(event.state);
+
+          if (!moveBaseState && event.state) {
+            moveBaseState = cloneState(event.state);
+            lastStateSignature = JSON.stringify(event.state);
+          }
+
+          if (stateMovePending && event.state && expectedMoveUsesState()) {
+            processCubeStateMove(event.state);
+          } else if (syncBaseFromNextFacelets && event.state) {
+            moveBaseState = cloneState(event.state);
+            lastStateSignature = JSON.stringify(event.state);
+            syncBaseFromNextFacelets = false;
+          }
 
           const stateText = isBackToStart() ? " ✅ START" : " 🔄 ZMĚNA";
 
@@ -517,6 +709,7 @@ function setupCubeButtons() {
             "FACELETS " + faceletCount + stateText + ":\n" + event.facelets;
         }
       });
+      
 
       isConnected = true;
       cubeMode = "smart";
@@ -600,9 +793,7 @@ function setupGlobalControls() {
       return;
     }
 
-    if (cubeMode === "smart" && isSolving) {
-      manualStop();
-    }
+    // Smart Cube se nezastavuje dotykem obrazovky, aby screenshot/tap nerozbil solve.
   });
 
   document.addEventListener("keydown", e => {
@@ -617,9 +808,7 @@ function setupGlobalControls() {
       return;
     }
 
-    if (cubeMode === "smart" && isSolving) {
-      manualStop();
-    }
+    // Smart Cube se nezastavuje dotykem obrazovky, aby screenshot/tap nerozbil solve.
   });
 }
 
@@ -757,6 +946,11 @@ function prepareNextTrainerRun() {
 }
 
 function prepareNext() {
+  clearPendingMove();
+  clearGuidedDoublePending();
+  clearStateDoublePending();
+  clearM2PulsePending();
+
   seq = [];
   moveTimes = [];
   tpsHistory = [];
@@ -764,6 +958,13 @@ function prepareNext() {
   maxTPS = 0;
   longestPause = 0;
   pendingMove = null;
+  waitingForStateAfterMove = false;
+  syncBaseFromNextFacelets = false;
+  guidedCooldownUntil = 0;
+  stateMovePending = false;
+  m2HalfPending = null;
+  mRawSlicePulseCount = 0;
+  lastMRawSlicePulseTime = 0;
 
   resetStatsUI({
     notation,
@@ -778,6 +979,250 @@ function prepareNext() {
   });
 
   clearCanvas(ctx, canvas);
+}
+
+function normalizeMove(move) {
+  if (move == null) return "";
+
+  return String(move)
+    .trim()
+    .replace(/\s+/g, "")
+    .replace("’", "'");
+}
+
+function clearPendingMove() {
+  if (pendingTimer) {
+    clearTimeout(pendingTimer);
+    pendingTimer = null;
+  }
+
+  pendingMove = null;
+  pendingMoveTime = 0;
+}
+
+function clearGuidedDoublePending() {
+  if (guidedDoublePending && guidedDoublePending.timer) {
+    clearTimeout(guidedDoublePending.timer);
+  }
+
+  guidedDoublePending = null;
+}
+
+function clearStateDoublePending() {
+  stateDoublePending = null;
+}
+
+function clearM2PulsePending() {
+  if (m2PulsePending && m2PulsePending.timer) {
+    clearTimeout(m2PulsePending.timer);
+  }
+
+  m2PulsePending = null;
+  mRawSlicePulseCount = 0;
+  lastMRawSlicePulseTime = 0;
+}
+
+function rawLooksLikeMSlice(move) {
+  const f = baseFace(normalizeMove(move));
+  // GAN/MonsterGo pro fyzický M typicky hlásí vnější osu L/R.
+  // U/D/F/B sem nepatří, aby U nikdy nedokončilo čekající M2.
+  return f === "L" || f === "R";
+}
+
+function registerMSliceRawPulse(move) {
+  const now = performance.now();
+
+  if (!rawLooksLikeMSlice(move)) {
+    if (mDebug) {
+      mDebug.innerText = "M režim: čekám M, ignoruji RAW " + normalizeMove(move);
+    }
+    return;
+  }
+
+  // Krátké duplicitní hlášky z jednoho fyzického flicku nepočítáme jako druhé M.
+  if (now - lastMRawSlicePulseTime > 70) {
+    mRawSlicePulseCount++;
+    lastMRawSlicePulseTime = now;
+  }
+
+  if (mDebug) {
+    mDebug.innerText = "M RAW pulz " + mRawSlicePulseCount + ": " + normalizeMove(move);
+  }
+}
+
+function oppositeUDMove(move) {
+  move = normalizeMove(move);
+  if (move === "D'") return "U";
+  if (move === "D") return "U'";
+  if (move === "D2") return "U2";
+  if (move === "U'") return "D";
+  if (move === "U") return "D'";
+  if (move === "U2") return "D2";
+  return move;
+}
+
+function mapRawMoveInMAlgorithm(rawMove, expected) {
+  rawMove = normalizeMove(rawMove);
+  expected = normalizeMove(expected);
+  if (!rawMove || !expected) return rawMove;
+
+  // H/Z perm používají po M tazích U vrstvu. Některé GAN/MG kostky ji po M
+  // hlásí jako opačnou D vrstvu. Opravujeme jen tehdy, když algoritmus čeká U.
+  if (baseFace(expected) === "U" && baseFace(rawMove) === "D") {
+    return oppositeUDMove(rawMove);
+  }
+
+  return rawMove;
+}
+
+function advanceMoveBaseState(move) {
+  if (!moveBaseState) return;
+  const nextState = applyStateMoveMap(moveBaseState, move);
+  if (!nextState) {
+    if (mDebug && selectedAlgorithmUsesM()) {
+      mDebug.innerText = "Nemám STATE mapu pro " + move + " – klikni MAP a nauč tah.";
+    }
+    return;
+  }
+
+  moveBaseState = cloneState(nextState);
+  lastStateSignature = JSON.stringify(moveBaseState);
+}
+
+function handleExpectedM2Pulse() {
+  const expected = normalizeMove(getExpectedMove());
+  if (expected !== "M2") return false;
+
+  const now = performance.now();
+
+  if (
+    m2PulsePending &&
+    now - m2PulsePending.time < 1800
+  ) {
+    clearM2PulsePending();
+    clearStateDoublePending();
+
+    if (mDebug) {
+      mDebug.innerText = "M2: 2/2 → potvrzeno";
+    }
+
+    commitMove("M2", now);
+    syncBaseFromNextFacelets = true;
+    return true;
+  }
+
+  clearM2PulsePending();
+
+  m2PulsePending = {
+    time: now,
+    timer: setTimeout(() => {
+      if (m2PulsePending) {
+        m2PulsePending = null;
+        if (mDebug && normalizeMove(getExpectedMove()) === "M2") {
+          mDebug.innerText = "M2: čekám na druhý M";
+        }
+      }
+    }, 1800)
+  };
+
+  if (mDebug) {
+    mDebug.innerText = "M2: 1/2";
+  }
+
+  return false;
+}
+
+function handleGuidedAlgorithmMove(rawMove) {
+  if (activeScreen !== "timer") return false;
+  if (cubeMode === "normal") return false;
+  if (trainerLocked) return false;
+
+  const expected = normalizeMove(getExpectedMove());
+  if (!expected) return false;
+  const raw = normalizeMove(rawMove);
+
+  const now = performance.now();
+
+  if (!isSolving && seq.length > 0) {
+    prepareNext();
+  }
+
+  // Jeden fyzický M tah často vytvoří více RAW událostí.
+  // Tady je všechny dočasně ignorujeme, aby první M nikdy nepotvrdilo celé M2.
+  if (now < guidedCooldownUntil) {
+    if (mDebug) {
+      mDebug.innerText = "M režim: ignoruji duplicitní pulz pro " + expected;
+    }
+    return false;
+  }
+
+  // Dvojité tahy v M algoritmech potvrzujeme až po dvou oddělených pulzech.
+  // Platí pro M2 i U2 v H/Z permu.
+  if (expected.includes("2")) {
+    return handleGuidedDoubleExpected(expected, now, raw);
+  }
+
+  clearGuidedDoublePending();
+  clearStateDoublePending();
+  clearM2PulsePending();
+
+  commitMove(expected, now);
+  guidedCooldownUntil = now + GUIDED_COOLDOWN_MS;
+  syncBaseFromNextFacelets = true;
+  return true;
+}
+
+function handleGuidedDoubleExpected(expected, now, rawMove) {
+  if (rawMove && rawMove.includes("2")) {
+    clearGuidedDoublePending();
+    clearStateDoublePending();
+    clearM2PulsePending();
+    commitMove(expected, now);
+    guidedCooldownUntil = now + GUIDED_COOLDOWN_MS;
+    syncBaseFromNextFacelets = true;
+    return true;
+  }
+
+  if (
+    guidedDoublePending &&
+    guidedDoublePending.expected === expected &&
+    now - guidedDoublePending.time >= GUIDED_COOLDOWN_MS &&
+    now - guidedDoublePending.time <= GUIDED_DOUBLE_TIMEOUT_MS
+  ) {
+    clearGuidedDoublePending();
+    clearStateDoublePending();
+    clearM2PulsePending();
+
+    commitMove(expected, now);
+    guidedCooldownUntil = now + GUIDED_COOLDOWN_MS;
+    syncBaseFromNextFacelets = true;
+    return true;
+  }
+
+  clearGuidedDoublePending();
+  clearStateDoublePending();
+  clearM2PulsePending();
+
+  guidedDoublePending = {
+    expected,
+    time: now,
+    timer: setTimeout(() => {
+      if (guidedDoublePending && guidedDoublePending.expected === expected) {
+        guidedDoublePending = null;
+        if (mDebug) {
+          mDebug.innerText = "M režim: čekám druhou polovinu " + expected;
+        }
+      }
+    }, GUIDED_DOUBLE_TIMEOUT_MS)
+  };
+
+  guidedCooldownUntil = now + GUIDED_COOLDOWN_MS;
+
+  if (mDebug) {
+    mDebug.innerText = "M režim: " + expected + " 1/2";
+  }
+
+  return false;
 }
 
 function baseFace(move) {
@@ -795,6 +1240,10 @@ function makeDoubleMove(move) {
 function handleRawMove(move) {
   if (activeScreen !== "timer") return;
   if (cubeMode === "normal") return;
+  if (trainerLocked) return;
+
+  move = normalizeMove(move);
+  if (!move) return;
 
   const now = performance.now();
 
@@ -832,6 +1281,8 @@ function handleRawMove(move) {
     }
   }, DOUBLE_MOVE_WINDOW);
 }
+
+
 
 function runStartSolve(now) {
   startSolve(now, {
@@ -871,8 +1322,12 @@ function runStartSolve(now) {
   uiTimer = setInterval(updateUI, 100);
 }
 
+
 function commitMove(move, now) {
   if (trainerLocked) return;
+
+  move = normalizeMove(move);
+  if (!move) return;
 
   if (!isSolving) {
     saveStartFacelets();
@@ -903,8 +1358,27 @@ function commitMove(move, now) {
 
   const trainerResult = checkMove(move, selectedAlg);
 
+  if (mDebug) {
+    mDebug.innerText =
+      "MOVE: " + move +
+      " | EXPECTED: " + (getExpectedMove() || "-") +
+      " | RESULT: " + trainerResult;
+  }
+
+  if (trainerResult !== "wrong" && selectedAlgorithmUsesM() && !isStateMove(move)) {
+    advanceMoveBaseState(move);
+  }
+
   if (trainerResult === "wrong") {
     trainerLocked = true;
+    clearPendingMove();
+    clearGuidedDoublePending();
+    clearStateDoublePending();
+    clearM2PulsePending();
+    stateMovePending = false;
+    m2HalfPending = null;
+    mRawSlicePulseCount = 0;
+    lastMRawSlicePulseTime = 0;
 
     playErrorSound();
     failSolve();
@@ -919,21 +1393,29 @@ function commitMove(move, now) {
 
   if (trainerResult === "finished") {
     trainerLocked = true;
+    clearPendingMove();
+    clearGuidedDoublePending();
+    clearStateDoublePending();
+    clearM2PulsePending();
+    stateMovePending = false;
+    m2HalfPending = null;
+    mRawSlicePulseCount = 0;
+    lastMRawSlicePulseTime = 0;
 
     finishSolve(performance.now(), false);
 
     setTimeout(() => {
       prepareNextTrainerRun();
       trainerLocked = false;
-    }, 800);
+    }, 1200);
 
     return;
   }
 
   moveTimes.push(now);
 
-  clearTimeout(stopTimer);
-  stopTimer = setTimeout(() => finishSolve(lastMoveTime, false), 3000);
+  // Smart PLL trainer se dokončuje přes checkMove() == "finished".
+  // Ne auto-timeoutem, jinak se uprostřed algoritmu ukládal falešný solve.
 }
 
 function updateUI() {
@@ -982,6 +1464,11 @@ function manualStop() {
     pendingMove = null;
   }
 
+  if (guidedDoublePending) {
+    clearGuidedDoublePending();
+  }
+
+  clearStateDoublePending();
   finishSolve(stopTime, true);
 }
 
@@ -1101,6 +1588,7 @@ function finishSolve(stopTime, manual) {
 }
 
 function failSolve() {
+  clearPendingMove();
   if (!isSolving) return;
 
   isSolving = false;
