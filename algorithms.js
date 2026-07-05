@@ -2,8 +2,12 @@
 // Databáze PLL algoritmů. Později sem přidáme i OLL.
 
 export const pllAlgs={
-"Ua-perm":"R U' R U R U R U' R' U' R2",
-"Ub-perm":"R2 U R U R' U' R' U' R' U R'",
+ "test-perm":"M U M' U M2 R M2 U2 M R M2 R2 M' U2",
+  
+"Ua-perm":"M2 U M U2 M' U M2",
+
+"Ub-perm":"M2 U' M U2 M' U' M2",
+
 "Z-perm":"M2 U M2 U M' U2 M2 U2 M' U2",
 "H-perm":"M2 U M2 U2 M2 U M2",
 "Aa-perm":"x R' U R' D2 R U' R' D2 R2 x'",

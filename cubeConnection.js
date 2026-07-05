@@ -24,20 +24,13 @@ export async function connectCube({ onMove, onFacelets }) {
         onMove(event.move);
       }
 
-      setTimeout(requestFacelets, 220);
-      setTimeout(requestFacelets, 450);
+      setTimeout(requestFacelets, 150);
       return;
     }
 
-    // Některé MOVE eventy nemají event.move. I tak dáme appce vědět,
-    // aby při očekávaném M/M'/M2 čekala na následný STATE/FACELETS.
+    // Některé MOVE eventy nemají event.move. Ty jen použijeme k obnově stavu.
     if (type.includes("MOVE")) {
-      if (typeof onMove === "function") {
-        onMove(event.move || "");
-      }
-
-      setTimeout(requestFacelets, 220);
-      setTimeout(requestFacelets, 450);
+      setTimeout(requestFacelets, 150);
       return;
     }
 

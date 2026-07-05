@@ -1,3 +1,5 @@
+import { rotateMove, isTrainerMove, stripTrainerMove } from "./orientation.js";
+
 function expandMove(move, displayIndex){
   return [
     { move, displayIndex }
@@ -40,24 +42,33 @@ wrongDisplayIndex = -1;
   renderTrainer(selectedAlg);
 }
 
-export function renderTrainer(selectedAlg){
+export function renderTrainer(selectedAlg) {
+  const algName = selectedAlg.dataset.algName || "";
+  
   selectedAlg.innerHTML =
-    "Algoritmus:<br>" +
-    displayMoves.map((move,index)=>{
-      if(index === wrongDisplayIndex){
-  return `<span class="wrong-move">${move}</span>`;
-}
-      if(index < displayIndex){
+    '<div class="alg-title">' +
+    'Algoritmus' + (algName ? ': <span>' + algName + '</span>' : '') +
+    '</div>' +
+    '<div class="alg-moves-row">' +
+    displayMoves.map((move, index) => {
+      if (index === wrongDisplayIndex) {
+        return `<span class="wrong-move">${move}</span>`;
+      }
+      
+      if (index < displayIndex) {
         return `<span class="done-move">${move}</span>`;
       }
-
-      if(index === displayIndex){
+      
+      if (index === displayIndex) {
         return `<span class="next-move">${move}</span>`;
       }
-
+      
       return `<span class="alg-move">${move}</span>`;
-    }).join(" ");
+    }).join(" ") +
+    '</div>';
 }
+
+
 
 export function nextTrainerMove(selectedAlg){
   if(displayMoves.length === 0) return;
@@ -81,7 +92,11 @@ export function checkMove(move, selectedAlg){
   if(!expected){
     return "none";
   }
-
+  if (isTrainerMove(move)) {
+  move = stripTrainerMove(move);
+} else {
+  move = rotateMove(move);
+}
   if(move !== expected.move){
   wrongDisplayIndex = expected.displayIndex;
   renderTrainer(selectedAlg);

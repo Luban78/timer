@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
 
-  <title>MG3i Trainer v0.52</title>
+  <title>MG3i Trainer v0.55</title>
 </head>
 
 <body>
@@ -19,9 +19,9 @@
 <div id="main-layout">
 
   <div id="app">
-    <div id="app-version">v0.52 real M state + raw sync</div>
+    <div id="app-version">v0.55 slice M + U sync</div>
 
-    <button id="btn">izzzzzz</button>
+    <button id="btn">Připojit kostku</button>
     <button id="normalCubeBtn">Normal cube</button>
 
     <div id="modeButtons">
@@ -48,38 +48,39 @@
     </div>
 
     <div id="notation">Notace:</div>
+    
+    
     <div id="mode-label">Režim: Smart Cube</div>
 
     <div id="state-msg">Připoj kostku...</div>
     <div id="tps">0.0</div>
 
     <div class="stats-grid">
-      <div class="stat-box">
-        <div class="stat-label">Čas</div>
-        <div id="time-val" class="stat-val">0.00s</div>
-      </div>
-
-      <div class="stat-box">
-        <div class="stat-label">Tahy HTM</div>
-        <div id="moves-val" class="stat-val">0</div>
-      </div>
-
-      <div class="stat-box">
-        <div class="stat-label">Průměr TPS</div>
-        <div id="avg-val" class="stat-val" style="color:#00e676">0.0</div>
-      </div>
-
-      <div class="stat-box">
-        <div class="stat-label">Špička TPS</div>
-        <div id="max-val" class="stat-val">0.0</div>
-      </div>
-
-      <div class="stat-box" style="grid-column:span 2">
-        <div class="stat-label">Nejdelší pauza</div>
-        <div id="pause-val" class="stat-val" style="color:#ff1744">0.00s</div>
-      </div>
-    </div>
-
+  <div class="stat-box">
+    <div class="stat-label">TPS</div>
+    <div id="time-val" class="stat-val">0.0</div>
+  </div>
+  
+  <div class="stat-box">
+    <div class="stat-label">Tahy HTM</div>
+    <div id="moves-val" class="stat-val">0</div>
+  </div>
+  
+  <div class="stat-box">
+    <div class="stat-label">Průměr TPS</div>
+    <div id="avg-val" class="stat-val" style="color:#00e676">0.0</div>
+  </div>
+  
+  <div class="stat-box">
+    <div class="stat-label">Špička TPS</div>
+    <div id="max-val" class="stat-val">0.0</div>
+  </div>
+  
+  <div class="stat-box" style="grid-column:span 4">
+    <div class="stat-label">Nejdelší pauza</div>
+    <div id="pause-val" class="stat-val" style="color:#ffffff">0.00s</div>
+  </div>
+</div>
     <div id="version">v0.15 detail graph</div>
     <canvas id="graph"></canvas>
   </div>
@@ -246,7 +247,7 @@
   </div>
 </div>
 
-<script type="module" src="./app.js?v=10046"></script>
+<script type="module" src="./app.js?v=10000"></script>
 
 </body>
 </html>

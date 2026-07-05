@@ -1,12 +1,19 @@
 :root{
-  --history-width:130px;
-  --bg:#121212;
-  --box:#1e1e1e;
+  --bg:#0f1010;
+  --panel:#15191b;
+  --card:#1b242a;
+  --card2:#181818;
+  --line:#30363a;
+  --line2:#43545c;
   --green:#00e676;
   --cyan:#00e5ff;
-  --yellow:#ffea00;
+  --yellow:#ffd54f;
   --red:#ff1744;
+  --text:#ffffff;
+  --muted:#a5adb3;
 }
+
+*{box-sizing:border-box;}
 
 html,body{
   margin:0;
@@ -14,128 +21,120 @@ html,body{
   width:100%;
   height:100%;
   background:var(--bg);
-  color:white;
-  font-family:Arial,sans-serif;
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
   overflow:hidden;
 }
 
 button{
   border:none;
-  border-radius:12px;
-  font-weight:bold;
+  border-radius:14px;
+  font-weight:700;
   background:var(--green);
-  color:black;
+  color:#101010;
+  font-family:inherit;
 }
 
+/* ========== TIMER SCREEN ========== */
 #main-layout{
-  display:flex;
   width:100vw;
-  height:calc(100vh - 72px);
+  height:calc(100vh - 64px);
+  height:calc(100dvh - 64px);
+  display:grid;
+  grid-template-rows:minmax(0,1fr) 158px;
+  grid-template-columns:1fr;
   overflow:hidden;
+  background:var(--bg);
 }
 
 #app{
-  flex:1;
   min-width:0;
+  min-height:0;
   height:100%;
-  padding:8px;
-  box-sizing:border-box;
+  padding:8px 10px 4px;
   display:flex;
   flex-direction:column;
-  align-items:center;
+  align-items:stretch;
   gap:6px;
-  overflow-y:auto;
+  overflow:hidden;
 }
 
 #history{
-  flex:0 0 var(--history-width);
-  width:var(--history-width);
-  height:100%;
-  background:rgba(30,30,30,.96);
-  border-left:1px solid #333;
-  padding:8px;
-  box-sizing:border-box;
-  display:flex;
-  flex-direction:column;
+  min-height:0;
+  height:158px;
+  width:100%;
+  padding:6px 10px 8px;
+  background:#101010;
+  border-top:1px solid var(--line);
   overflow:hidden;
-  z-index:1;
 }
 
-#history h2{
-  margin:0 0 10px;
-  font-size:26px;
+/* schované vývojové / zbytečné prvky */
+#app-version,
+#version,
+#graph,
+#notation,
+#mode-label,
+#m-debug,
+#dev-controls,
+#legacy-tools,
+#pllDebugBox{
+  display:none !important;
 }
 
-#stats-box{
-  font-size:14px;
-  line-height:1.4;
-  border-bottom:1px solid #333;
-  padding-bottom:8px;
-  margin-bottom:8px;
-}
-
-#stats-box span{
-  color:var(--cyan);
-  font-weight:bold;
-}
-
-#history-list{
-  flex:1;
-  overflow-y:auto;
-}
-
-.hist-row{
-  border-bottom:1px solid #333;
-  padding:6px 0;
-}
-
-.hist-time{
-  color:var(--cyan);
-  font-weight:bold;
-  font-size:17px;
-}
-
-.hist-small{
-  color:#aaa;
-  font-size:11px;
-}
-
+/* Připojení – před startem jsou vidět, po Normal/Smart je JS schová */
 #btn,
 #normalCubeBtn{
   width:100%;
-  height:44px;
-  font-size:20px;
+  height:34px;
+  min-height:34px;
+  font-size:17px;
+  line-height:34px;
   border-radius:18px;
+  padding:0 12px;
 }
 
+/* OLL / PLL */
 #modeButtons{
+  width:100%;
   display:none;
   grid-template-columns:1fr 1fr;
-  gap:8px;
-  width:100%;
+  gap:10px;
 }
 
 .modeBtn{
-  height:48px;
-  font-size:24px;
-  border-radius:18px;
+  height:56px;
+  min-height:56px;
+  font-size:34px;
+  border-radius:20px;
 }
 
+/* Režim / status */
 #status{
-  color:#aaa;
-  font-size:11px;
-  text-align:center;
-  word-break:break-all;
+  min-height:18px;
+  max-height:18px;
+  font-size:14px;
+  line-height:18px;
+  color:#cfd8dc;
+  text-align:left;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
 #training-mode{
+  height:34px;
+  min-height:34px;
   display:flex;
-  gap:6px;
+  justify-content:flex-end;
+  gap:8px;
 }
 
 #training-mode button{
-  height:30px;
-  font-size:14px;
+  min-width:104px;
+  height:34px;
+  font-size:16px;
+  border-radius:20px;
   background:#263238;
   color:white;
   border:1px solid #455a64;
@@ -147,214 +146,20 @@ button{
   color:#111;
 }
 
+/* Algoritmus */
 #selectedAlg{
   width:100%;
-  min-height:150px;
-  background:#263238;
-  border:1px solid #455a64;
-  border-radius:14px;
-  padding:10px;
-  box-sizing:border-box;
-  font-size:18px;
-  line-height:1.2;
-  overflow:visible;
-}
-
-#notation,
-#mode-label{
-  display:none;
-}
-
-#dev-controls{
-  display:flex;
-  gap:8px;
-  margin:6px 0;
-  width:auto;
-  position:relative;
-  z-index:5;
-}
-
-#dev-controls button{
-  min-width:44px;
-  height:36px;
-  font-size:18px;
-  padding:0 10px;
-}
-
-#state-msg{
-  font-size:26px;
-  line-height:1;
-  color:var(--yellow);
-  font-weight:bold;
-  text-align:center;
-}
-
-#tps{
-  font-size:90px;
-  line-height:.85;
-}
-
-.stats-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  width:100%;
-}
-
-.stat-box{
-  background:var(--box);
-  border:1px solid #333;
-  border-radius:14px;
-  padding:8px;
-  text-align:center;
-  min-height:62px;
-}
-
-.stat-label{
-  font-size:12px;
-  color:#aaa;
-  text-transform:uppercase;
-}
-
-.stat-val{
-  font-size:30px;
-  font-weight:bold;
-}
-
-#graph{
-  width:100%;
-  height:80px;
-  pointer-events:none;
-}
-
-#bottom-nav{
-  position:fixed;
-  left:0;
-  right:0;
-  bottom:0;
-  height:72px;
-  display:flex;
-  background:#1f1f1f;
-  border-top:1px solid #444;
-  z-index:999;
-}
-
-#bottom-nav button{
-  flex:1;
-  background:none;
-  color:white;
-  font-size:15px;
-}
-
-#bottom-nav button.active{
-  color:var(--green);
-  background:#151515;
-}
-
-#app-version{
-  position:absolute;
-  top:6px;
-  right:calc(var(--history-width) + 12px);
-  font-size:11px;
-  color:#888;
-  z-index:10;
-}
-
-#version{
-  color:#777;
-  font-size:11px;
-  align-self:flex-start;
-}
-
-#legacy-tools{
-  display:none;
-}
-
-#modal,
-.detail-modal{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.88);
-  z-index:200;
-  padding:16px;
-  box-sizing:border-box;
-  overflow:auto;
-}
-
-#modalContent,
-.detail-box{
-  max-width:520px;
-  margin:40px auto;
-  background:var(--box);
-  border:1px solid #444;
-  border-radius:16px;
-  padding:14px;
-}
-
-.algGrid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
-.algBtn{
-  padding:18px 8px;
-  font-size:19px;
-  background:#263238;
-  color:white;
-  border-radius:14px;
-}
-
-.closeBtn{
-  width:100%;
-  padding:16px;
-  margin-top:12px;
-  font-size:22px;
-  background:var(--red);
-  color:white;
-}
-
-#export-text,
-#import-text{
-  width:100%;
-  height:260px;
-  box-sizing:border-box;
-  background:#121212;
-  color:var(--cyan);
-  border:1px solid #333;
-  border-radius:12px;
-  padding:10px;
-  font-family:monospace;
-}
-
-#settings-screen,
-#stats-screen{
-  height:calc(100vh - 72px);
-  overflow-y:auto;
-  padding:20px;
-  padding-bottom:100px;
-  box-sizing:border-box;
-}
-
-.stat-card{
-  background:var(--box);
-  border:1px solid #333;
-  border-radius:14px;
-  padding:16px;
-  margin-bottom:14px;
-  text-align:center;
-}
-
-.stat-card h3{
-  margin:0 0 10px;
-  color:var(--yellow);
-}
-
-.stat-card div{
-  font-size:30px;
-  font-weight:bold;
-  color:var(--cyan);
+  height:126px;
+  min-height:126px;
+  max-height:126px;
+  overflow:hidden;
+  background:var(--card);
+  border:1px solid var(--line2);
+  border-radius:20px;
+  padding:10px 12px;
+  font-size:20px;
+  line-height:1.36;
+  text-align:left;
 }
 
 .alg-move,
@@ -362,56 +167,386 @@ button{
 .done-move,
 .wrong-move{
   display:inline-flex;
-  width:34px;
-  height:34px;
+  width:36px;
+  height:36px;
+  min-width:36px;
   align-items:center;
   justify-content:center;
-  margin:2px;
-  border-radius:8px;
+  margin:3px 9px 3px 0;
+  border-radius:10px;
+  font-size:23px;
+  line-height:1;
 }
 
-.next-move{background:#ffd54f;color:#111;font-weight:bold;}
-.done-move{background:#00c853;color:white;font-weight:bold;}
-.wrong-move{background:#ff1744;color:white;font-weight:bold;}
+.next-move{background:var(--yellow);color:#111;font-weight:700;}
+.done-move{background:#00c853;color:white;font-weight:700;}
+.wrong-move{background:var(--red);color:white;font-weight:700;}
 
-/* LOCALHOST TEST: historie jen zobrazuje, nebere kliky */
-#history,
-#history * {
-  pointer-events: none !important;
+/* Stav + velký čas */
+#state-msg{
+  height:28px;
+  min-height:28px;
+  max-height:28px;
+  margin:0;
+  color:var(--green);
+  font-size:27px;
+  line-height:28px;
+  font-weight:700;
+  text-align:center;
 }
 
-#dev-controls{
-  display:flex !important;
-  gap:8px !important;
-  width:100% !important;
-  justify-content:center !important;
-  position:relative !important;
-  z-index:5 !important;
+#tps{
+  height:72px;
+  min-height:72px;
+  max-height:72px;
+  margin:0;
+  font-size:82px;
+  line-height:72px;
+  text-align:center;
 }
 
-#dev-controls button{
-  flex:0 0 auto !important;
-  width:auto !important;
-  min-width:44px !important;
-  height:36px !important;
-  padding:0 10px !important;
-  position:relative !important;
-  inset:auto !important;
-  transform:none !important;
+/* Čas / tahy / TPS / nejdelší pauza */
+.stats-grid{
+  width:100%;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:7px;
 }
-/* Fix: Statistiky/Nastavení jsou mimo #main-layout, proto se #main-layout při přepnutí skrývá v app.js. */
-#stats-screen,
-#settings-screen{
-  width:100vw;
-  max-width:100vw;
+
+.stat-box{
+  height:54px;
+  min-height:54px;
+  padding:5px 4px;
+  background:var(--card2);
+  border:1px solid var(--line);
+  border-radius:14px;
+  text-align:center;
+  overflow:hidden;
+}
+
+.stat-label{
+  color:var(--muted);
+  font-size:10px;
+  line-height:12px;
+  text-transform:uppercase;
+}
+
+.stat-val{
+  font-size:25px;
+  line-height:30px;
+  font-weight:700;
+}
+
+#avg-val{color:var(--green) !important;}
+#max-val{color:white !important;}
+#pause-val{color:white !important;}
+
+.stats-grid .stat-box:nth-child(5){
+  grid-column:1 / -1;
+  height:46px;
+  min-height:46px;
+}
+.stats-grid .stat-box:nth-child(5) .stat-label{
+  font-size:12px;
+  line-height:14px;
+}
+.stats-grid .stat-box:nth-child(5) .stat-val{
+  color:white !important;
+  font-size:27px;
+  line-height:29px;
+}
+
+/* ========== SPODNÍ HISTORIE ========== */
+#history h2{display:none;}
+
+#history::before{
+  content:"POSLEDNÍ ČASY";
+  display:block;
+  height:18px;
+  line-height:18px;
+  margin:0 0 5px;
+  color:white;
+  font-size:16px;
+  font-weight:700;
+}
+
+#stats-box{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  height:44px;
+  min-height:44px;
+  max-height:44px;
+  margin:0 0 6px;
+  padding:0;
+  background:var(--card2);
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden;
+}
+
+#stats-box > div{
+  padding:4px 2px;
+  border-right:1px solid #2a2a2a;
+  color:var(--muted);
+  font-size:9px;
+  line-height:11px;
+  text-align:center;
+  text-transform:uppercase;
+}
+#stats-box > div:last-child{border-right:none;}
+
+#stats-box span{
+  display:block;
+  margin-top:2px;
+  color:var(--green);
+  font-size:16px;
+  line-height:18px;
+  font-weight:700;
+}
+
+#history-list{
+  height:70px;
+  max-height:70px;
+  padding:0 6px;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:0;
+  background:#141414;
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden;
+}
+
+.hist-row{
+  display:block;
+  height:68px;
+  padding:6px 4px;
+  border-right:1px solid #2b2b2b;
+  border-bottom:none;
+  overflow:hidden;
+}
+.hist-row:nth-child(n+6){display:none;}
+.hist-row:nth-child(5){border-right:none;}
+
+.hist-time{
+  color:var(--cyan);
+  font-weight:700;
+  font-size:16px;
+  line-height:19px;
+  white-space:nowrap;
+}
+.hist-small{
+  color:#aaa;
+  font-size:10px;
+  line-height:12px;
+  white-space:nowrap;
+}
+
+/* ========== BOTTOM NAV ========== */
+#bottom-nav{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  height:64px;
+  display:flex;
+  background:#181818;
+  border-top:1px solid #333;
+  z-index:999;
+}
+#bottom-nav button{
+  flex:1;
+  background:none;
+  color:white;
+  font-size:14px;
+  border-radius:0;
+}
+#bottom-nav button.active{
+  color:var(--green);
+  background:#151515;
+}
+
+/* ========== MODÁLY ========== */
+#modal,
+.detail-modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  padding:16px;
+  background:rgba(0,0,0,.88);
+  z-index:2000;
+  overflow:auto;
+}
+#modalContent,
+.detail-box{
+  max-width:520px;
+  margin:40px auto;
+  padding:14px;
+  background:var(--card2);
+  border:1px solid #444;
+  border-radius:16px;
+}
+.algGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.algBtn{
+  padding:18px 8px;
+  background:#263238;
+  color:white;
+  border-radius:14px;
+  font-size:19px;
+}
+.closeBtn{
+  width:100%;
+  margin-top:12px;
+  padding:16px;
+  background:var(--red);
+  color:white;
+  font-size:22px;
+}
+#export-text,
+#import-text{
+  width:100%;
+  height:260px;
+  padding:10px;
+  background:#121212;
+  color:var(--cyan);
+  border:1px solid #333;
+  border-radius:12px;
+  font-family:monospace;
+}
+
+/* ========== STATISTIKY / NASTAVENÍ ========== */
+#settings-screen,
+#stats-screen{
+  height:calc(100dvh - 64px);
+  overflow-y:auto;
+  padding:20px;
+  padding-bottom:90px;
   background:var(--bg);
   color:white;
 }
-
 #settings-screen button{
   display:block;
   width:100%;
   margin:10px 0;
   padding:14px;
   font-size:18px;
+}
+.stat-card{
+  margin-bottom:14px;
+  padding:16px;
+  background:var(--card2);
+  border:1px solid #333;
+  border-radius:14px;
+  text-align:center;
+}
+.stat-card h3{
+  margin:0 0 10px;
+  color:var(--yellow);
+}
+.stat-card div{
+  color:var(--cyan);
+  font-size:30px;
+  font-weight:700;
+}
+.xp-bar{
+  height:16px;
+  background:#333;
+  border-radius:10px;
+  overflow:hidden;
+}
+#xp-fill{
+  width:0%;
+  height:100%;
+  background:var(--green);
+}
+
+/* ========== MENŠÍ VÝŠKA ========== */
+@media (max-height:760px){
+  #main-layout{grid-template-rows:minmax(0,1fr) 136px;}
+  #history{height:136px;min-height:136px;max-height:136px;padding:5px 10px 6px;}
+  .modeBtn{height:48px;min-height:48px;font-size:31px;}
+  #selectedAlg{height:112px;min-height:112px;max-height:112px;font-size:18px;line-height:1.28;padding:8px 10px;}
+  .alg-move,.next-move,.done-move,.wrong-move{width:32px;height:32px;min-width:32px;font-size:20px;margin:2px 7px 2px 0;}
+  #state-msg{height:24px;min-height:24px;max-height:24px;font-size:24px;line-height:24px;}
+  #tps{height:60px;min-height:60px;max-height:60px;font-size:70px;line-height:60px;}
+  .stat-box{height:48px;min-height:48px;padding:4px 3px;}
+  .stat-val{font-size:23px;line-height:27px;}
+  .stats-grid .stat-box:nth-child(5){height:40px;min-height:40px;}
+  .stats-grid .stat-box:nth-child(5) .stat-val{font-size:24px;line-height:25px;}
+  #history::before{height:17px;line-height:17px;font-size:15px;margin-bottom:4px;}
+  #stats-box{height:40px;min-height:40px;max-height:40px;margin-bottom:4px;}
+  #stats-box span{font-size:15px;line-height:17px;}
+  #history-list{height:62px;max-height:62px;}
+  .hist-row{height:60px;padding:5px 4px;}
+  .hist-time{font-size:15px;}
+}
+/* Název algoritmu v kartě */
+.alg-title {
+  font-size: 20px;
+  line-height: 24px;
+  margin-bottom: 4px;
+  color: white;
+}
+
+.alg-title span {
+  color: var(--green);
+  font-weight: bold;
+}
+
+.alg-moves-row {
+  display: block;
+  white-space: normal;
+}
+/* Velký prostřední údaj používáme jako hlavní čas */
+#tps{
+  font-size:70px;
+  line-height:72px;
+  color:white;
+  font-weight:normal;
+}
+#moveDebugBox{
+  position:fixed;
+  left:8px;
+  right:8px;
+  bottom:72px;
+  z-index:99999;
+  background:rgba(0,0,0,.88);
+  color:#00ff88;
+  border:1px solid #00ff88;
+  border-radius:10px;
+  padding:8px 10px;
+  font-family:monospace;
+  font-size:13px;
+  line-height:1.35;
+  pointer-events:none;
+  white-space:pre-wrap;
+}
+#moveDebugBox {
+  position: fixed !important;
+  left: 8px !important;
+  right: 8px !important;
+  top: 360px !important;
+  z-index: 999999 !important;
+  background: rgba(0, 0, 0, .92) !important;
+  color: #00ff88 !important;
+  border: 2px solid #00ff88 !important;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+  font-family: monospace !important;
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+  white-space: pre-wrap !important;
+  pointer-events: none !important;
+  max-height: 300px !important;
+  overflow: hidden !important;
+}
+
+#ollBtn.debug-on{
+  background:#ffea00 !important;
+  color:#111 !important;
+  box-shadow:0 0 16px rgba(255,234,0,.65) !important;
 }
