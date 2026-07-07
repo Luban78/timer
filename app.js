@@ -588,8 +588,9 @@ function setupCubeButtons() {
 
     status.innerText = "Normal Cube režim";
     showTrainerDashboard();
-    stateMsg.innerText = "Vyber algoritmus a klepni pro start";
+    /*stateMsg.innerText = "Vyber algoritmus a klepni pro start";
     stateMsg.style.color = "yellow";
+    */
   };
 
   btn.onclick = async e => {

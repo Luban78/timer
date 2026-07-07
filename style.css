@@ -36,11 +36,11 @@ button {
   
   font-family: inherit;
   font-weight: 800;
-  
+  /*
   box-shadow:
     inset 0 0 14px rgba(0, 230, 118, .10),
     0 0 8px rgba(0, 230, 118, .08);
-  
+  */
   cursor: pointer;
 }
 button:active {
@@ -338,8 +338,8 @@ button:active {
 }
 .stat-card div{
   color:var(--cyan);
-  font-size:30px;
-  font-weight:700;
+  font-size:20px;
+  font-weight:300;
 }
 .xp-bar{
   height:16px;
@@ -543,7 +543,7 @@ body {
   position: relative !important;
   overflow: visible !important;
 }
-
+/*pozice ao ok*/
 #app #stats-box {
   position: absolute !important;
 
@@ -588,7 +588,7 @@ body {
   padding: 0 !important;
 
   color: #cfcfcf !important;
-  font-size: 14px !important;
+  font-size: 11px !important;
   line-height: 22px !important;
   white-space: nowrap !important;
 }
@@ -597,15 +597,15 @@ body {
   display: inline-block !important;
 
   color: #00e676 !important;
-  font-weight: 900 !important;
-  font-size: 14px !important;
+  font-weight: 500 !important;
+  font-size: 11px !important;
   line-height: 22px !important;
 
   text-align: right !important;
 }
 
 /* ===== NEJDELŠÍ PAUZA - UKOTVENÍ K #app ===== */
-
+/*
 #app .stats-grid .stat-box:nth-child(5) {
   position: absolute !important;
 
@@ -632,10 +632,11 @@ body {
   z-index: 30 !important;
   overflow: hidden !important;
 }
+*/
 
 #app .stats-grid .stat-box:nth-child(5) .stat-label {
   font-size: 12px !important;
-  line-height: 14px !important;
+  line-height: 15px !important;
   margin: 0 0 8px 0 !important;
   text-align: center !important;
   color: #cfcfcf !important;
@@ -657,21 +658,34 @@ body {
 }
 
 /* Algoritmus už nebude v běžném toku stránky */
+
 #app #selectedAlg {
   position: absolute !important;
-
+  
   left: 10px !important;
   right: 10px !important;
-  top: 160px !important;
-
+  top: 168px !important;
+  
   width: auto !important;
   height: 126px !important;
   min-height: 126px !important;
   max-height: 126px !important;
-
-  z-index: 10 !important;
+  
+  background: #1b242a !important;
+  
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  
+  border-radius: 14px !important;
+  
+  padding: 10px 14px !important;
+  box-sizing: border-box !important;
+  
+  overflow: hidden !important;
+  
+  z-index: 1 !important;
 }
-
 /* stats-grid nesmí být kotva pro absolutní boxy */
 #app .stats-grid {
   position: static !important;
@@ -742,7 +756,7 @@ body {
 #app .stats-grid .stat-box:nth-child(1) .stat-val,
 #app .stats-grid .stat-box:nth-child(2) .stat-val,
 #app .stats-grid .stat-box:nth-child(3) .stat-val {
-  font-size: 34px !important;
+  font-size: 24px !important;
   line-height: 38px !important;
 }
 
@@ -762,7 +776,7 @@ body {
   margin: 0 !important;
   padding: 0 !important;
 
-  font-size: 30px !important;
+  font-size: 20px !important;
   line-height: 34px !important;
   font-weight: 800 !important;
   text-align: center !important;
@@ -809,7 +823,7 @@ body {
   min-height: 42px !important;
   max-height: 42px !important;
 
-  font-size: 20px !important;
+  font-size: 15px !important;
   line-height: 42px !important;
 
   overflow: visible !important;
@@ -825,7 +839,7 @@ body {
   min-height: 90px !important;
   max-height: 90px !important;
 
-  font-size: 70px !important;
+  font-size: 50px !important;
   line-height: 90px !important;
 
   overflow: visible !important;
@@ -834,10 +848,10 @@ body {
 
 #app #singleModeBtn,
 #app #randomModeBtn {
-  width: 155px !important;
+  width: 164px !important;
   height: 42px !important;
   min-height: 42px !important;
-
+top: -82px !important;
   font-size: 20px !important;
   line-height: 42px !important;
 
@@ -849,7 +863,7 @@ body {
 #app #modeButtons {
  /* display: grid !important;*/
   grid-template-columns: 1fr 1fr !important;
-  gap: 16px !important;
+  gap: 8px !important;
 
   height: 38px !important;
   min-height: 38px !important;
@@ -904,12 +918,14 @@ body {
   border:1px solid rgba(0,230,118,.75);
   background:linear-gradient(180deg,#10261c 0%, #101616 100%);
   color:#f5f5f5;
-  font-size:44px;
+  font-size: 22px;
   font-weight:700;
   letter-spacing:.5px;
+  /*
   box-shadow:
     inset 0 0 18px rgba(0,230,118,.10),
     0 0 10px rgba(0,230,118,.10);
+    */
 }
 
 /* když je app/JS ukáže, budou mít nový vzhled */
@@ -1032,9 +1048,11 @@ body {
   background:linear-gradient(180deg,#10261c 0%, #101616 100%);
   border:1px solid rgba(0,230,118,.75);
   color:#ffffff;
+ /*
   box-shadow:
     inset 0 0 18px rgba(0,230,118,.10),
     0 0 10px rgba(0,230,118,.08);
+    */
 }
 
 /* ikonky */
@@ -1043,7 +1061,7 @@ body {
   position:absolute;
   left:18px;
   top:22px;
-  font-size:26px;
+  font-size:24px;
   color:var(--green);
 }
 
@@ -1145,7 +1163,7 @@ body {
   position: absolute !important;
   left: 10px !important;
   right: 10px !important;
-  top: 8px !important;
+  top: px !important;
 
   height: 170px !important;
   min-height: 170px !important;
@@ -1185,17 +1203,17 @@ body {
 #stats-box {
   top: 270px !important;
 }
-
+/*
 #app .stats-grid .stat-box:nth-child(5) {
   top: 275px !important;
 }
-
+*/
 #app #state-msg {
-  top: 320px !important;
+  top: 280px !important;
 }
 
 #app #tps {
-  top: 360px !important;
+  top: 300px !important;
 }
 
 #app .stats-grid .stat-box:nth-child(2),
@@ -1205,7 +1223,7 @@ body {
 }
 
 #app #graph {
-  top: 455px !important;
+  top: 465px !important;
 }
 
 /* OLL / PLL tlačítka */
@@ -1215,7 +1233,7 @@ body {
   max-height: 58px !important;
 
   border-radius: 12px !important;
-  font-size: 30px !important;
+  font-size: 24px !important;
   line-height: 58px !important;
 
   padding: 0 !important;
@@ -1375,7 +1393,7 @@ body {
   position: absolute !important;
   left: 18px !important;
   right: 18px !important;
-  top: 8px !important;
+  top: 80px !important;
 
   height: 170px !important;
   min-height: 170px !important;
@@ -1428,7 +1446,7 @@ body.trainer-ready #status {
 }
 
 #top-dashboard .modeBtn {
-  height: 58px !important;
+  height: 50px !important;
   min-height: 58px !important;
   max-height: 58px !important;
 
@@ -1448,6 +1466,7 @@ body.trainer-ready #status {
 }
 
 /* lišta ZMĚNA / LEVEL / XP */
+/*
 #top-dashboard #top-strip {
   position: absolute !important;
   left: 0 !important;
@@ -1468,7 +1487,7 @@ body.trainer-ready #status {
 
   overflow: hidden !important;
 }
-
+*/
 #top-dashboard .top-strip-item {
   height: 42px !important;
   min-height: 42px !important;
@@ -1519,12 +1538,13 @@ body.trainer-ready #status {
 }
 
 #top-xp-fill {
-  width: 72% !important;
+  width: 75% !important;
   height: 100% !important;
   background: #00e676 !important;
 }
 
 /* Single / Random */
+/*
 #top-dashboard #training-mode {
   position: absolute !important;
   left: 0 !important;
@@ -1540,7 +1560,7 @@ body.trainer-ready #status {
   margin: 0 !important;
   padding: 0 !important;
 }
-
+*/
 #top-dashboard #training-mode button {
   height: 50px !important;
   min-height: 50px !important;
@@ -1580,7 +1600,7 @@ body.trainer-ready #status {
    ========================================================= */
 
 #top-dashboard {
-  top: 8px !important;
+  top: 1px !important;
   height: 155px !important;
   min-height: 155px !important;
   max-height: 155px !important;
@@ -1603,7 +1623,7 @@ body.trainer-ready #status {
 */
 /* ZMĚNA / LEVEL / XP */
 #top-dashboard #top-strip {
-  top: 58px !important;
+  top: 0px !important;
   height: 36px !important;
 }
 
@@ -1617,14 +1637,15 @@ body.trainer-ready #status {
 
 /* Single / Random výš */
 #top-dashboard #training-mode {
-  top: 104px !important;
-  height: 46px !important;
+  left: 0px !important;
+  top: 188px !important;
+  height: 40px !important;
 }
 
 #top-dashboard #training-mode button {
-  height: 46px !important;
-  min-height: 46px !important;
-  max-height: 46px !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
 }
 
 #top-dashboard .train-title {
@@ -1641,9 +1662,9 @@ body.trainer-ready #status {
   margin-left: 18px !important;
   margin-right: 18px !important;
   
-  height: 54px !important;
-  min-height: 54px !important;
-  max-height: 54px !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
   
   border-radius: 14px !important;
   
@@ -1661,9 +1682,10 @@ body.trainer-ready #status {
 align-items:center;
 justify-content:center;
 text-align:center;
-  box-shadow:
+/*  box-shadow:
     inset 0 0 18px rgba(0, 230, 118, .10),
     0 0 10px rgba(0, 230, 118, .10) !important;
+    */
 }
 
 /* první tlačítko trochu níž od horní lišty */
@@ -1687,7 +1709,7 @@ text-align:center;
   left: 0 !important;
   right: 0 !important;
   width: auto !important;
-  
+  top: 40px !important;
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
   gap: 12px !important;
@@ -1698,8 +1720,132 @@ text-align:center;
   width: 100% !important;
   height: 50px !important;
   border-radius: 12px !important;
-  font-size: 24px !important;
+  font-size: 20px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+}
+/* =========================================================
+   FIX: OKNO ALGORITMU + NEJDELŠÍ PAUZA
+   ========================================================= */
+
+/* Algoritmus - čistý panel bez divného černého okraje */
+#app #selectedAlg {
+  background: #1b242a !important;
+
+  border: 1px solid #43545c !important;
+  border-radius: 20px !important;
+
+  box-shadow: none !important;
+  outline: none !important;
+
+  overflow: hidden !important;
+}
+
+/* Nejdelší pauza - posunout dovnitř a srovnat */
+#app .stats-grid .stat-box:nth-child(5) {
+  position: absolute !important;
+
+  right: 10px !important;
+  top: 300px !important;
+
+  width: 86px !important;
+  height: 92px !important;
+  min-height: 92px !important;
+  max-height: 92px !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+
+  padding: 8px 6px !important;
+  box-sizing: border-box !important;
+
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
+  border-radius: 14px !important;
+
+  box-shadow: none !important;
+  outline: none !important;
+
+  z-index: 35 !important;
+  overflow: hidden !important;
+}
+*/
+#app .stats-grid .stat-box:nth-child(5) .stat-label {
+  font-size: 10px !important;
+  line-height: 15px !important;
+  font-weight: 400 !important;
+  text-align: center !important;
+
+  color: #d8d8d8 !important;
+
+  margin: 0 0 8px 0 !important;
+  padding: 0 !important;
+
+  text-transform: none !important;
+}
+
+#app .stats-grid .stat-box:nth-child(5) .stat-val {
+  font-size: 20px !important;
+  line-height: 15px !important;
+  font-weight: 400px !important;
+
+  color: #ffffff !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+}
+/* =========================================================
+   SINGLE / RANDOM NAD VŠEMI PRVKY
+   ========================================================= */
+
+#top-dashboard {
+  z-index: 500 !important;
+  overflow: visible !important;
+}
+
+#top-dashboard #training-mode {
+  z-index: 600 !important;
+  overflow: visible !important;
+}
+
+#top-dashboard #singleModeBtn,
+#top-dashboard #randomModeBtn {
+  position: relative !important;
+  z-index: 700 !important;
+}
+#app #selectedAlg {
+  z-index: 30 !important;
+}
+
+#app #state-msg,
+#app #tps,
+#app #stats-box,
+#app .stats-grid,
+#app #graph {
+  z-index: 20 !important;
+}
+/* =========================================================
+   TEXT V MALÝCH BOXECH: TAHY / PRŮMĚR / TPS
+   ========================================================= */
+
+/* popisek nahoře */
+#app .stats-grid .stat-box:nth-child(1) .stat-label,
+#app .stats-grid .stat-box:nth-child(2) .stat-label,
+#app .stats-grid .stat-box:nth-child(3) .stat-label {
+  font-size: 10px !important;
+  line-height: 18px !important;
+  font-weight: 400 !important;
+  text-transform: none !important;
+}
+
+/* velká hodnota */
+#app .stats-grid .stat-box:nth-child(1) .stat-val,
+#app .stats-grid .stat-box:nth-child(2) .stat-val,
+#app .stats-grid .stat-box:nth-child(3) .stat-val {
+  font-size: 20px !important;
+  line-height: 15px !important;
+  font-weight: 400 !important;
 }
