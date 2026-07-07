@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="MG Trainer">
 
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="zaloha style.css">
 
   <title>MG3i Trainer v0.55</title>
 </head>
@@ -21,78 +21,29 @@
   <div id="app">
     <div id="app-version">v0.55 slice M + U sync</div>
 
-    <!-- původní připojovací tlačítka - JS je pořád používá -->
     <button id="btn">Připojit kostku</button>
     <button id="normalCubeBtn">Normal cube</button>
 
-    <!-- status necháváme kvůli JS, ale vizuálně ho můžeme skrýt přes CSS -->
-    <div id="status">Odpojeno</div>
-
-    <!-- ===== NOVÝ HORNÍ DASHBOARD ===== -->
-    <div id="top-dashboard">
-
-      <!-- OLL / PLL - stejné ID kvůli JS -->
-      <div id="modeButtons">
-        <button class="modeBtn" id="ollBtn">
-          <span>OLL</span>
-          <span class="mode-icon">▧</span>
-        </button>
-
-        <button class="modeBtn" id="pllBtn">
-          <span>PLL</span>
-          <span class="mode-icon">▧</span>
-        </button>
-      </div>
-
-      <!-- horní info lišta bez FACELETS -->
-      <div id="top-strip">
-        <div class="top-strip-item">
-          <span class="strip-icon">⇄</span>
-          <span>ZMĚNA</span>
-        </div>
-
-        <div class="top-strip-item top-strip-center">
-          <span>LEVEL <b id="top-level">12</b></span>
-        </div>
-
-        <div class="top-strip-item xp-item">
-          <div class="xp-head">
-            <span>XP</span>
-            <span id="top-xp-text">720 / 1000</span>
-          </div>
-          <div class="top-xp-bar">
-            <div id="top-xp-fill"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Single / Random - stejné ID kvůli JS -->
-      <div id="training-mode">
-        <button id="singleModeBtn">
-          <span class="train-title">Single</span>
-          <span class="train-subtitle">Focus &amp; Improve</span>
-        </button>
-
-        <button id="randomModeBtn">
-          <span class="train-title">Random</span>
-          <span class="train-subtitle">Challenge Yourself</span>
-        </button>
-      </div>
-
+    <div id="modeButtons">
+      <button class="modeBtn" id="ollBtn">OLL</button>
+      <button class="modeBtn" id="pllBtn">PLL</button>
     </div>
 
-    <!-- ===== ALGORITMUS A TIMER ČÁST ===== -->
-    <div id="selectedAlg">Algoritmus: nevybráno</div>
+    <div id="status">Odpojeno</div>
 
-    <div id="stats-box">
+    <div id="training-mode">
+      <button id="singleModeBtn">Single</button>
+      <button id="randomModeBtn">Random</button>
+    </div>
+
+    <div id="selectedAlg">Algoritmus: nevybráno</div>
+ <div id="stats-box">
       <div>Best: <span id="stat-best">-</span></div>
       <div>Ao3: <span id="stat-ao3">-</span></div>
       <div>Ao5: <span id="stat-ao5">-</span></div>
       <div>Ao12: <span id="stat-ao12">-</span></div>
-      <div>Ao100: <span id="stat-ao100">-</span></div>
       <div>Solves: <span id="stat-count">0</span></div>
     </div>
-
     <div id="m-debug"></div>
 
     <div id="dev-controls">
@@ -103,44 +54,46 @@
     </div>
 
     <div id="notation">Notace:</div>
+    
+    
     <div id="mode-label">Režim: Smart Cube</div>
 
     <div id="state-msg">Připoj kostku...</div>
     <div id="tps">0.0</div>
 
     <div class="stats-grid">
-      <div class="stat-box">
-        <div class="stat-label">TPS</div>
-        <div id="time-val" class="stat-val">0.0</div>
-      </div>
-
-      <div class="stat-box">
-        <div class="stat-label">Tahy HTM</div>
-        <div id="moves-val" class="stat-val">0</div>
-      </div>
-
-      <div class="stat-box">
-        <div class="stat-label">Průměr TPS</div>
-        <div id="avg-val" class="stat-val">0.0</div>
-      </div>
-
-      <div class="stat-box">
-        <div class="stat-label">Špička TPS</div>
-        <div id="max-val" class="stat-val">0.0</div>
-      </div>
-
-      <div class="stat-box" style="grid-column:span 4">
-        <div class="stat-label">Nejdelší<br>pauza</div>
-        <div id="pause-val" class="stat-val">0.00s</div>
-      </div>
-    </div>
-
+  <div class="stat-box">
+    <div class="stat-label">TPS</div>
+    <div id="time-val" class="stat-val">0.0</div>
+  </div>
+  
+  <div class="stat-box">
+    <div class="stat-label">Tahy HTM</div>
+    <div id="moves-val" class="stat-val">0</div>
+  </div>
+  
+  <div class="stat-box">
+    <div class="stat-label">Průměr TPS</div>
+    <div id="avg-val" class="stat-val" style="color:#00e676">0.0</div>
+  </div>
+  
+  <div class="stat-box">
+    <div class="stat-label">Špička TPS</div>
+    <div id="max-val" class="stat-val">0.0</div>
+  </div>
+  
+  <div class="stat-box" style="grid-column:span 4">
+    <div class="stat-label">Nejdelší<br>pauza</div>
+    <div id="pause-val" class="stat-val" style="color:#ffffff">0.00s</div>
+  </div>
+</div>
     <div id="version">v0.15 detail graph</div>
     <canvas id="graph"></canvas>
   </div>
 
   <div id="history">
     <h2>ČASY</h2>
+   
 
     <div id="legacy-tools">
       <button id="clear-history-btn">Vymazat časy</button>
@@ -153,7 +106,6 @@
 
 </div>
 
-<!-- ===== VÝBĚR ALGORITMŮ ===== -->
 <div id="modal">
   <div id="modalContent">
     <h2 id="modalTitle">PLL</h2>
@@ -162,7 +114,6 @@
   </div>
 </div>
 
-<!-- ===== DETAIL SOLVE ===== -->
 <div id="solve-detail" class="detail-modal">
   <div class="detail-box">
     <h2>Detail solve</h2>
@@ -172,7 +123,6 @@
   </div>
 </div>
 
-<!-- ===== EXPORT ===== -->
 <div id="export-modal" class="detail-modal">
   <div class="detail-box">
     <h2>Export historie</h2>
@@ -184,7 +134,6 @@
   </div>
 </div>
 
-<!-- ===== IMPORT ===== -->
 <div id="import-modal" class="detail-modal">
   <div class="detail-box">
     <h2>Import historie</h2>
@@ -194,7 +143,6 @@
   </div>
 </div>
 
-<!-- ===== STATISTIKY SCREEN ===== -->
 <div id="stats-screen" style="display:none;">
   <div class="stat-card" id="xp-card">
     <h3>🏆 Level <span id="player-level">1</span></h3>
@@ -260,7 +208,6 @@
   </div>
 </div>
 
-<!-- ===== NASTAVENÍ SCREEN ===== -->
 <div id="settings-screen" style="display:none; padding:20px;">
   <h2>⚙️ Nastavení</h2>
   <p>Správa dat aplikace</p>
@@ -271,14 +218,12 @@
   <button id="settings-reset-profile-btn" class="danger">Reset profilu / achievementů</button>
 </div>
 
-<!-- ===== SPODNÍ NAVIGACE ===== -->
 <div id="bottom-nav">
   <button id="nav-timer">🏠<br>Timer</button>
   <button id="nav-stats">📊<br>Statistiky</button>
   <button id="nav-settings">⚙️<br>Nastavení</button>
 </div>
 
-<!-- ===== LEVEL MODAL ===== -->
 <div id="level-modal" class="detail-modal">
   <div class="detail-box level-box">
     <h2 id="level-title">🏆 LEVEL UP!</h2>
@@ -286,7 +231,6 @@
   </div>
 </div>
 
-<!-- ===== RECORD MODAL ===== -->
 <div id="record-modal" class="detail-modal">
   <div class="detail-box level-box">
     <h2>🎉 Nový rekord!</h2>
@@ -294,7 +238,6 @@
   </div>
 </div>
 
-<!-- ===== ACHIEVEMENT MODAL ===== -->
 <div id="achievement-modal" class="detail-modal">
   <div class="detail-box level-box">
     <h2>🏅 Nový odznak!</h2>

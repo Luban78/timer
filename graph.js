@@ -1,8 +1,7 @@
-export function resizeGraphCanvas(canvas){
-  canvas.width = window.innerWidth - 92;
-  canvas.height = window.innerHeight * 0.23;
+export function resizeGraphCanvas(canvas) {
+    canvas.width = canvas.clientWidth || window.innerWidth - 40;
+    canvas.height = 58;
 }
-
 export function drawGraph(ctx, canvas, tpsHistory){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     if(tpsHistory.length<2)return;

@@ -1,6 +1,6 @@
 // app.js
 // Hlavní logika MG3i Traineru
-
+import { adaptSliceMoveForTrainer } from "./sliceAdapter.js";
 import {
   setTrainerRotation,
   setTrainerTop,
@@ -199,6 +199,7 @@ devExportMap.onclick = () => alert("KLIK MAP");
 
 const singleModeBtn = document.getElementById("singleModeBtn");
 const randomModeBtn = document.getElementById("randomModeBtn");
+
 let waitingForStateAfterMove = false;
 let moveDebugEnabled = false;
 let activeScreen = "timer";
@@ -255,6 +256,23 @@ const SLICE_CENTER_ROT = [
   [4, 0, 2, 1, 3, 5]  // S / z
 ];
 
+function showTrainerDashboard() {
+  document.body.classList.add("trainer-ready");
+
+  const topDashboard = document.getElementById("top-dashboard");
+  if (topDashboard) {
+    topDashboard.classList.add("ready");
+  }
+}
+
+function hideTrainerDashboard() {
+  document.body.classList.remove("trainer-ready");
+
+  const topDashboard = document.getElementById("top-dashboard");
+  if (topDashboard) {
+    topDashboard.classList.remove("ready");
+  }
+}
 function cloneState(state) {
   return JSON.parse(JSON.stringify(state));
 }
@@ -569,6 +587,7 @@ function setupCubeButtons() {
     updateModeLabel();
 
     status.innerText = "Normal Cube režim";
+    showTrainerDashboard();
     stateMsg.innerText = "Vyber algoritmus a klepni pro start";
     stateMsg.style.color = "yellow";
   };
@@ -616,6 +635,7 @@ function setupCubeButtons() {
       modeButtons.style.display = "grid";
 
       status.innerText = "Připojeno, začni otočením kostky";
+      showTrainerDashboard();
       stateMsg.innerText = "PŘIPRAVEN";
 
       beep(523, .08);
@@ -673,10 +693,21 @@ clearGuidedOuterBuffer();
 resetSliceCenter();
         setTrainerTop("yellow");
         
-        const pllRotation = detectPLLRotationFromFacelets(
+        let pllRotation = detectPLLRotationFromFacelets(
           getCurrentFacelets(),
           currentAlgorithmName
-        );
+          );
+          let pllRotationForTrainer = pllRotation;
+
+// TEST: Z-perm ambiguous → ručně zkusíme modrá vpředu = ROT 0.
+// Později z toho uděláme tlačítka front barvy.
+if (
+  currentAlgorithmName === "Z-perm" &&
+  window.__pllDebug &&
+  window.__pllDebug.manualRotation
+) {
+  pllRotationForTrainer = 0;
+}
         const faceletsNowForDebug = String(getCurrentFacelets() || "");
 const pllDbgForDebug = window.__pllDebug || {};
 
@@ -754,13 +785,14 @@ if (moveDebugEnabled) {
           faceletGroup("L", 36) + "\n" +
           faceletGroup("B", 45);
         
-        if (pllRotation !== null && pllRotation !== undefined) {
-          setTrainerRotation(pllRotation);
+        
+        
+        
+        if (pllRotationForTrainer !== null && pllRotationForTrainer !== undefined) {
+  setTrainerRotation(pllRotationForTrainer);
+  if (mDebug) mDebug.innerText = "PLL ROT: " + pllRotationForTrainer;
+} else {
           
-          if (mDebug) {
-            mDebug.innerText = "PLL ROT: " + pllRotation;
-          }
-        } else {
           const frontColor = detectFrontColorFromFacelets(getCurrentFacelets());
           setTrainerFrontColor(frontColor || "green");
           
@@ -1295,8 +1327,15 @@ if (sliceMoveRaw) {
   
   const expectedNow = normalizeMove(getExpectedMove());
   
-  let sliceMove = sliceMoveRaw;
-  
+  const adaptedSlice = adaptSliceMoveForTrainer(
+  sliceMoveRaw,
+  expectedNow,
+  getTrainerRotation(),
+  currentAlgorithmName
+);
+
+let sliceMove = adaptedSlice.move;
+  /*
   // U Ua/Ub algoritmů očekáváme M/M'/M2.
   // Když je PLL otočené jinou barvou dopředu,
   // fyzické M může z kostky přijít jako S.
@@ -1308,24 +1347,9 @@ if (sliceMoveRaw) {
   ) {
     sliceMove = "M" + sliceMoveRaw.slice(1);
   }
-  // U ROT 0 nám MG3i hlásí směr M opačně.
-// M' má být M a M má být M'.
-if (
-  expectedNow &&
-  expectedNow.charAt(0) === "M" &&
-  sliceMove.charAt(0) === "M" &&
-  getTrainerRotation() === 0
-) {
-  if (sliceMove === "M") {
-    sliceMove = "M'";
-  } else if (sliceMove === "M'") {
-    sliceMove = "M";
-  }
-}
-  
+  */
   window.__lastRawDebug =
-    previous.move + " + " + move + " => " + sliceMoveRaw +
-    (sliceMove !== sliceMoveRaw ? " | FIX => " + sliceMove : "");
+  previous.move + " + " + move + " => " + adaptedSlice.debug;
   
   if (mDebug) {
     mDebug.innerText =
@@ -1656,7 +1680,7 @@ function finishSolve(stopTime, manual) {
 
   const finalAvg = finalTime > 0 ? finalMoves / finalTime : 0;
 
-  timeVal.innerText = finalTime.toFixed(2) + "s";
+  timeVal.innerText = finalTime.toFixed(2);
   avgVal.innerText = finalAvg.toFixed(1);
 
   tpsDiv.innerText = finalTime.toFixed(2);
