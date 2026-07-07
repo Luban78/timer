@@ -1587,19 +1587,20 @@ body.trainer-ready #status {
 }
 
 /* OLL / PLL trochu nižší */
+
 #top-dashboard #modeButtons {
   height: 50px !important;
 }
-
+/*
 #top-dashboard .modeBtn {
   height: 50px !important;
   min-height: 50px !important;
   max-height: 50px !important;
 
-  font-size: 28px !important;
+  font-size: 20px !important;
   line-height: 50px !important;
 }
-
+*/
 /* ZMĚNA / LEVEL / XP */
 #top-dashboard #top-strip {
   top: 58px !important;
@@ -1651,12 +1652,15 @@ body.trainer-ready #status {
   
   border: 1px solid rgba(0, 230, 118, .75) !important;
   
-  font-size: 24px !important;
+  font-size: 20px !important;
   line-height: 54px !important;
   font-weight: 800 !important;
   
   padding: 0 !important;
-  
+  display:flex;
+align-items:center;
+justify-content:center;
+text-align:center;
   box-shadow:
     inset 0 0 18px rgba(0, 230, 118, .10),
     0 0 10px rgba(0, 230, 118, .10) !important;
@@ -1670,4 +1674,32 @@ body.trainer-ready #status {
 /* mezera mezi tlačítky */
 #normalCubeBtn {
   margin-top: 8px !important;
+}
+/* FIX: horní dashboard nesmí přetékat doprava */
+#top-dashboard {
+  left: 18px !important;
+  right: 18px !important;
+  width: auto !important;
+}
+
+/* OLL / PLL vystředit a zarovnat */
+#top-dashboard #modeButtons {
+  left: 0 !important;
+  right: 0 !important;
+  width: auto !important;
+  
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+}
+
+/* samotná tlačítka */
+#top-dashboard .modeBtn {
+  width: 100% !important;
+  height: 50px !important;
+  border-radius: 12px !important;
+  font-size: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
