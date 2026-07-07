@@ -26,29 +26,16 @@ html,body{
   overflow:hidden;
 }
 
-/*NEMAZAT START*/
-button {
-  border: 1px solid rgba(0, 230, 118, .65);
-  border-radius: 12px;
-  
-  background: linear-gradient(180deg, #10261c 0%, #101616 100%);
-  color: #f5f5f5;
-  
-  font-family: inherit;
-  font-weight: 800;
-  
-  box-shadow:
-    inset 0 0 14px rgba(0, 230, 118, .10),
-    0 0 8px rgba(0, 230, 118, .08);
-  
-  cursor: pointer;
+button{
+  border:none;
+  border-radius:14px;
+  font-weight:700;
+  background:var(--green);
+  color:#101010;
+  font-family:inherit;
 }
-button:active {
-  transform: scale(.97);
-  filter: brightness(1.15);
-}
-/* ========== TIMER SCREEN ========== */
 
+/* ========== TIMER SCREEN ========== */
 #main-layout{
   width:100vw;
   height:calc(100vh - 64px);
@@ -59,7 +46,6 @@ button:active {
   overflow:hidden;
   background:var(--bg);
 }
-
 
 #app{
   min-width:0;
@@ -72,8 +58,7 @@ button:active {
   gap:6px;
   overflow:hidden;
 }
-/*NEMAZAT STOP*/
-/*
+
 #history{
   min-height:0;
   height:158px;
@@ -83,7 +68,6 @@ button:active {
   border-top:1px solid var(--line);
   overflow:hidden;
 }
-*/
 
 /* schované vývojové / zbytečné prvky */
 #app-version,
@@ -208,7 +192,6 @@ button:active {
 .wrong-move{background:var(--red);color:white;font-weight:700;}
 
 /* Stav + velký čas */
-/*
 #state-msg{
   height:28px;
   min-height:28px;
@@ -220,7 +203,7 @@ button:active {
   font-weight:700;
   text-align:center;
 }
-/*
+
 #tps{
   height:72px;
   min-height:72px;
@@ -232,14 +215,13 @@ button:active {
 }
 
 /* Čas / tahy / TPS / nejdelší pauza */
-/*
+
 .stats-grid{
   width:100%;
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:7px;
 }
-*/
 
 .stat-box{
   height:54px;
@@ -252,14 +234,13 @@ button:active {
   overflow:hidden;
 }
 
-/*
 .stat-label{
   color:var(--muted);
   font-size:10px;
   line-height:12px;
   text-transform:uppercase;
 }
-/*
+
 .stat-val{
   font-size:25px;
   line-height:30px;
@@ -276,22 +257,17 @@ button:active {
   min-height:46px;
 }
 */
-/*
 .stats-grid .stat-box:nth-child(5) .stat-label{
   font-size:12px;
   line-height:14px;
 }
-*/
-/*
 .stats-grid .stat-box:nth-child(5) .stat-val{
   color:white !important;
   font-size:27px;
   line-height:29px;
 }
-*/
-/*Nemazat start*/
-/* ========== SPODNÍ HISTORIE ========== */
 
+/* ========== SPODNÍ HISTORIE ========== */
 #history h2{display:none;}
 
 #history::before{
@@ -304,7 +280,7 @@ button:active {
   font-size:16px;
   font-weight:700;
 }
-/*
+
 #stats-box{
   display:grid;
   grid-template-columns:repeat(6,1fr);
@@ -318,8 +294,7 @@ button:active {
   border-radius:14px;
   overflow:hidden;
 }
-*/
-/*
+
 #stats-box > div{
   padding:4px 2px;
   border-right:1px solid #2a2a2a;
@@ -329,8 +304,6 @@ button:active {
   text-align:center;
   text-transform:uppercase;
 }
-*/
-
 #stats-box > div:last-child{border-right:none;}
 
 #stats-box span{
@@ -554,14 +527,12 @@ button:active {
   white-space: normal;
 }
 /* Velký prostřední údaj používáme jako hlavní čas */
-/*
 #tps{
   font-size:65px;
   line-height:57px;
   color:white;
   font-weight:normal;
 }
-*/
 #moveDebugBox{
   position:fixed;
   left:8px;
@@ -600,7 +571,7 @@ button:active {
 }
 
 #ollBtn.debug-on{
-  background:#ffaa00 !important;
+  background:#ffea00 !important;
   color:#111 !important;
   box-shadow:0 0 16px rgba(255,234,0,.65) !important;
 }
@@ -643,20 +614,17 @@ button:active {
   z-index: 20 !important;
 }
 */
-/*
 .stats-grid .stat-box:nth-child(5) .stat-label {
   font-size: 10px !important;
   line-height: 26px !important;
   text-align: center !important;
 }
-*/
-/*
+
 .stats-grid .stat-box:nth-child(5) .stat-val {
   font-size: 25px !important;
   line-height: 34px !important;
   color: #00e676 !important;
 }
-*/
 /*text nejdelší pauza */
 /*
 .stats-grid .stat-box:nth-child(5){
@@ -671,11 +639,11 @@ button:active {
     margin:0 !important;
 }
 */
-/*
+
 .stats-grid .stat-box:nth-child(5) .stat-val{
     margin-top:6px !important;
 }
-*/
+
 
 
 
@@ -685,7 +653,6 @@ button:active {
 
 
 /* AO BOX - tvrdé přepsání */
-/*
 body #main-layout #history #stats-box {
   position: absolute !important;
 
@@ -709,9 +676,8 @@ body #main-layout #history #stats-box {
   z-index: 99999 !important;
   overflow: visible !important;
 }
-*/
+
 /* jednotlivé řádky uvnitř */
-/*
 body #main-layout #history #stats-box div {
   display: block !important;
   width: 100% !important;
@@ -729,22 +695,18 @@ body #main-layout #history #stats-box div {
   color: #cfcfcf !important;
   white-space: nowrap !important;
 }
-*/
+
 /* zelené hodnoty */
-/*
 body #main-layout #history #stats-box span {
   color: #00e676 !important;
   font-weight: 900 !important;
   font-size: 11px !important;
 }
-*/
 /* schovat 4 box*/
-/*
 .stats-grid .stat-box:nth-child(4) {
   display: none !important;
 }
-*/
-/*
+
 #app {
   position: relative !important;
 }
@@ -753,12 +715,11 @@ body #main-layout #history #stats-box span {
   position: absolute !important;
   right: 88px !important;
   top: 305px !important;   /* doladíme podle obrazovky */
-  /*
   width: 50px !important;
   height: 88px !important;
   z-index: 30 !important;
 }
-*/
+
 
 
 
@@ -767,33 +728,29 @@ body #main-layout #history #stats-box span {
 /* FIX: stat boxy nesmí přeskakovat */
 
 /* grid má pořád 4 sloupce */
-/*
 .stats-grid {
   display: grid !important;
   grid-template-columns: repeat(4, 1fr) !important;
   gap: 8px !important;
 }
-*/
+
 /* 1. box TPS přesuneme na místo špičky = 4. sloupec */
-/*
 .stats-grid .stat-box:nth-child(1) {
   grid-column: 4 !important;
   grid-row: 1 !important;
   display: block !important;
   position: static !important;
 }
-*/
+
 /* 2. box TAHY HTM zůstane ve 2. sloupci */
-/*
 .stats-grid .stat-box:nth-child(2) {
   grid-column: 2 !important;
   grid-row: 1 !important;
   display: block !important;
   position: static !important;
 }
-*/
+
 /* 3. box PRŮMĚR TPS zůstane ve 3. sloupci */
-/*
 .stats-grid .stat-box:nth-child(3) {
   grid-column: 3 !important;
   grid-row: 1 !important;
@@ -802,14 +759,12 @@ body #main-layout #history #stats-box span {
 }
 
 /* 4. box ŠPIČKA TPS schováme */
-/*
 .stats-grid .stat-box:nth-child(4) {
   display: none !important;
 }
 
-*/
+
 /* TPS box stejně velký jako TAHY HTM a PRŮMĚR TPS */
-/*
 .stats-grid .stat-box:nth-child(1) {
   grid-column: 4 !important;
   grid-row: 1 !important;
@@ -828,9 +783,8 @@ body #main-layout #history #stats-box span {
   border-radius: 14px !important;
   overflow: hidden !important;
 }
-*/
+
 /* TAHY HTM */
-/*
 .stats-grid .stat-box:nth-child(2) {
   grid-column: 2 !important;
   grid-row: 1 !important;
@@ -840,9 +794,8 @@ body #main-layout #history #stats-box span {
   min-height: 86px !important;
   max-height: 86px !important;
 }
-*/
+
 /* PRŮMĚR TPS */
-/*
 .stats-grid .stat-box:nth-child(3) {
   grid-column: 3 !important;
   grid-row: 1 !important;
@@ -852,15 +805,13 @@ body #main-layout #history #stats-box span {
   min-height: 86px !important;
   max-height: 86px !important;
 }
-*/
+
 /* ŠPIČKA TPS schovaná */
-/*
 .stats-grid .stat-box:nth-child(4) {
   display: none !important;
 }
-*/
+
 /* stejný text ve všech třech boxech */
-/*
 .stats-grid .stat-box:nth-child(1) .stat-label,
 .stats-grid .stat-box:nth-child(2) .stat-label,
 .stats-grid .stat-box:nth-child(3) .stat-label {
@@ -868,8 +819,7 @@ body #main-layout #history #stats-box span {
   line-height: 17px !important;
   margin: 0 0 4px 0 !important;
 }
-*/
-/*
+
 .stats-grid .stat-box:nth-child(1) .stat-val,
 .stats-grid .stat-box:nth-child(2) .stat-val,
 .stats-grid .stat-box:nth-child(3) .stat-val {
@@ -877,9 +827,7 @@ body #main-layout #history #stats-box span {
   line-height: 42px !important;
   margin: 0 !important;
 }
-*/
 /* Zmenšení spodních boxů HTM / Průměr / TPS */
-/*
 .stats-grid .stat-box:nth-child(1),
 .stats-grid .stat-box:nth-child(2),
 .stats-grid .stat-box:nth-child(3) {
@@ -888,9 +836,8 @@ body #main-layout #history #stats-box span {
   height: 69px !important;
   padding: 5px 4px !important;
 }
-*/
+
 /* text nahoře v boxu */
-/*
 .stats-grid .stat-box:nth-child(1) .stat-label,
 .stats-grid .stat-box:nth-child(2) .stat-label,
 .stats-grid .stat-box:nth-child(3) .stat-label {
@@ -898,9 +845,8 @@ body #main-layout #history #stats-box span {
   line-height: 15px !important;
   margin: 0 0 2px 0 !important;
 }
-*/
+
 /* velká hodnota v boxu */
-/*
 .stats-grid .stat-box:nth-child(1) .stat-val,
 .stats-grid .stat-box:nth-child(2) .stat-val,
 .stats-grid .stat-box:nth-child(3) .stat-val {
@@ -908,12 +854,12 @@ body #main-layout #history #stats-box span {
   line-height: 36px !important;
 }
 
-*/
+
 
 
 
 /* ===== AO PANEL FINAL - JEDINÉ PRAVIDLO ===== */
-/*
+
 body #main-layout #history #stats-box {
   position: absolute !important;
   
@@ -940,8 +886,7 @@ body #main-layout #history #stats-box {
   z-index: 99999 !important;
   overflow: hidden !important;
 }
-*/
-/*
+
 body #main-layout #history #stats-box div {
   width: 100% !important;
   height: 20px !important;
@@ -960,8 +905,7 @@ body #main-layout #history #stats-box div {
   white-space: nowrap !important;
   text-align: left !important;
 }
-*/
-/*
+
 body #main-layout #history #stats-box span {
   display: inline-block !important;
   min-width: 38px !important;
@@ -973,10 +917,9 @@ body #main-layout #history #stats-box span {
   text-align: right !important;
 }
 
-*/
+
 
 /* AO panel - oprava zarovnání SOLVES */
-/*
 body #main-layout #history #stats-box div {
   display: grid !important;
   grid-template-columns: 42px 1fr !important;
@@ -985,14 +928,13 @@ body #main-layout #history #stats-box div {
 
   text-align: left !important;
 }
-*/
-/*
+
 body #main-layout #history #stats-box span {
   min-width: 0 !important;
   width: auto !important;
   text-align: right !important;
 }
-*/
+
 /* KROK: posun historie dolů + povolit posun obrazovky */
 #main-layout {
   grid-template-rows: minmax(0,1fr) 118px !important;
