@@ -2,6 +2,7 @@
 // Databáze PLL algoritmů. Později sem přidáme i OLL.
 
 export const pllAlgs={
+ "Z-rot test": "z R U R' U' z'",
  "test-Fperm":"y R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R",
   
 "Ua-perm":"M2 U M U2 M' U M2",
