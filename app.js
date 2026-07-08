@@ -141,6 +141,15 @@ const closeImportBtn = document.getElementById("close-import-btn");
 const navTimer = document.getElementById("nav-timer");
 const navStats = document.getElementById("nav-stats");
 const navSettings = document.getElementById("nav-settings");
+const topMenuWrap = document.getElementById("top-menu-wrap");
+const topMenuBtn = document.getElementById("top-menu-btn");
+const globalMenuBtn = document.getElementById("globalMenuBtn");
+const screenMenuDropdown = document.getElementById("screen-menu-dropdown");
+const aoPanel = document.getElementById("ao-panel");
+const aoPanelToggle = document.getElementById("aoPanelToggle");
+const aoPinBtn = document.getElementById("aoPinBtn");
+const historyPanelToggle = document.getElementById("historyPanelToggle");
+const historyPinBtn = document.getElementById("historyPinBtn");
 
 const appScreen = document.getElementById("app");
 const mainLayout = document.getElementById("main-layout");
@@ -463,17 +472,42 @@ function runMapTest() {
 
 
 function setupNavigation() {
+  function closeTopMenu() {
+    document.body.classList.remove("menu-open");
+    if (topMenuWrap) topMenuWrap.classList.remove("open");
+  }
+
+  function toggleTopMenu(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.body.classList.toggle("menu-open");
+    if (topMenuWrap) topMenuWrap.classList.toggle("open", document.body.classList.contains("menu-open"));
+  }
+
+  if (topMenuBtn) topMenuBtn.onclick = toggleTopMenu;
+  if (globalMenuBtn) globalMenuBtn.onclick = toggleTopMenu;
+
+  document.addEventListener("pointerdown", e => {
+    if (e.target.closest("#top-menu-btn")) return;
+    if (e.target.closest("#globalMenuBtn")) return;
+    if (e.target.closest("#screen-menu-dropdown")) return;
+    closeTopMenu();
+  });
+
   navTimer.onclick = () => {
+    closeTopMenu();
     setActiveNav(navTimer);
     showScreen("timer");
   };
 
   navStats.onclick = () => {
+    closeTopMenu();
     setActiveNav(navStats);
     showScreen("stats");
   };
 
   navSettings.onclick = () => {
+    closeTopMenu();
     setActiveNav(navSettings);
     showScreen("settings");
   };
@@ -492,6 +526,9 @@ function setActiveNav(activeBtn) {
 
 function showScreen(screen) {
   activeScreen = screen;
+  document.body.classList.toggle("screen-timer", screen === "timer");
+  document.body.classList.toggle("screen-stats", screen === "stats");
+  document.body.classList.toggle("screen-settings", screen === "settings");
 
   if (mainLayout) {
     mainLayout.style.display = screen === "timer" ? "grid" : "none";
@@ -500,6 +537,77 @@ appScreen.style.display = screen === "timer" ? "flex" : "none";
 historyPanel.style.display = screen === "timer" ? "block" : "none";
 settingsScreen.style.display = screen === "settings" ? "block" : "none";
 statsScreen.style.display = screen === "stats" ? "block" : "none";
+}
+
+function setupAoPanel() {
+  if (!aoPanel || !aoPanelToggle) return;
+
+  const pinned = localStorage.getItem("aoPanelPinned") === "1";
+  if (pinned) {
+    document.body.classList.add("ao-open", "ao-pinned");
+  }
+
+  aoPanelToggle.onclick = e => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (document.body.classList.contains("ao-pinned")) return;
+    document.body.classList.toggle("ao-open");
+  };
+
+  if (aoPinBtn) {
+    aoPinBtn.onclick = e => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const willPin = !document.body.classList.contains("ao-pinned");
+      document.body.classList.toggle("ao-pinned", willPin);
+      document.body.classList.toggle("ao-open", willPin);
+      localStorage.setItem("aoPanelPinned", willPin ? "1" : "0");
+    };
+  }
+
+  document.addEventListener("pointerdown", e => {
+    if (document.body.classList.contains("ao-pinned")) return;
+    if (e.target.closest("#ao-panel")) return;
+    document.body.classList.remove("ao-open");
+  });
+}
+
+
+function setupHistoryPanel() {
+  if (!historyPanel || !historyPanelToggle) return;
+
+  const pinned = localStorage.getItem("historyPanelPinned") === "1";
+  if (pinned) {
+    document.body.classList.add("history-open", "history-pinned");
+  }
+
+  historyPanelToggle.onclick = e => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (document.body.classList.contains("history-pinned")) return;
+    document.body.classList.toggle("history-open");
+  };
+
+  if (historyPinBtn) {
+    historyPinBtn.onclick = e => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const willPin = !document.body.classList.contains("history-pinned");
+      document.body.classList.toggle("history-pinned", willPin);
+      document.body.classList.toggle("history-open", willPin);
+      localStorage.setItem("historyPanelPinned", willPin ? "1" : "0");
+    };
+  }
+
+  document.addEventListener("pointerdown", e => {
+    if (document.body.classList.contains("history-pinned")) return;
+    if (e.target.closest("#history")) return;
+    document.body.classList.remove("history-open");
+  });
 }
 
 function setupImportExport() {
@@ -757,49 +865,9 @@ if (moveDebugEnabled) {
     result: "PLL DETECT"
   });
 }
-        let pllDebugBox = document.getElementById("pllDebugBox");
-        
-        if (!pllDebugBox) {
-          pllDebugBox = document.createElement("div");
-          pllDebugBox.id = "pllDebugBox";
-          pllDebugBox.style.position = "fixed";
-          pllDebugBox.style.left = "8px";
-          pllDebugBox.style.right = "8px";
-          pllDebugBox.style.bottom = "80px";
-          pllDebugBox.style.zIndex = "9999";
-          pllDebugBox.style.padding = "10px";
-          pllDebugBox.style.background = "rgba(0,0,0,0.85)";
-          pllDebugBox.style.color = "#00ff88";
-          pllDebugBox.style.fontSize = "12px";
-          pllDebugBox.style.wordBreak = "break-all";
-          pllDebugBox.style.border = "1px solid #00ff88";
-          pllDebugBox.style.borderRadius = "8px";
-          document.body.appendChild(pllDebugBox);
-        }
-        
-        const faceletsNow = String(getCurrentFacelets() || "");
-        
-        function faceletGroup(name, start) {
-          const part = faceletsNow.slice(start, start + 9);
-          return name + ': "' + part + '"';
-        }
-        
-        const pllDbg = window.__pllDebug || {};
-        
-        pllDebugBox.innerText =
-          "ALG: " + currentAlgorithmName + "\n" +
-          "ROT: " + pllRotation + "\n" +
-          "PATTERN: " + (pllDbg.detectedPattern || "none") + "\n" +
-          "LEN: " + faceletsNow.length + "\n" +
-          faceletGroup("U", 0) + "\n" +
-          faceletGroup("R", 9) + "\n" +
-          faceletGroup("F", 18) + "\n" +
-          faceletGroup("D", 27) + "\n" +
-          faceletGroup("L", 36) + "\n" +
-          faceletGroup("B", 45);
-        
-        
-        
+        // Spodní PLL/facelets debug box je vypnutý, aby nepřekrýval timer.
+        const oldPllDebugBox = document.getElementById("pllDebugBox");
+        if (oldPllDebugBox) oldPllDebugBox.remove();
         
         if (pllRotationForTrainer !== null && pllRotationForTrainer !== undefined) {
   setTrainerRotation(pllRotationForTrainer);
@@ -1895,6 +1963,8 @@ function initApp() {
   setupTrainingButtons();
   setupDevButtons();
   setupNavigation();
+  setupAoPanel();
+  setupHistoryPanel();
   setupImportExport();
   setupCubeButtons();
   setupAlgorithmButtons();

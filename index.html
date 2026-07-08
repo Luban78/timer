@@ -9,17 +9,24 @@
   <meta name="apple-mobile-web-app-title" content="MG Trainer">
 
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=navrh1-menu-history-2">
 
   <title>MG3i Trainer v0.55</title>
 </head>
 
 <body>
 
+<button id="globalMenuBtn" class="global-menu-fab" type="button" aria-label="Menu obrazovek">☰</button>
+<div id="screen-menu-dropdown" class="screen-menu-dropdown" aria-label="Výběr obrazovky">
+  <button id="nav-timer" type="button">🏠 Timer</button>
+  <button id="nav-stats" type="button">📊 Statistiky</button>
+  <button id="nav-settings" type="button">⚙️ Nastavení</button>
+</div>
+
 <div id="main-layout">
 
   <div id="app">
-    <div id="app-version">v0.55 slice M + U sync</div>
+    <div id="app-version">MG3i Trainer v0.55</div>
 
     <!-- původní připojovací tlačítka - JS je pořád používá -->
     <button id="btn">Připojit kostku</button>
@@ -46,9 +53,11 @@
 
       <!-- horní info lišta bez FACELETS -->
       <div id="top-strip">
-        <div class="top-strip-item">
-          <span class="strip-icon">⇄</span>
-          <span>ZMĚNA</span>
+        <div class="top-strip-item top-menu-item" id="top-menu-wrap">
+          <button id="top-menu-btn" type="button" aria-label="Menu obrazovek">
+            <span class="strip-icon">☰</span>
+            <span>MENU</span>
+          </button>
         </div>
 
         <div class="top-strip-item top-strip-center">
@@ -82,16 +91,22 @@
     </div>
 
     <!-- ===== ALGORITMUS A TIMER ČÁST ===== -->
-    <div id="selectedAlg">Algoritmus: nevybráno</div>
-    <button id="editAlgVariantBtn" class="edit-alg-btn hidden" type="button">✎</button>
+    <div id="algorithm-card-wrap">
+      <div id="selectedAlg">Algoritmus: nevybráno</div>
+      <button id="editAlgVariantBtn" class="edit-alg-btn hidden" type="button" aria-label="Vybrat variantu algoritmu">✎</button>
+    </div>
 
-    <div id="stats-box">
-      <div>Best: <span id="stat-best">-</span></div>
-      <div>Ao3: <span id="stat-ao3">-</span></div>
-      <div>Ao5: <span id="stat-ao5">-</span></div>
-      <div>Ao12: <span id="stat-ao12">-</span></div>
-      <div>Ao100: <span id="stat-ao100">-</span></div>
-      <div>Solves: <span id="stat-count">0</span></div>
+    <div id="ao-panel" class="ao-panel" aria-label="AO statistiky">
+      <button id="aoPanelToggle" class="ao-toggle" type="button" aria-label="Zobrazit AO statistiky">‹</button>
+      <button id="aoPinBtn" class="ao-pin" type="button" aria-label="Připnout AO statistiky">📌</button>
+      <div id="stats-box">
+        <div>Best: <span id="stat-best">-</span></div>
+        <div>Ao3: <span id="stat-ao3">-</span></div>
+        <div>Ao5: <span id="stat-ao5">-</span></div>
+        <div>Ao12: <span id="stat-ao12">-</span></div>
+        <div>Ao100: <span id="stat-ao100">-</span></div>
+        <div>Solves: <span id="stat-count">0</span></div>
+      </div>
     </div>
 
     <div id="m-debug"></div>
@@ -140,8 +155,11 @@
     <canvas id="graph"></canvas>
   </div>
 
-  <div id="history">
-    <h2>ČASY</h2>
+  <div id="history" aria-label="Poslední časy">
+    <div class="history-panel-controls">
+      <button id="historyPanelToggle" class="history-toggle" type="button" aria-label="Zobrazit poslední časy">⌃</button>
+      <button id="historyPinBtn" class="history-pin" type="button" aria-label="Připnout poslední časy">📌</button>
+    </div>
 
     <div id="legacy-tools">
       <button id="clear-history-btn">Vymazat časy</button>
@@ -272,13 +290,6 @@
   <button id="settings-reset-profile-btn" class="danger">Reset profilu / achievementů</button>
 </div>
 
-<!-- ===== SPODNÍ NAVIGACE ===== -->
-<div id="bottom-nav">
-  <button id="nav-timer">🏠<br>Timer</button>
-  <button id="nav-stats">📊<br>Statistiky</button>
-  <button id="nav-settings">⚙️<br>Nastavení</button>
-</div>
-
 <!-- ===== LEVEL MODAL ===== -->
 <div id="level-modal" class="detail-modal">
   <div class="detail-box level-box">
@@ -317,7 +328,7 @@
     </div>
   </div>
 </div>
-<script type="module" src="./app.js?v=10000"></script>
+<script type="module" src="./app.js?v=10003"></script>
 
 </body>
 </html>

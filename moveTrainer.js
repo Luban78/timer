@@ -237,7 +237,7 @@ function skipRotationMoves() {
 
 export function renderAlgorithmPreview(selectedAlg) {
   const algFromDataset = selectedAlg.dataset.algText || "";
-  
+
   const text = selectedAlg.innerText || "";
   const parts = text.split(":");
   const alg = algFromDataset || (parts[1] ? parts[1].trim() : "");
@@ -252,11 +252,11 @@ export function renderAlgorithmPreview(selectedAlg) {
     virtualX = 0;
     virtualZ = 0;
 
-    selectedAlg.innerHTML = "Algoritmus: nevybráno";
+    selectedAlg.innerHTML = renderAlgorithmCard("Nevybráno", [], true);
     return;
   }
 
-  displayMoves = alg.split(/\s+/);
+  displayMoves = alg.split(/\s+/).filter(Boolean);
   checkMoves = expandAlgorithm(displayMoves);
 
   displayIndex = 0;
@@ -269,32 +269,82 @@ export function renderAlgorithmPreview(selectedAlg) {
   renderTrainer(selectedAlg);
 }
 
-export function renderTrainer(selectedAlg) {
-  const algName = selectedAlg.dataset.algName || "";
-  const displaySteps = buildDisplaySteps(displayMoves);
-
-  selectedAlg.innerHTML =
-  '<div class="alg-title">' +
-  'Algoritmus' + (algName ? ': <span>' + algName + '</span>' : '') +
-  '</div>' +
-    displaySteps.map((move, index) => {
-      if (index === wrongDisplayIndex) {
-        return `<span class="wrong-move">${move}</span>`;
-      }
-
-      if (index < displayIndex) {
-        return `<span class="done-move">${move}</span>`;
-      }
-
-      if (index === displayIndex) {
-        return `<span class="next-move">${move}</span>`;
-      }
-
-      return `<span class="alg-move">${move}</span>`;
-    }).join(" ") +
-    '</div>';
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
+function renderCubePlaceholder(algName) {
+  const cells = Array.from({ length: 9 }, (_, index) => {
+    const isCorner = index === 0 || index === 2 || index === 6 || index === 8;
+    return `<span class="cube-cell${isCorner ? " is-corner" : ""}"></span>`;
+  }).join("");
+
+  return `
+    <div class="alg-picture" data-alg="${escapeHtml(algName)}" aria-label="Náhled algoritmu">
+      <div class="alg-cube-placeholder">
+        ${cells}
+      </div>
+    </div>`;
+}
+
+function renderMove(move, index) {
+  const safeMove = escapeHtml(move);
+
+  if (index === wrongDisplayIndex) {
+    return `<span class="wrong-move">${safeMove}</span>`;
+  }
+
+  if (index < displayIndex) {
+    return `<span class="done-move">${safeMove}</span>`;
+  }
+
+  if (index === displayIndex) {
+    return `<span class="next-move">${safeMove}</span>`;
+  }
+
+  return `<span class="alg-move">${safeMove}</span>`;
+}
+
+function renderMoveRows(displaySteps) {
+  const rows = [];
+
+  for (let i = 0; i < displaySteps.length; i += 6) {
+    const row = displaySteps
+      .slice(i, i + 6)
+      .map((move, offset) => renderMove(move, i + offset))
+      .join("");
+
+    rows.push(`<div class="alg-move-line">${row}</div>`);
+  }
+
+  return rows.join("");
+}
+
+function renderAlgorithmCard(algName, displaySteps, empty = false) {
+  const safeName = escapeHtml(algName || "Nevybráno");
+
+  return `
+    <div class="alg-card-head">
+      <div class="alg-title${empty ? " alg-title-empty" : ""}">${safeName}</div>
+    </div>
+    ${empty ? "" : renderCubePlaceholder(algName)}
+    <div class="alg-moves-row">
+      ${empty ? "" : renderMoveRows(displaySteps)}
+    </div>
+  `;
+}
+
+export function renderTrainer(selectedAlg) {
+  const algName = selectedAlg.dataset.algName || "Algoritmus";
+  const displaySteps = buildDisplaySteps(displayMoves);
+
+  selectedAlg.innerHTML = renderAlgorithmCard(algName, displaySteps, false);
+}
 
 /* =========================================================
    RUČNÍ POSUN TRAINERU
