@@ -14,6 +14,8 @@ let wrongDisplayIndex = -1;
 // Zatím řešíme bezpečně jen rotaci y.
 // x / z zatím pouze přeskočíme.
 let virtualY = 0;
+let virtualX = 0;
+
 
 
 /* =========================================================
@@ -99,9 +101,50 @@ function applySkippedRotation(move) {
     virtualY = (virtualY + 2) % 4;
   }
 
+  if (move === "x") {
+    virtualX = (virtualX + 1) % 4;
+  }
+
+  if (move === "x'") {
+    virtualX = (virtualX + 3) % 4;
+  }
+
+  if (move === "x2") {
+    virtualX = (virtualX + 2) % 4;
+  }
+
   window.__lastSkippedRotation = move;
-  console.log("SKIP ROTATION:", move, "virtualY:", virtualY);
+  console.log("SKIP ROTATION:", move, "virtualY:", virtualY, "virtualX:", virtualX);
 }
+
+function applyVirtualXToExpectedMove(move) {
+  if (!move) return move;
+
+  const face = move[0];
+  const suffix = move.slice(1);
+
+  if (virtualX === 0) return move;
+
+  const maps = [
+    { U: "U", D: "D", F: "F", B: "B", R: "R", L: "L" },
+
+    // po x: podle testu D2 se fyzicky hlásí jako B2
+    { U: "F", D: "B", F: "D", B: "U", R: "R", L: "L" },
+
+    // x2
+    { U: "D", D: "U", F: "B", B: "F", R: "R", L: "L" },
+
+    // x'
+    { U: "B", D: "F", F: "U", B: "D", R: "R", L: "L" }
+  ];
+
+  const map = maps[virtualX];
+
+  if (!map[face]) return move;
+
+  return map[face] + suffix;
+}
+
 
 function applyVirtualYToExpectedMove(move) {
   if (!move) return move;
@@ -165,6 +208,7 @@ export function renderAlgorithmPreview(selectedAlg) {
     checkIndex = 0;
     wrongDisplayIndex = -1;
     virtualY = 0;
+    virtualX = 0;
 
     selectedAlg.innerHTML = "Algoritmus: nevybráno";
     return;
@@ -177,6 +221,7 @@ export function renderAlgorithmPreview(selectedAlg) {
   checkIndex = 0;
   wrongDisplayIndex = -1;
   virtualY = 0;
+  virtualX = 0;
 
   renderTrainer(selectedAlg);
 }
@@ -252,14 +297,17 @@ export function checkMove(move, selectedAlg) {
     move = rotateMove(move);
   }
 
-  const expectedMove = applyVirtualYToExpectedMove(expected.move);
+  const expectedMove = applyVirtualYToExpectedMove(
+  applyVirtualXToExpectedMove(expected.move)
+);
 
   console.log("MOVE CHECK:", {
-    real: move,
-    expectedOriginal: expected.move,
-    expectedAfterY: expectedMove,
-    virtualY
-  });
+  real: move,
+  expectedOriginal: expected.move,
+  expectedAfterRotation: expectedMove,
+  virtualY,
+  virtualX
+});
 
   if (move !== expectedMove) {
     wrongDisplayIndex = getGroupedDisplayIndex(expected.displayIndex);
@@ -320,6 +368,7 @@ export function resetTrainer(selectedAlg) {
   checkIndex = 0;
   wrongDisplayIndex = -1;
   virtualY = 0;
+  virtualX = 0;
 
   renderTrainer(selectedAlg);
 }
