@@ -83,7 +83,7 @@ import { drawGraph, resizeGraphCanvas } from "./graph.js";
 import { renderHistory } from "./history.js";
 import { loadSolves, saveSolves, loadProfile, saveProfile } from "./storage.js";
 import { connectCube } from "./cubeConnection.js?v=13";
-import { pllAlgs } from "./algorithms.js";
+import { pllAlgs, getActivePllAlg } from "./algorithms.js";
 /*
 localStorage.removeItem("mg3i_move_maps");
 alert("Move maps vymazány");
@@ -255,6 +255,9 @@ const SLICE_CENTER_ROT = [
   [5, 1, 0, 2, 4, 3], // M / x'
   [4, 0, 2, 1, 3, 5]  // S / z
 ];
+
+
+//localStorage.setItem("pllVariant:Jb-perm", "2");
 
 function showTrainerDashboard() {
   document.body.classList.add("trainer-ready");
@@ -686,8 +689,12 @@ function setupAlgorithmButtons() {
       pllAlgs,
       onSelect: name => {
         currentAlgorithmName = name;
-        selectedAlg.dataset.algName = name;
-        prepareNext();
+selectedAlg.dataset.algName = name;
+selectedAlg.dataset.algText = getActivePllAlg(name);
+selectedAlg.innerText = "Algoritmus: " + selectedAlg.dataset.algText;
+
+prepareNext();
+renderAlgorithmPreview(selectedAlg);
         clearPendingMove();
 clearSliceMoveBuffer();
 clearGuidedOuterBuffer();
@@ -982,13 +989,18 @@ function showAchievement(title) {
 function pickRandomPLL() {
   const names = Object.keys(pllAlgs);
   const randomName = names[Math.floor(Math.random() * names.length)];
-
+  
   currentAlgorithmName = randomName;
-  selectedAlg.innerText = "Algoritmus: " + pllAlgs[randomName];
-
+selectedAlg.dataset.algName = randomName;
+selectedAlg.dataset.algText = getActivePllAlg(randomName);
+selectedAlg.innerText = "Algoritmus: " + selectedAlg.dataset.algText;
+  
   prepareNext();
   renderAlgorithmPreview(selectedAlg);
 }
+
+
+
 
 function prepareNextTrainerRun() {
   if (trainingMode === "random") {
@@ -1062,13 +1074,14 @@ function makeDoubleMove(move) {
 
 function getCurrentAlgorithmText() {
   if (currentAlgorithmName && pllAlgs[currentAlgorithmName]) {
-    return pllAlgs[currentAlgorithmName];
+    return getActivePllAlg(currentAlgorithmName);
   }
 
   const text = selectedAlg ? (selectedAlg.innerText || "") : "";
   const parts = text.split(":");
   return parts[1] ? parts[1].trim() : "";
 }
+
 
 function selectedAlgorithmUsesSlice() {
   return /(^|\s)[MES](?:2|'|\s|$)/.test(getCurrentAlgorithmText());

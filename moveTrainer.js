@@ -236,9 +236,11 @@ function skipRotationMoves() {
    ========================================================= */
 
 export function renderAlgorithmPreview(selectedAlg) {
+  const algFromDataset = selectedAlg.dataset.algText || "";
+  
   const text = selectedAlg.innerText || "";
   const parts = text.split(":");
-  const alg = parts[1] ? parts[1].trim() : "";
+  const alg = algFromDataset || (parts[1] ? parts[1].trim() : "");
 
   if (!alg) {
     displayMoves = [];

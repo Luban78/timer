@@ -30,4 +30,77 @@ export const pllAlgs={
 "Gd-perm":"R U R' U' D R2 U' R U' R' U R' U R2 D'"
 };
 
+export const pllAlgVariants = {
+  "Jb-perm": [
+    {
+      name: "Default",
+      alg: "R U R' F' R U R' U' R' F R2 U' R'"
+    },
+    {
+      name: "Alt 1",
+      alg: "R U2 R' U' R U2 L' U R' U' L"
+    },
+    {
+      name: "Alt 2",
+      alg: "r' F R F' r U2 R' U R U2 R'"
+    },
+    {
+      name: "Alt 3",
+      alg: "L' U R U' L U2 R' U R U2 R'"
+    }
+  ],
+
+  "Ja-perm": [
+    {
+      name: "Default",
+      alg: "y R' U L' U2 R U' R' U2 R L"
+    },
+    {
+      name: "Alt 1",
+      alg: "R' U L' U2 R U' R' U2 R L U"
+    }
+  ],
+
+  "T-perm": [
+    {
+      name: "Default",
+      alg: "R U R' U' R' F R2 U' R' U' R U R' F'"
+    },
+    {
+      name: "Alt 1",
+      alg: "R U R' U' R' F R2 U' R' U' R U R' F'"
+    }
+  ],
+
+  "F-perm": [
+    {
+      name: "Default",
+      alg: "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R"
+    },
+    {
+      name: "Alt with y",
+      alg: "y R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R"
+    }
+  ]
+};
+
+export function getActivePllAlg(name) {
+  const variants = pllAlgVariants[name];
+
+  if (!variants || variants.length === 0) {
+    return pllAlgs[name];
+  }
+
+  const savedIndex = Number(localStorage.getItem("pllVariant:" + name));
+
+  if (
+    Number.isInteger(savedIndex) &&
+    variants[savedIndex] &&
+    variants[savedIndex].alg
+  ) {
+    return variants[savedIndex].alg;
+  }
+
+  return pllAlgs[name];
+}
 export const ollAlgs = {};
