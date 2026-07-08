@@ -274,10 +274,9 @@ export function renderTrainer(selectedAlg) {
   const displaySteps = buildDisplaySteps(displayMoves);
 
   selectedAlg.innerHTML =
-    '<div class="alg-title">' +
-    'Algoritmus' + (algName ? ': <span>' + algName + '</span>' : '') +
-    '</div>' +
-    '<div class="alg-moves-row">' +
+  '<div class="alg-title">' +
+  'Algoritmus' + (algName ? ': <span>' + algName + '</span>' : '') +
+  '</div>' +
     displaySteps.map((move, index) => {
       if (index === wrongDisplayIndex) {
         return `<span class="wrong-move">${move}</span>`;

@@ -1914,3 +1914,315 @@ text-align:center;
   border-radius: 8px !important;
   box-sizing: border-box !important;
 }
+
+/* =========================================================
+   TLAČÍTKO EDIT VARIANTY ALGORITMU
+   ========================================================= */
+
+#app #selectedAlg .alg-title {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+#app #selectedAlg .edit-alg-btn {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  padding: 0 !important;
+  margin-left: 6px !important;
+
+  border-radius: 10px !important;
+  border: 1px solid rgba(0, 230, 118, .75) !important;
+  background: linear-gradient(180deg, #10261c 0%, #101616 100%) !important;
+  color: #00e676 !important;
+
+  font-size: 21px !important;
+  line-height: 34px !important;
+  font-weight: 800 !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  box-shadow:
+    inset 0 0 12px rgba(0, 230, 118, .12),
+    0 0 8px rgba(0, 230, 118, .15) !important;
+
+  cursor: pointer !important;
+}
+#app #selectedAlg .edit-alg-btn {
+  position: static !important;
+  flex: 0 0 34px !important;
+  z-index: 1 !important;
+  text-decoration: none !important;
+  user-select: none !important;
+}
+/* =========================================================
+   MODAL PRO VÝBĚR VARIANTY ALGORITMU
+   ========================================================= */
+
+.variant-modal.hidden {
+  display: none !important;
+}
+
+.variant-modal {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
+
+  background: rgba(0, 0, 0, .72) !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 18px !important;
+  box-sizing: border-box !important;
+}
+
+.variant-modal-box {
+  width: 100% !important;
+  max-width: 620px !important;
+  max-height: 82vh !important;
+
+  background: #151f25 !important;
+  border: 1px solid rgba(0, 230, 118, .65) !important;
+  border-radius: 18px !important;
+
+  box-shadow:
+    0 0 24px rgba(0, 230, 118, .22),
+    inset 0 0 18px rgba(0, 230, 118, .08) !important;
+
+  overflow: hidden !important;
+}
+
+.variant-modal-title {
+  height: 56px !important;
+  padding: 0 14px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+
+  color: #fff !important;
+  font-size: 22px !important;
+  font-weight: 800 !important;
+
+  border-bottom: 1px solid rgba(255,255,255,.12) !important;
+}
+
+#closeVariantModalBtn {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+  font-size: 28px !important;
+  color: #fff !important;
+}
+
+.variant-list {
+  max-height: 55vh !important;
+  overflow-y: auto !important;
+  padding: 12px !important;
+  box-sizing: border-box !important;
+}
+
+.variant-item {
+  width: 100% !important;
+  margin-bottom: 10px !important;
+  padding: 10px 12px !important;
+
+  border-radius: 14px !important;
+  border: 1px solid rgba(255,255,255,.16) !important;
+  background: rgba(255,255,255,.05) !important;
+
+  color: #fff !important;
+  box-sizing: border-box !important;
+}
+
+.variant-item.selected {
+  border-color: rgba(0,230,118,.9) !important;
+  background: rgba(0,230,118,.12) !important;
+}
+
+.variant-item-head {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 6px !important;
+}
+
+.variant-name {
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #00e676 !important;
+}
+
+.variant-check {
+  font-size: 22px !important;
+  color: #00e676 !important;
+}
+
+.variant-alg {
+  font-size: 17px !important;
+  line-height: 24px !important;
+  color: #e8e8e8 !important;
+  word-break: normal !important;
+}
+
+.variant-modal-actions {
+  height: 62px !important;
+  padding: 10px 12px !important;
+
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+
+  border-top: 1px solid rgba(255,255,255,.12) !important;
+  box-sizing: border-box !important;
+}
+
+#cancelVariantBtn,
+#saveVariantBtn {
+  height: 42px !important;
+  border-radius: 12px !important;
+  font-size: 19px !important;
+  font-weight: 800 !important;
+}
+
+#saveVariantBtn {
+  color: #001b0d !important;
+  background: #00e676 !important;
+}
+/* =========================================================
+   FIX: OLL / PLL nesmí lézt nad popup výběr algoritmů
+   ========================================================= */
+
+#top-dashboard {
+  z-index: 80 !important;
+  overflow: visible !important;
+}
+
+#top-dashboard #modeButtons,
+#top-dashboard #top-strip,
+#top-dashboard #training-mode {
+  z-index: 90 !important;
+}
+
+#top-dashboard .modeBtn,
+#top-dashboard #singleModeBtn,
+#top-dashboard #randomModeBtn {
+  position: relative !important;
+  z-index: 100 !important;
+}
+
+/* =========================================================
+   FIX: odstranit modré zvýraznění kliknutých tlačítek Android/WebView
+   ========================================================= */
+
+* {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+button,
+.modeBtn,
+#ollBtn,
+#pllBtn,
+#singleModeBtn,
+#randomModeBtn {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+button:focus,
+button:focus-visible,
+button:active,
+.modeBtn:focus,
+.modeBtn:focus-visible,
+.modeBtn:active,
+#ollBtn:focus,
+#ollBtn:focus-visible,
+#ollBtn:active,
+#pllBtn:focus,
+#pllBtn:focus-visible,
+#pllBtn:active {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+
+
+#app #selectedAlg .edit-alg-btn {
+  pointer-events: auto !important;
+  touch-action: none !important;
+}
+#app #selectedAlg .edit-alg-btn {
+  pointer-events: auto !important;
+  touch-action: none !important;
+  position: relative !important;
+  z-index: 999 !important;
+}
+/* FIX: tužka musí mít jistý dotyk na mobilu */
+#app #selectedAlg .edit-alg-btn {
+  min-width: 46px !important;
+  width: 46px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  margin-left: 10px !important;
+
+  position: relative !important;
+  z-index: 999 !important;
+
+  pointer-events: auto !important;
+  touch-action: none !important;
+  user-select: none !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* =========================================================
+   SAMOSTATNÁ TUŽKA VARIANT
+   ========================================================= */
+
+#app > #editAlgVariantBtn {
+  position: absolute !important;
+  right: 28px !important;
+  top: 178px !important;
+
+  width: 48px !important;
+  height: 42px !important;
+  min-width: 48px !important;
+  padding: 0 !important;
+
+  border-radius: 13px !important;
+  border: 1px solid rgba(0, 230, 118, .75) !important;
+  background: linear-gradient(180deg, #10261c 0%, #101616 100%) !important;
+  color: #00e676 !important;
+
+  font-size: 25px !important;
+  font-weight: 900 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  z-index: 500 !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  user-select: none !important;
+
+  box-shadow:
+    inset 0 0 12px rgba(0,230,118,.12),
+    0 0 8px rgba(0,230,118,.18) !important;
+}
+
+#app>#editAlgVariantBtn.hidden {
+  display: none !important;
+}

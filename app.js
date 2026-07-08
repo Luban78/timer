@@ -1,5 +1,7 @@
 // app.js
 // Hlavní logika MG3i Traineru
+
+import { openVariantPicker, initVariantPicker } from "./variantPicker.js";
 import { adaptSliceMoveForTrainer } from "./sliceAdapter.js";
 import {
   setTrainerRotation,
@@ -84,6 +86,7 @@ import { renderHistory } from "./history.js";
 import { loadSolves, saveSolves, loadProfile, saveProfile } from "./storage.js";
 import { connectCube } from "./cubeConnection.js?v=13";
 import { pllAlgs, getActivePllAlg } from "./algorithms.js";
+
 /*
 localStorage.removeItem("mg3i_move_maps");
 alert("Move maps vymazány");
@@ -255,7 +258,7 @@ const SLICE_CENTER_ROT = [
   [5, 1, 0, 2, 4, 3], // M / x'
   [4, 0, 2, 1, 3, 5]  // S / z
 ];
-
+let pendingVariantIndex = null;
 
 //localStorage.setItem("pllVariant:Jb-perm", "2");
 
@@ -695,6 +698,8 @@ selectedAlg.innerText = "Algoritmus: " + selectedAlg.dataset.algText;
 
 prepareNext();
 renderAlgorithmPreview(selectedAlg);
+const editBtn = document.getElementById("editAlgVariantBtn");
+if (editBtn) editBtn.classList.remove("hidden");
         clearPendingMove();
 clearSliceMoveBuffer();
 clearGuidedOuterBuffer();
@@ -830,30 +835,40 @@ if (moveDebugEnabled) {
 
 function setupGlobalControls() {
   document.addEventListener("pointerdown", e => {
-    if (activeScreen !== "timer") return;
-
-    if (e.target.closest("button")) return;
-    if (e.target.closest("#dev-controls")) return;
-    if (e.target.closest("#history")) return;
-    if (e.target.closest("#history-list")) return;
-    if (e.target.closest(".hist-row")) return;
-    if (e.target.closest("#bottom-nav")) return;
-    if (e.target.closest("#modal")) return;
-    if (e.target.closest("#solve-detail")) return;
-    if (e.target.closest("#export-modal")) return;
-    if (e.target.closest("#import-modal")) return;
-    if (e.target.closest("#level-modal")) return;
-    if (e.target.closest("#achievement-modal")) return;
-    if (e.target.closest("#record-modal")) return;
+      if (activeScreen !== "timer") return;
+      
+      if (e.target.closest("button")) return;
+     
+      if (e.target.closest("#selectedAlg")) return;
+      if (e.target.closest("#algVariantModal")) return;
+      
+      if (e.target.closest("#dev-controls")) return;
+      if (e.target.closest("#history")) return;
+      if (e.target.closest("#history-list")) return;
+      if (e.target.closest(".hist-row")) return;
+      if (e.target.closest("#bottom-nav")) return;
+      if (e.target.closest("#modal")) return;
+      if (e.target.closest("#solve-detail")) return;
+      if (e.target.closest("#export-modal")) return;
+      if (e.target.closest("#import-modal")) return;
+      if (e.target.closest("#level-modal")) return;
+      if (e.target.closest("#achievement-modal")) return;
+      if (e.target.closest("#record-modal")) return;
+    
+    
+    
 
     if (cubeMode === "normal") {
-      if (!isSolving) {
-        runStartSolve(performance.now());
-      } else {
-        manualStop();
-      }
-      return;
-    }
+  // Ruční start/stop jen klikem na velký čas
+  if (!e.target.closest("#tps")) return;
+  
+  if (!isSolving) {
+    runStartSolve(performance.now());
+  } else {
+    manualStop();
+  }
+  return;
+}
 
     // Smart Cube se nezastavuje dotykem obrazovky, aby screenshot/tap nerozbil solve.
   });
@@ -862,13 +877,15 @@ function setupGlobalControls() {
     if (activeScreen !== "timer") return;
 
     if (cubeMode === "normal") {
-      if (!isSolving) {
-        runStartSolve(performance.now());
-      } else {
-        manualStop();
-      }
-      return;
-    }
+  if (!e.target.closest("#tps")) return;
+  
+  if (!isSolving) {
+    runStartSolve(performance.now());
+  } else {
+    manualStop();
+  }
+  return;
+}
 
     // Smart Cube se nezastavuje dotykem obrazovky, aby screenshot/tap nerozbil solve.
   });
@@ -997,6 +1014,7 @@ selectedAlg.innerText = "Algoritmus: " + selectedAlg.dataset.algText;
   
   prepareNext();
   renderAlgorithmPreview(selectedAlg);
+  
 }
 
 
@@ -1081,6 +1099,10 @@ function getCurrentAlgorithmText() {
   const parts = text.split(":");
   return parts[1] ? parts[1].trim() : "";
 }
+
+
+
+
 
 
 function selectedAlgorithmUsesSlice() {
@@ -1892,4 +1914,24 @@ function initApp() {
   registerServiceWorker();
 }
 
+initVariantPicker();
 initApp();
+
+const editAlgVariantBtn = document.getElementById("editAlgVariantBtn");
+
+if (editAlgVariantBtn) {
+  editAlgVariantBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!currentAlgorithmName || currentAlgorithmName === "Nevybráno") return;
+
+    openVariantPicker(currentAlgorithmName, (newAlg) => {
+      selectedAlg.dataset.algText = newAlg;
+      selectedAlg.innerText = "Algoritmus: " + newAlg;
+
+      prepareNext();
+      renderAlgorithmPreview(selectedAlg);
+    });
+  });
+}

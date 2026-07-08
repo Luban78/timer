@@ -83,6 +83,7 @@
 
     <!-- ===== ALGORITMUS A TIMER ČÁST ===== -->
     <div id="selectedAlg">Algoritmus: nevybráno</div>
+    <button id="editAlgVariantBtn" class="edit-alg-btn hidden" type="button">✎</button>
 
     <div id="stats-box">
       <div>Best: <span id="stat-best">-</span></div>
@@ -301,7 +302,21 @@
     <div id="achievement-title"></div>
   </div>
 </div>
+<div id="algVariantModal" class="variant-modal hidden">
+  <div class="variant-modal-box">
+    <div class="variant-modal-title">
+      <span id="variantModalTitle">Varianty algoritmu</span>
+      <button id="closeVariantModalBtn" type="button">×</button>
+    </div>
 
+    <div id="variantList" class="variant-list"></div>
+
+    <div class="variant-modal-actions">
+      <button id="cancelVariantBtn" type="button">Zrušit</button>
+      <button id="saveVariantBtn" type="button">Uložit</button>
+    </div>
+  </div>
+</div>
 <script type="module" src="./app.js?v=10000"></script>
 
 </body>
