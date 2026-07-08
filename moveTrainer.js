@@ -1,33 +1,171 @@
 import { rotateMove, isTrainerMove, stripTrainerMove } from "./orientation.js";
 
-function expandMove(move, displayIndex){
+/* =========================================================
+   STAV TRAINERU
+   ========================================================= */
+
+let displayMoves = [];
+let checkMoves = [];
+
+let displayIndex = 0;
+let checkIndex = 0;
+let wrongDisplayIndex = -1;
+
+// Zatím řešíme bezpečně jen rotaci y.
+// x / z zatím pouze přeskočíme.
+let virtualY = 0;
+
+
+/* =========================================================
+   ZÁKLADNÍ POMOCNÉ FUNKCE
+   ========================================================= */
+
+function expandMove(move, displayIndex) {
   return [
     { move, displayIndex }
   ];
 }
 
-function expandAlgorithm(moves){
-  return moves.flatMap((move,index)=>expandMove(move,index));
+function expandAlgorithm(moves) {
+  return moves.flatMap((move, index) => expandMove(move, index));
 }
 
-let displayMoves = [];
-let checkMoves = [];
-let displayIndex = 0;
-let checkIndex = 0;
-let wrongDisplayIndex = -1;
+function isCubeRotationMove(move) {
+  return (
+    move === "x" || move === "x'" || move === "x2" ||
+    move === "y" || move === "y'" || move === "y2" ||
+    move === "z" || move === "z'" || move === "z2"
+  );
+}
+
+function buildDisplaySteps(moves) {
+  const steps = [];
+
+  for (let i = 0; i < moves.length; i++) {
+    const move = moves[i];
+
+    if (isCubeRotationMove(move) && moves[i + 1]) {
+      steps.push(move + " " + moves[i + 1]);
+      i++;
+    } else {
+      steps.push(move);
+    }
+  }
+
+  return steps;
+}
+
+function getGroupedDisplayIndex(originalIndex) {
+  let stepIndex = 0;
+
+  for (let i = 0; i < displayMoves.length; i++) {
+    const move = displayMoves[i];
+
+    if (isCubeRotationMove(move) && displayMoves[i + 1]) {
+      if (originalIndex === i || originalIndex === i + 1) {
+        return stepIndex;
+      }
+
+      i++;
+      stepIndex++;
+      continue;
+    }
+
+    if (originalIndex === i) {
+      return stepIndex;
+    }
+
+    stepIndex++;
+  }
+
+  return stepIndex;
+}
 
 
-export function renderAlgorithmPreview(selectedAlg){
+/* =========================================================
+   VIRTUÁLNÍ ROTACE Y
+   ========================================================= */
+
+function applySkippedRotation(move) {
+  if (move === "y") {
+    virtualY = (virtualY + 1) % 4;
+  }
+
+  if (move === "y'") {
+    virtualY = (virtualY + 3) % 4;
+  }
+
+  if (move === "y2") {
+    virtualY = (virtualY + 2) % 4;
+  }
+
+  window.__lastSkippedRotation = move;
+  console.log("SKIP ROTATION:", move, "virtualY:", virtualY);
+}
+
+function applyVirtualYToExpectedMove(move) {
+  if (!move) return move;
+
+  const face = move[0];
+  const suffix = move.slice(1);
+
+  if (virtualY === 0) return move;
+
+  const maps = [
+    { F: "F", R: "R", B: "B", L: "L" },
+
+    // po y: R se fyzicky hlásí jako F
+    { F: "L", R: "F", B: "R", L: "B" },
+
+    // y2
+    { F: "B", R: "L", B: "F", L: "R" },
+
+    // y'
+    { F: "R", R: "B", B: "L", L: "F" }
+  ];
+
+  const map = maps[virtualY];
+
+  if (!map[face]) return move;
+
+  return map[face] + suffix;
+}
+
+function skipRotationMoves() {
+  let skipped = false;
+
+  while (true) {
+    const expected = checkMoves[checkIndex];
+
+    if (!expected) break;
+    if (!isCubeRotationMove(expected.move)) break;
+
+    applySkippedRotation(expected.move);
+    checkIndex++;
+    skipped = true;
+  }
+
+  return skipped;
+}
+
+
+/* =========================================================
+   VYKRESLENÍ ALGORITMU
+   ========================================================= */
+
+export function renderAlgorithmPreview(selectedAlg) {
   const text = selectedAlg.innerText || "";
   const parts = text.split(":");
   const alg = parts[1] ? parts[1].trim() : "";
-  if(!alg){
+
+  if (!alg) {
     displayMoves = [];
     checkMoves = [];
     displayIndex = 0;
     checkIndex = 0;
     wrongDisplayIndex = -1;
-  
+    virtualY = 0;
+
     selectedAlg.innerHTML = "Algoritmus: nevybráno";
     return;
   }
@@ -37,101 +175,151 @@ export function renderAlgorithmPreview(selectedAlg){
 
   displayIndex = 0;
   checkIndex = 0;
-wrongDisplayIndex = -1;
-  
+  wrongDisplayIndex = -1;
+  virtualY = 0;
+
   renderTrainer(selectedAlg);
 }
 
 export function renderTrainer(selectedAlg) {
   const algName = selectedAlg.dataset.algName || "";
-  
+  const displaySteps = buildDisplaySteps(displayMoves);
+
   selectedAlg.innerHTML =
     '<div class="alg-title">' +
     'Algoritmus' + (algName ? ': <span>' + algName + '</span>' : '') +
     '</div>' +
     '<div class="alg-moves-row">' +
-    displayMoves.map((move, index) => {
+    displaySteps.map((move, index) => {
       if (index === wrongDisplayIndex) {
         return `<span class="wrong-move">${move}</span>`;
       }
-      
+
       if (index < displayIndex) {
         return `<span class="done-move">${move}</span>`;
       }
-      
+
       if (index === displayIndex) {
         return `<span class="next-move">${move}</span>`;
       }
-      
+
       return `<span class="alg-move">${move}</span>`;
     }).join(" ") +
     '</div>';
 }
 
 
+/* =========================================================
+   RUČNÍ POSUN TRAINERU
+   ========================================================= */
 
-export function nextTrainerMove(selectedAlg){
-  if(displayMoves.length === 0) return;
+export function nextTrainerMove(selectedAlg) {
+  if (displayMoves.length === 0) return;
+
+  const displaySteps = buildDisplaySteps(displayMoves);
 
   displayIndex++;
 
-  if(displayIndex >= displayMoves.length){
-    displayIndex = displayMoves.length - 1;
+  if (displayIndex >= displaySteps.length) {
+    displayIndex = displaySteps.length - 1;
   }
 
   renderTrainer(selectedAlg);
 }
 
-export function checkMove(move, selectedAlg){
-  if(checkMoves.length === 0){
+
+/* =========================================================
+   KONTROLA TAHU
+   ========================================================= */
+
+export function checkMove(move, selectedAlg) {
+  if (checkMoves.length === 0) {
     return "none";
   }
+
+  // Přeskočíme x/y/z, ale y zároveň nastaví virtuální osu.
+  skipRotationMoves();
 
   const expected = checkMoves[checkIndex];
 
-  if(!expected){
+  if (!expected) {
     return "none";
   }
+
   if (isTrainerMove(move)) {
-  move = stripTrainerMove(move);
-} else {
-  move = rotateMove(move);
-}
-  if(move !== expected.move){
-  wrongDisplayIndex = expected.displayIndex;
-  renderTrainer(selectedAlg);
-  return "wrong";
-}
+    move = stripTrainerMove(move);
+  } else {
+    move = rotateMove(move);
+  }
 
+  const expectedMove = applyVirtualYToExpectedMove(expected.move);
 
+  console.log("MOVE CHECK:", {
+    real: move,
+    expectedOriginal: expected.move,
+    expectedAfterY: expectedMove,
+    virtualY
+  });
+
+  if (move !== expectedMove) {
+    wrongDisplayIndex = getGroupedDisplayIndex(expected.displayIndex);
+    renderTrainer(selectedAlg);
+    return "wrong";
+  }
+
+  wrongDisplayIndex = -1;
   checkIndex++;
+
+  // Když je na konci algoritmu třeba x', přeskočíme ho a dokončíme algoritmus.
+  skipRotationMoves();
 
   const nextExpected = checkMoves[checkIndex];
 
-  if(nextExpected){
-    displayIndex = nextExpected.displayIndex;
+  if (nextExpected) {
+    displayIndex = getGroupedDisplayIndex(nextExpected.displayIndex);
     renderTrainer(selectedAlg);
     return "correct";
   }
 
-  displayIndex = displayMoves.length;
+  displayIndex = buildDisplaySteps(displayMoves).length;
   renderTrainer(selectedAlg);
   return "finished";
 }
 
-export function getExpectedMove(){
-  if(checkMoves.length === 0) return null;
 
-  const expected = checkMoves[checkIndex];
-  if(!expected) return null;
+/* =========================================================
+   DALŠÍ OČEKÁVANÝ TAH PRO app.js
+   POZOR: NESMÍ NIC POSOUVAT
+   ========================================================= */
 
-  return expected.move;
+export function getExpectedMove() {
+  if (checkMoves.length === 0) return null;
+
+  let tempIndex = checkIndex;
+
+  while (true) {
+    const expected = checkMoves[tempIndex];
+
+    if (!expected) return null;
+
+    if (!isCubeRotationMove(expected.move)) {
+      return expected.move;
+    }
+
+    tempIndex++;
+  }
 }
 
-export function resetTrainer(selectedAlg){
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+export function resetTrainer(selectedAlg) {
   displayIndex = 0;
   checkIndex = 0;
   wrongDisplayIndex = -1;
+  virtualY = 0;
 
   renderTrainer(selectedAlg);
 }

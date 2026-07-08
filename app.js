@@ -235,8 +235,8 @@ let currentAlgorithmName = "Nevybráno";
 
 let savedSolves = loadSolves();
 let playerProfile = loadProfile();
-
-const DOUBLE_MOVE_WINDOW = 280;
+//úprava rychlosti U2
+const DOUBLE_MOVE_WINDOW = 450;
 
 const SLICE_PAIR_WINDOW = 260;
 const SLICE_DOUBLE_MOVE_WINDOW = 650;
@@ -1277,6 +1277,13 @@ function showMoveDebug(info = {}) {
 
 
 function handleSmartRawMove(move) {
+  window.__smartInCount = (window.__smartInCount || 0) + 1;
+
+if (mDebug) {
+  mDebug.innerText =
+    "SMART IN #" + window.__smartInCount + "\n" +
+    "MOVE: " + move;
+}
   window.__lastRawDebug = String(move || "");
   
   move = normalizeMove(move);

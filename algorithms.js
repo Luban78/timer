@@ -15,7 +15,7 @@ export const pllAlgs={
 "E-perm":"x' R U' R' D R U R' D' R U R' D R U' R' D'",
 "T-perm":"R U R' U' R' F R2 U' R' U' R U R' F'",
 "F-perm":"R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R",
-"Ja-perm":"x R2 F R F' R U2 r' U r U2",
+"Ja-perm":"y R' U L' U2 R U' R' U2 R L",
 "Jb-perm":"R U R' F' R U R' U' R' F R2 U' R'",
 "Ra-perm":"R U' R' U' R U R D R' U' R D' R' U2 R'",
 "Rb-perm":"R' U2 R U2 R' F R U R' U' R' F' R2",
