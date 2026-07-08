@@ -26,16 +26,29 @@ html,body{
   overflow:hidden;
 }
 
-button{
-  border:none;
-  border-radius:14px;
-  font-weight:700;
-  background:var(--green);
-  color:#101010;
-  font-family:inherit;
+/*NEMAZAT START*/
+button {
+  border: 1px solid rgba(0, 230, 118, .65);
+  border-radius: 12px;
+  
+  background: linear-gradient(180deg, #10261c 0%, #101616 100%);
+  color: #f5f5f5;
+  
+  font-family: inherit;
+  font-weight: 800;
+  /*
+  box-shadow:
+    inset 0 0 14px rgba(0, 230, 118, .10),
+    0 0 8px rgba(0, 230, 118, .08);
+  */
+  cursor: pointer;
 }
-
+button:active {
+  transform: scale(.97);
+  filter: brightness(1.15);
+}
 /* ========== TIMER SCREEN ========== */
+
 #main-layout{
   width:100vw;
   height:calc(100vh - 64px);
@@ -46,6 +59,7 @@ button{
   overflow:hidden;
   background:var(--bg);
 }
+
 
 #app{
   min-width:0;
@@ -58,16 +72,7 @@ button{
   gap:6px;
   overflow:hidden;
 }
-
-#history{
-  min-height:0;
-  height:158px;
-  width:100%;
-  padding:6px 10px 8px;
-  background:#101010;
-  border-top:1px solid var(--line);
-  overflow:hidden;
-}
+/*NEMAZAT STOP*/
 
 /* schované vývojové / zbytečné prvky */
 #app-version,
@@ -82,52 +87,11 @@ button{
   display:none !important;
 }
 
-/* Připojení – před startem jsou vidět, po Normal/Smart je JS schová */
-#btn,
-#normalCubeBtn{
-  width:100%;
-  height:34px;
-  min-height:34px;
-  font-size:17px;
-  line-height:34px;
-  border-radius:14px;
-  padding:0 12px;
-}
-
-/* OLL / PLL */
-#modeButtons{
-  width:100%;
-  display:none;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
 .modeBtn{
   height:56px;
   min-height:56px;
   font-size:34px;
   border-radius:14px;
-}
-
-/* Režim / status */
-#status{
-  min-height:18px;
-  max-height:18px;
-  font-size:14px;
-  line-height:18px;
-  color:#cfd8dc;
-  text-align:left;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-#training-mode{
-  height:34px;
-  min-height:34px;
-  display:flex;
-  justify-content:flex-end;
-  gap:8px;
 }
 
 #training-mode button{
@@ -140,11 +104,6 @@ button{
   border:1px solid #455a64;
 }
 
-#singleModeBtn.active,
-#randomModeBtn.active{
-  background:var(--green);
-  color:#111;
-}
 
 /* Algoritmus */
 #selectedAlg{
@@ -182,36 +141,6 @@ button{
 .done-move{background:#00c853;color:white;font-weight:700;}
 .wrong-move{background:var(--red);color:white;font-weight:700;}
 
-/* Stav + velký čas */
-#state-msg{
-  height:28px;
-  min-height:28px;
-  max-height:28px;
-  margin:0;
-  color:var(--green);
-  font-size:27px;
-  line-height:28px;
-  font-weight:700;
-  text-align:center;
-}
-
-#tps{
-  height:72px;
-  min-height:72px;
-  max-height:72px;
-  margin:0;
-  font-size:82px;
-  line-height:72px;
-  text-align:center;
-}
-
-/* Čas / tahy / TPS / nejdelší pauza */
-.stats-grid{
-  width:100%;
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:7px;
-}
 
 .stat-box{
   height:54px;
@@ -224,39 +153,9 @@ button{
   overflow:hidden;
 }
 
-.stat-label{
-  color:var(--muted);
-  font-size:10px;
-  line-height:12px;
-  text-transform:uppercase;
-}
-
-.stat-val{
-  font-size:25px;
-  line-height:30px;
-  font-weight:700;
-}
-
-#avg-val{color:var(--green) !important;}
-#max-val{color:white !important;}
-#pause-val{color:white !important;}
-
-.stats-grid .stat-box:nth-child(5){
-  grid-column:1 / -1;
-  height:46px;
-  min-height:46px;
-}
-.stats-grid .stat-box:nth-child(5) .stat-label{
-  font-size:12px;
-  line-height:14px;
-}
-.stats-grid .stat-box:nth-child(5) .stat-val{
-  color:white !important;
-  font-size:27px;
-  line-height:29px;
-}
-
+/*Nemazat start*/
 /* ========== SPODNÍ HISTORIE ========== */
+
 #history h2{display:none;}
 
 #history::before{
@@ -270,29 +169,6 @@ button{
   font-weight:700;
 }
 
-#stats-box{
-  display:grid;
-  grid-template-columns:repeat(6,1fr);
-  height:44px;
-  min-height:44px;
-  max-height:44px;
-  margin:0 0 6px;
-  padding:0;
-  background:var(--card2);
-  border:1px solid var(--line);
-  border-radius:14px;
-  overflow:hidden;
-}
-
-#stats-box > div{
-  padding:4px 2px;
-  border-right:1px solid #2a2a2a;
-  color:var(--muted);
-  font-size:9px;
-  line-height:11px;
-  text-align:center;
-  text-transform:uppercase;
-}
 #stats-box > div:last-child{border-right:none;}
 
 #stats-box span{
@@ -462,8 +338,8 @@ button{
 }
 .stat-card div{
   color:var(--cyan);
-  font-size:30px;
-  font-weight:700;
+  font-size:20px;
+  font-weight:300;
 }
 .xp-bar{
   height:16px;
@@ -515,13 +391,7 @@ button{
   display: block;
   white-space: normal;
 }
-/* Velký prostřední údaj používáme jako hlavní čas */
-#tps{
-  font-size:65px;
-  line-height:57px;
-  color:white;
-  font-weight:normal;
-}
+
 #moveDebugBox{
   position:fixed;
   left:8px;
@@ -534,7 +404,7 @@ button{
   border-radius:10px;
   padding:8px 10px;
   font-family:monospace;
-  font-size:13px;
+  font-size:39px;
   line-height:1.35;
   pointer-events:none;
   white-space:pre-wrap;
@@ -560,364 +430,9 @@ button{
 }
 
 #ollBtn.debug-on{
-  background:#ffea00 !important;
+  background:#ffaa00 !important;
   color:#111 !important;
   box-shadow:0 0 16px rgba(255,234,0,.65) !important;
-}
-
-/* KROK 1: přesun Nejdelší pauza doprava vedle času */
-
-#app {
-  position: relative !important;
-}
-
-
-
-
-
-
-
-
-
-/* 5. box ve stats-grid = Nejdelší pauza */
-.stats-grid .stat-box:nth-child(5) {
-  position: absolute !important;
-
-  right: 10px !important;
-  top: 270px !important;
-
-  width: 83px !important;
-  height: 92px !important;
-  min-height: 92px !important;
-
-  grid-column: auto !important;
-
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  align-items: center !important;
-
-  padding: 6px !important;
-  box-sizing: border-box !important;
-  z-index: 20 !important;
-}
-
-.stats-grid .stat-box:nth-child(5) .stat-label {
-  font-size: 10px !important;
-  line-height: 26px !important;
-  text-align: center !important;
-}
-
-.stats-grid .stat-box:nth-child(5) .stat-val {
-  font-size: 25px !important;
-  line-height: 34px !important;
-  color: #00e676 !important;
-}
-/*text nejdelší pauza */
-
-.stats-grid .stat-box:nth-child(5){
-    justify-content:flex-start !important;
-    padding-top:10px !important;
-}
-
-.stats-grid .stat-box:nth-child(5) .stat-label{
-    line-height:1 !important;
-    margin:0 !important;
-}
-
-.stats-grid .stat-box:nth-child(5) .stat-val{
-    margin-top:6px !important;
-}
-
-
-
-
-
-
-
-
-
-/* AO BOX - tvrdé přepsání */
-body #main-layout #history #stats-box {
-  position: absolute !important;
-
-  left: 10px !important;
-  top: 265px !important;
-
-  width: 83px !important;
-  height: 120px !important;
-  min-height: 165px !important;
-  max-height: 155px !important;
-
-  display: block !important;
-
-  background: rgba(255,255,255,0.08) !important;
-  border: 1px solid rgba(255,255,255,0.25) !important;
-  border-radius: 14px !important;
-
-  padding: 8px !important;
-  box-sizing: border-box !important;
-
-  z-index: 99999 !important;
-  overflow: visible !important;
-}
-
-/* jednotlivé řádky uvnitř */
-body #main-layout #history #stats-box div {
-  display: block !important;
-  width: 100% !important;
-  height: 22px !important;
-  min-height: 22px !important;
-  max-height: 22px !important;
-
-  font-size: 10px !important;
-  line-height: 12px !important;
-  text-align: center !important;
-
-  margin: 0 !important;
-  padding: 0 !important;
-
-  color: #cfcfcf !important;
-  white-space: nowrap !important;
-}
-
-/* zelené hodnoty */
-body #main-layout #history #stats-box span {
-  color: #00e676 !important;
-  font-weight: 900 !important;
-  font-size: 11px !important;
-}
-/* schovat 4 box*/
-.stats-grid .stat-box:nth-child(4) {
-  display: none !important;
-}
-
-#app {
-  position: relative !important;
-}
-
-.stats-grid .stat-box:nth-child(1) {
-  position: absolute !important;
-  right: 88px !important;
-  top: 305px !important;   /* doladíme podle obrazovky */
-  width: 50px !important;
-  height: 88px !important;
-  z-index: 30 !important;
-}
-
-
-
-
-
-
-/* FIX: stat boxy nesmí přeskakovat */
-
-/* grid má pořád 4 sloupce */
-.stats-grid {
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 8px !important;
-}
-
-/* 1. box TPS přesuneme na místo špičky = 4. sloupec */
-.stats-grid .stat-box:nth-child(1) {
-  grid-column: 4 !important;
-  grid-row: 1 !important;
-  display: block !important;
-  position: static !important;
-}
-
-/* 2. box TAHY HTM zůstane ve 2. sloupci */
-.stats-grid .stat-box:nth-child(2) {
-  grid-column: 2 !important;
-  grid-row: 1 !important;
-  display: block !important;
-  position: static !important;
-}
-
-/* 3. box PRŮMĚR TPS zůstane ve 3. sloupci */
-.stats-grid .stat-box:nth-child(3) {
-  grid-column: 3 !important;
-  grid-row: 1 !important;
-  display: block !important;
-  position: static !important;
-}
-
-/* 4. box ŠPIČKA TPS schováme */
-.stats-grid .stat-box:nth-child(4) {
-  display: none !important;
-}
-
-
-/* TPS box stejně velký jako TAHY HTM a PRŮMĚR TPS */
-.stats-grid .stat-box:nth-child(1) {
-  grid-column: 4 !important;
-  grid-row: 1 !important;
-
-  position: static !important;
-  display: block !important;
-
-  width: auto !important;
-  height: auto !important;
-  min-height: 86px !important;
-  max-height: 86px !important;
-
-  padding: 6px 4px !important;
-  box-sizing: border-box !important;
-
-  border-radius: 14px !important;
-  overflow: hidden !important;
-}
-
-/* TAHY HTM */
-.stats-grid .stat-box:nth-child(2) {
-  grid-column: 2 !important;
-  grid-row: 1 !important;
-
-  width: auto !important;
-  height: auto !important;
-  min-height: 86px !important;
-  max-height: 86px !important;
-}
-
-/* PRŮMĚR TPS */
-.stats-grid .stat-box:nth-child(3) {
-  grid-column: 3 !important;
-  grid-row: 1 !important;
-
-  width: auto !important;
-  height: auto !important;
-  min-height: 86px !important;
-  max-height: 86px !important;
-}
-
-/* ŠPIČKA TPS schovaná */
-.stats-grid .stat-box:nth-child(4) {
-  display: none !important;
-}
-
-/* stejný text ve všech třech boxech */
-.stats-grid .stat-box:nth-child(1) .stat-label,
-.stats-grid .stat-box:nth-child(2) .stat-label,
-.stats-grid .stat-box:nth-child(3) .stat-label {
-  font-size: 12px !important;
-  line-height: 17px !important;
-  margin: 0 0 4px 0 !important;
-}
-
-.stats-grid .stat-box:nth-child(1) .stat-val,
-.stats-grid .stat-box:nth-child(2) .stat-val,
-.stats-grid .stat-box:nth-child(3) .stat-val {
-  font-size: 30px !important;
-  line-height: 42px !important;
-  margin: 0 !important;
-}
-/* Zmenšení spodních boxů HTM / Průměr / TPS */
-.stats-grid .stat-box:nth-child(1),
-.stats-grid .stat-box:nth-child(2),
-.stats-grid .stat-box:nth-child(3) {
-  min-height: 70px !important;
-  max-height: 70px !important;
-  height: 69px !important;
-  padding: 5px 4px !important;
-}
-
-/* text nahoře v boxu */
-.stats-grid .stat-box:nth-child(1) .stat-label,
-.stats-grid .stat-box:nth-child(2) .stat-label,
-.stats-grid .stat-box:nth-child(3) .stat-label {
-  font-size: 10px !important;
-  line-height: 15px !important;
-  margin: 0 0 2px 0 !important;
-}
-
-/* velká hodnota v boxu */
-.stats-grid .stat-box:nth-child(1) .stat-val,
-.stats-grid .stat-box:nth-child(2) .stat-val,
-.stats-grid .stat-box:nth-child(3) .stat-val {
-  font-size: 34px !important;
-  line-height: 36px !important;
-}
-
-
-
-
-
-/* ===== AO PANEL FINAL - JEDINÉ PRAVIDLO ===== */
-
-body #main-layout #history #stats-box {
-  position: absolute !important;
-  
-  left: 4px !important;
-  top: 270px !important;
-  
-  width: 88px !important;
-  height: 120px !important;
-  
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  align-items: stretch !important;
-  
-  gap: 2px !important;
-  
-  padding: 8px 6px !important;
-  box-sizing: border-box !important;
-  
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  border-radius: 14px !important;
-  
-  z-index: 99999 !important;
-  overflow: hidden !important;
-}
-
-body #main-layout #history #stats-box div {
-  width: 100% !important;
-  height: 20px !important;
-  
-  display: flex !important;
-  flex-direction: row !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  
-  margin: 0 !important;
-  padding: 0 !important;
-  
-  font-size: 11px !important;
-  line-height: 20px !important;
-  color: #cfcfcf !important;
-  white-space: nowrap !important;
-  text-align: left !important;
-}
-
-body #main-layout #history #stats-box span {
-  display: inline-block !important;
-  min-width: 38px !important;
-  
-  color: #00e676 !important;
-  font-weight: 900 !important;
-  font-size: 11px !important;
-  line-height: 20px !important;
-  text-align: right !important;
-}
-
-
-
-/* AO panel - oprava zarovnání SOLVES */
-body #main-layout #history #stats-box div {
-  display: grid !important;
-  grid-template-columns: 42px 1fr !important;
-  align-items: center !important;
-  column-gap: 2px !important;
-
-  text-align: left !important;
-}
-
-body #main-layout #history #stats-box span {
-  min-width: 0 !important;
-  width: auto !important;
-  text-align: right !important;
 }
 
 /* KROK: posun historie dolů + povolit posun obrazovky */
@@ -1028,7 +543,7 @@ body {
   position: relative !important;
   overflow: visible !important;
 }
-
+/*pozice ao ok*/
 #app #stats-box {
   position: absolute !important;
 
@@ -1073,7 +588,7 @@ body {
   padding: 0 !important;
 
   color: #cfcfcf !important;
-  font-size: 14px !important;
+  font-size: 11px !important;
   line-height: 22px !important;
   white-space: nowrap !important;
 }
@@ -1082,15 +597,15 @@ body {
   display: inline-block !important;
 
   color: #00e676 !important;
-  font-weight: 900 !important;
-  font-size: 14px !important;
+  font-weight: 500 !important;
+  font-size: 11px !important;
   line-height: 22px !important;
 
   text-align: right !important;
 }
 
 /* ===== NEJDELŠÍ PAUZA - UKOTVENÍ K #app ===== */
-
+/*
 #app .stats-grid .stat-box:nth-child(5) {
   position: absolute !important;
 
@@ -1117,10 +632,11 @@ body {
   z-index: 30 !important;
   overflow: hidden !important;
 }
+*/
 
 #app .stats-grid .stat-box:nth-child(5) .stat-label {
   font-size: 12px !important;
-  line-height: 14px !important;
+  line-height: 15px !important;
   margin: 0 0 8px 0 !important;
   text-align: center !important;
   color: #cfcfcf !important;
@@ -1135,7 +651,6 @@ body {
 
 
 
-
 /* ===== UKOTVENÍ ALGORITMU + 3 SPODNÍCH BOXŮ K #app ===== */
 
 #app {
@@ -1143,21 +658,34 @@ body {
 }
 
 /* Algoritmus už nebude v běžném toku stránky */
+
 #app #selectedAlg {
   position: absolute !important;
-
+  
   left: 10px !important;
   right: 10px !important;
-  top: 160px !important;
-
+  top: 168px !important;
+  
   width: auto !important;
   height: 126px !important;
   min-height: 126px !important;
   max-height: 126px !important;
-
-  z-index: 10 !important;
+  
+  background: #1b242a !important;
+  
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  
+  border-radius: 14px !important;
+  
+  padding: 10px 14px !important;
+  box-sizing: border-box !important;
+  
+  overflow: hidden !important;
+  
+  z-index: 1 !important;
 }
-
 /* stats-grid nesmí být kotva pro absolutní boxy */
 #app .stats-grid {
   position: static !important;
@@ -1228,7 +756,7 @@ body {
 #app .stats-grid .stat-box:nth-child(1) .stat-val,
 #app .stats-grid .stat-box:nth-child(2) .stat-val,
 #app .stats-grid .stat-box:nth-child(3) .stat-val {
-  font-size: 34px !important;
+  font-size: 24px !important;
   line-height: 38px !important;
 }
 
@@ -1248,7 +776,7 @@ body {
   margin: 0 !important;
   padding: 0 !important;
 
-  font-size: 30px !important;
+  font-size: 20px !important;
   line-height: 34px !important;
   font-weight: 800 !important;
   text-align: center !important;
@@ -1295,7 +823,7 @@ body {
   min-height: 42px !important;
   max-height: 42px !important;
 
-  font-size: 20px !important;
+  font-size: 15px !important;
   line-height: 42px !important;
 
   overflow: visible !important;
@@ -1311,43 +839,19 @@ body {
   min-height: 90px !important;
   max-height: 90px !important;
 
-  font-size: 70px !important;
+  font-size: 50px !important;
   line-height: 90px !important;
 
   overflow: visible !important;
   z-index: 40 !important;
 }
 
-/* ===== SINGLE / RANDOM - UKOTVENÍ K #app ===== */
-
-#app #training-mode {
-  position: absolute !important;
-
-  left: 0 !important;
-  right: 0 !important;
-  top: 110px !important;
-
-  height: 44px !important;
-  min-height: 44px !important;
-  max-height: 44px !important;
-
-  display: flex !important;
-  justify-content: flex-end !important;
-  align-items: center !important;
-  gap: 26px !important;
-
-  padding: 0 28px !important;
-  box-sizing: border-box !important;
-
-  z-index: 30 !important;
-}
-
 #app #singleModeBtn,
 #app #randomModeBtn {
-  width: 155px !important;
+  width: 164px !important;
   height: 42px !important;
   min-height: 42px !important;
-
+top: -82px !important;
   font-size: 20px !important;
   line-height: 42px !important;
 
@@ -1359,7 +863,7 @@ body {
 #app #modeButtons {
  /* display: grid !important;*/
   grid-template-columns: 1fr 1fr !important;
-  gap: 16px !important;
+  gap: 8px !important;
 
   height: 38px !important;
   min-height: 38px !important;
@@ -1380,4 +884,1345 @@ body {
 
   border-radius: 14px !important;
   padding: 0 !important;
+}
+
+
+
+/* =========================================================
+   NOVÝ HORNÍ DASHBOARD
+   ========================================================= */
+
+#top-dashboard{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+/* =========================
+   OLL / PLL
+   ========================= */
+
+#modeButtons{
+  width:100%;
+  display:none; /* důležité - zůstanou schované, dokud je JS neukáže */
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.modeBtn{
+  height:84px;
+  min-height:84px;
+  border-radius:18px;
+  border:1px solid rgba(0,230,118,.75);
+  background:linear-gradient(180deg,#10261c 0%, #101616 100%);
+  color:#f5f5f5;
+  font-size: 22px;
+  font-weight:700;
+  letter-spacing:.5px;
+  /*
+  box-shadow:
+    inset 0 0 18px rgba(0,230,118,.10),
+    0 0 10px rgba(0,230,118,.10);
+    */
+}
+
+/* když je app/JS ukáže, budou mít nový vzhled */
+#modeButtons.show{
+  display:grid !important;
+}
+
+/* =========================
+   INFO LIŠTA
+   ========================= */
+
+#top-strip{
+  width:100%;
+  display:grid;
+  grid-template-columns:1.25fr 1fr 1fr 1.55fr;
+  background:#11181d;
+  border:1px solid #30414a;
+  border-radius:14px;
+  overflow:hidden;
+}
+
+.top-strip-item{
+  min-height:56px;
+  padding:8px 10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#e9eef1;
+  font-size:15px;
+  border-right:1px solid #24343c;
+  min-width:0;
+}
+
+.top-strip-item:last-child{
+  border-right:none;
+}
+
+.top-strip-item b{
+  color:var(--green);
+  font-weight:800;
+}
+
+.top-strip-center{
+  justify-content:center;
+}
+
+.strip-icon{
+  color:var(--green);
+  font-size:18px;
+  line-height:1;
+  flex:0 0 auto;
+}
+
+/* XP */
+.xp-item{
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:center;
+  gap:6px;
+}
+
+.xp-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:13px;
+  line-height:1;
+  color:#d5dde1;
+}
+
+.xp-bar{
+  width:100%;
+  height:10px;
+  background:#0d1114;
+  border:1px solid #2c3940;
+  border-radius:999px;
+  overflow:hidden;
+}
+
+#xp-fill{
+  width:72%; /* 720 / 1000 */
+  height:100%;
+  background:linear-gradient(90deg,#00e676 0%, #1cff8f 100%);
+  border-radius:999px;
+}
+
+/* =========================
+   SINGLE / RANDOM
+   ========================= */
+
+#training-mode{
+  width:100%;
+  height:auto;
+  min-height:0;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+#training-mode button{
+  position:relative;
+  height:86px;
+  min-height:86px;
+  border-radius:18px;
+  border:1px solid #42545e;
+  background:#1d2830;
+  color:#f3f3f3;
+  font-size:24px;
+  font-weight:700;
+  text-align:left;
+  padding:0 18px 18px 58px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+}
+
+/* aktivní / neaktivní */
+#singleModeBtn.active,
+#randomModeBtn.active{
+  background:linear-gradient(180deg,#10261c 0%, #101616 100%);
+  border:1px solid rgba(0,230,118,.75);
+  color:#ffffff;
+ /*
+  box-shadow:
+    inset 0 0 18px rgba(0,230,118,.10),
+    0 0 10px rgba(0,230,118,.08);
+    */
+}
+
+/* ikonky */
+#singleModeBtn::before,
+#randomModeBtn::before{
+  position:absolute;
+  left:18px;
+  top:22px;
+  font-size:24px;
+  color:var(--green);
+}
+
+#singleModeBtn::before{
+  content:"⌖";
+}
+
+#randomModeBtn::before{
+  content:"⬢";
+}
+
+/* malé texty pod názvem */
+#singleModeBtn::after,
+#randomModeBtn::after{
+  position:absolute;
+  left:58px;
+  bottom:14px;
+  font-size:12px;
+  font-weight:400;
+  color:#c5d0d5;
+}
+
+#singleModeBtn::after{
+  content:"Focus & Improve";
+}
+
+#randomModeBtn::after{
+  content:"Challenge Yourself";
+}
+
+/* =========================
+   starý status schováme
+   ========================= */
+
+#status{
+  display:none !important;
+}
+
+/* =========================
+   menší displeje
+   ========================= */
+
+@media (max-width:420px){
+  .modeBtn{
+    height:76px;
+    min-height:76px;
+    font-size:38px;
+    border-radius:16px;
+  }
+
+  #top-strip{
+    grid-template-columns:1.15fr .95fr .95fr 1.35fr;
+  }
+
+  .top-strip-item{
+    min-height:52px;
+    padding:7px 8px;
+    font-size:13px;
+  }
+
+  .xp-head{
+    font-size:11px;
+  }
+
+  #training-mode button{
+    height:78px;
+    min-height:78px;
+    font-size:21px;
+    padding:0 14px 16px 52px;
+    border-radius:16px;
+  }
+
+  #singleModeBtn::before,
+  #randomModeBtn::before{
+    left:16px;
+    top:20px;
+    font-size:22px;
+  }
+
+  #singleModeBtn::after,
+  #randomModeBtn::after{
+    left:52px;
+    bottom:12px;
+    font-size:11px;
+  }
+}
+
+/* =========================================================
+   FIX PO NOVÉM HTML - horní dashboard nesmí rozbít spodek
+   ========================================================= */
+
+/* app je pevná pracovní plocha */
+#app {
+  position: relative !important;
+}
+
+/* nový top dashboard nesmí tlačit zbytek stránky dolů */
+#top-dashboard {
+  position: absolute !important;
+  left: 10px !important;
+  right: 10px !important;
+  top: px !important;
+
+  height: 170px !important;
+  min-height: 170px !important;
+  max-height: 170px !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 50 !important;
+  overflow: visible !important;
+}
+
+/* staré pseudo texty na Single/Random vypnout */
+#singleModeBtn::after,
+#randomModeBtn::after {
+  content: none !important;
+}
+
+#singleModeBtn::before,
+#randomModeBtn::before {
+  content: none !important;
+}
+
+/* texty uvnitř tlačítek už řídí nové HTML */
+#training-mode button span {
+  pointer-events: none !important;
+}
+
+/* spodní část vrátíme pod horní dashboard */
+#selectedAlg {
+  top: 185px !important;
+}
+
+#stats-box {
+  top: 270px !important;
+}
+/*
+#app .stats-grid .stat-box:nth-child(5) {
+  top: 275px !important;
+}
+*/
+#app #state-msg {
+  top: 280px !important;
+}
+
+#app #tps {
+  top: 300px !important;
+}
+
+#app .stats-grid .stat-box:nth-child(2),
+#app .stats-grid .stat-box:nth-child(3),
+#app .stats-grid .stat-box:nth-child(1) {
+  top: 395px !important;
+}
+
+#app #graph {
+  top: 465px !important;
+}
+
+/* OLL / PLL tlačítka */
+#top-dashboard .modeBtn {
+  height: 58px !important;
+  min-height: 58px !important;
+  max-height: 58px !important;
+
+  border-radius: 12px !important;
+  font-size: 24px !important;
+  line-height: 58px !important;
+
+  padding: 0 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+}
+
+#top-dashboard .mode-icon {
+  display: none !important;
+}
+
+/* info lišta */
+#top-dashboard #top-strip {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 68px !important;
+
+  height: 42px !important;
+
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1.35fr !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
+/* položky info lišty */
+#top-dashboard .top-strip-item {
+  height: 42px !important;
+  min-height: 42px !important;
+
+  padding: 4px 8px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  font-size: 14px !important;
+  line-height: 16px !important;
+
+  overflow: hidden !important;
+}
+
+/* XP uvnitř */
+#top-dashboard .xp-item {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 4px !important;
+}
+
+#top-dashboard .xp-head {
+  font-size: 11px !important;
+  line-height: 12px !important;
+}
+
+#top-dashboard .top-xp-bar {
+  height: 7px !important;
+}
+
+/* Single / Random */
+#top-dashboard #training-mode {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 120px !important;
+
+  height: 50px !important;
+
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Single / Random button */
+#top-dashboard #training-mode button {
+  position: relative !important;
+
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+
+  padding: 0 !important;
+
+  border-radius: 12px !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  text-align: center !important;
+  overflow: hidden !important;
+}
+
+/* hlavní text Single / Random */
+#top-dashboard .train-title {
+  display: block !important;
+  font-size: 22px !important;
+  line-height: 24px !important;
+  font-weight: 800 !important;
+}
+
+/* podtitulek zatím schováme, protože ti to rozbíjelo obrazovku */
+#top-dashboard .train-subtitle {
+  display: none !important;
+}
+
+/* vypnout staré pseudo texty */
+#singleModeBtn::before,
+#singleModeBtn::after,
+#randomModeBtn::before,
+#randomModeBtn::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* staré připojovací tlačítka a status nesmí překrývat nový dashboard */
+
+
+/* status zatím necháme vidět, ať víme stav */
+#status {
+  visibility: visible !important;
+  display: block !important;
+  position: relative !important;
+  z-index: 80 !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   ČISTÉ ŘÍZENÍ HORNÍHO DASHBOARDU
+   ========================================================= */
+
+/* před připojením je celý nový dashboard schovaný */
+#top-dashboard {
+  display: none !important;
+
+  position: absolute !important;
+  left: 18px !important;
+  right: 18px !important;
+  top: 80px !important;
+
+  height: 170px !important;
+  min-height: 170px !important;
+  max-height: 170px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  z-index: 40 !important;
+  overflow: hidden !important;
+}
+
+/* po připojení / normal cube se ukáže */
+#top-dashboard.ready {
+  display: block !important;
+}
+
+/* připojovací tlačítka normálně viditelná před startem */
+#btn,
+#normalCubeBtn {
+  display: block;
+}
+
+/* když je aplikace připravená, /* nový dashboard posunout níž pod tlačítka */připojovací tlačítka zmizí */
+body.trainer-ready #btn,
+body.trainer-ready #normalCubeBtn {
+  display: none !important;
+}
+
+/* status po startu schováme */
+body.trainer-ready #status {
+  display: none !important;
+}
+
+/* OLL / PLL uvnitř dashboardu */
+#top-dashboard #modeButtons {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
+
+  height: 58px !important;
+
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#top-dashboard .modeBtn {
+  height: 50px !important;
+  min-height: 58px !important;
+  max-height: 58px !important;
+
+  border-radius: 12px !important;
+  font-size: 30px !important;
+  line-height: 58px !important;
+
+  padding: 0 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#top-dashboard .mode-icon {
+  display: none !important;
+}
+
+/* lišta ZMĚNA / LEVEL / XP */
+/*
+#top-dashboard #top-strip {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 68px !important;
+
+  height: 42px !important;
+
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1.35fr !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  background: #11181d !important;
+  border: 1px solid #30414a !important;
+  border-radius: 10px !important;
+
+  overflow: hidden !important;
+}
+*/
+#top-dashboard .top-strip-item {
+  height: 42px !important;
+  min-height: 42px !important;
+
+  padding: 4px 8px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  font-size: 14px !important;
+  line-height: 16px !important;
+
+  color: #e9eef1 !important;
+  border-right: 1px solid #24343c !important;
+
+  overflow: hidden !important;
+}
+
+#top-dashboard .top-strip-item:last-child {
+  border-right: none !important;
+}
+
+#top-dashboard .top-strip-item b,
+#top-dashboard .strip-icon {
+  color: #00e676 !important;
+}
+
+#top-dashboard .xp-item {
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+#top-dashboard .xp-head {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  font-size: 11px !important;
+  line-height: 12px !important;
+}
+
+#top-dashboard .top-xp-bar {
+  width: 100% !important;
+  height: 7px !important;
+  background: #0d1114 !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+}
+
+#top-xp-fill {
+  width: 75% !important;
+  height: 100% !important;
+  background: #00e676 !important;
+}
+
+/* Single / Random */
+/*
+#top-dashboard #training-mode {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 120px !important;
+
+  height: 50px !important;
+
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+}
+*/
+#top-dashboard #training-mode button {
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+
+  padding: 0 !important;
+
+  border-radius: 12px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  overflow: hidden !important;
+}
+
+#top-dashboard .train-title {
+  font-size: 24px !important;
+  line-height: 28px !important;
+  font-weight: 800 !important;
+}
+
+#top-dashboard .train-subtitle {
+  display: none !important;
+}
+
+/* vypnout staré pseudo texty */
+#singleModeBtn::before,
+#singleModeBtn::after,
+#randomModeBtn::before,
+#randomModeBtn::after {
+  content: none !important;
+  display: none !important;
+}
+/* =========================================================
+   DOLADĚNÍ HORNÍHO DASHBOARDU - aby neležel přes algoritmus
+   ========================================================= */
+
+#top-dashboard {
+  top: 1px !important;
+  height: 155px !important;
+  min-height: 155px !important;
+  max-height: 155px !important;
+}
+
+/* OLL / PLL trochu nižší */
+
+#top-dashboard #modeButtons {
+  height: 50px !important;
+}
+/*
+#top-dashboard .modeBtn {
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+
+  font-size: 20px !important;
+  line-height: 50px !important;
+}
+*/
+/* ZMĚNA / LEVEL / XP */
+#top-dashboard #top-strip {
+  top: 0px !important;
+  height: 36px !important;
+}
+
+#top-dashboard .top-strip-item {
+  height: 36px !important;
+  min-height: 36px !important;
+
+  font-size: 13px !important;
+  line-height: 14px !important;
+}
+
+/* Single / Random výš */
+#top-dashboard #training-mode {
+  left: 0px !important;
+  top: 188px !important;
+  height: 40px !important;
+}
+
+#top-dashboard #training-mode button {
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+}
+
+#top-dashboard .train-title {
+  font-size: 22px !important;
+  line-height: 24px !important;
+}
+/* =========================================================
+   PŘIPOJIT / NORMAL CUBE - stejný styl jako nový dashboard
+   ========================================================= */
+
+#btn,
+#normalCubeBtn {
+  width: calc(100% - 36px) !important;
+  margin-left: 18px !important;
+  margin-right: 18px !important;
+  
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+  
+  border-radius: 14px !important;
+  
+  background: linear-gradient(180deg, #10261c 0%, #101616 100%) !important;
+  color: #f5f5f5 !important;
+  
+  border: 1px solid rgba(0, 230, 118, .75) !important;
+  
+  font-size: 20px !important;
+  line-height: 54px !important;
+  font-weight: 800 !important;
+  
+  padding: 0 !important;
+  display:flex;
+align-items:center;
+justify-content:center;
+text-align:center;
+/*  box-shadow:
+    inset 0 0 18px rgba(0, 230, 118, .10),
+    0 0 10px rgba(0, 230, 118, .10) !important;
+    */
+}
+
+/* první tlačítko trochu níž od horní lišty */
+#btn {
+  margin-top: 8px !important;
+}
+
+/* mezera mezi tlačítky */
+#normalCubeBtn {
+  margin-top: 8px !important;
+}
+/* FIX: horní dashboard nesmí přetékat doprava */
+#top-dashboard {
+  left: 18px !important;
+  right: 18px !important;
+  width: auto !important;
+}
+
+/* OLL / PLL vystředit a zarovnat */
+#top-dashboard #modeButtons {
+  left: 0 !important;
+  right: 0 !important;
+  width: auto !important;
+  top: 40px !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+}
+
+/* samotná tlačítka */
+#top-dashboard .modeBtn {
+  width: 100% !important;
+  height: 50px !important;
+  border-radius: 12px !important;
+  font-size: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+/* =========================================================
+   FIX: OKNO ALGORITMU + NEJDELŠÍ PAUZA
+   ========================================================= */
+
+/* Algoritmus - čistý panel bez divného černého okraje */
+#app #selectedAlg {
+  background: #1b242a !important;
+
+  border: 1px solid #43545c !important;
+  border-radius: 20px !important;
+
+  box-shadow: none !important;
+  outline: none !important;
+
+  overflow: hidden !important;
+}
+
+/* Nejdelší pauza - posunout dovnitř a srovnat */
+#app .stats-grid .stat-box:nth-child(5) {
+  position: absolute !important;
+
+  right: 10px !important;
+  top: 300px !important;
+
+  width: 86px !important;
+  height: 92px !important;
+  min-height: 92px !important;
+  max-height: 92px !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+
+  padding: 8px 6px !important;
+  box-sizing: border-box !important;
+
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
+  border-radius: 14px !important;
+
+  box-shadow: none !important;
+  outline: none !important;
+
+  z-index: 35 !important;
+  overflow: hidden !important;
+}
+*/
+#app .stats-grid .stat-box:nth-child(5) .stat-label {
+  font-size: 10px !important;
+  line-height: 15px !important;
+  font-weight: 400 !important;
+  text-align: center !important;
+
+  color: #d8d8d8 !important;
+
+  margin: 0 0 8px 0 !important;
+  padding: 0 !important;
+
+  text-transform: none !important;
+}
+
+#app .stats-grid .stat-box:nth-child(5) .stat-val {
+  font-size: 20px !important;
+  line-height: 15px !important;
+  font-weight: 400px !important;
+
+  color: #ffffff !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+}
+/* =========================================================
+   SINGLE / RANDOM NAD VŠEMI PRVKY
+   ========================================================= */
+
+#top-dashboard {
+  z-index: 500 !important;
+  overflow: visible !important;
+}
+
+#top-dashboard #training-mode {
+  z-index: 600 !important;
+  overflow: visible !important;
+}
+
+#top-dashboard #singleModeBtn,
+#top-dashboard #randomModeBtn {
+  position: relative !important;
+  z-index: 700 !important;
+}
+#app #selectedAlg {
+  z-index: 30 !important;
+}
+
+#app #state-msg,
+#app #tps,
+#app #stats-box,
+#app .stats-grid,
+#app #graph {
+  z-index: 20 !important;
+}
+/* =========================================================
+   TEXT V MALÝCH BOXECH: TAHY / PRŮMĚR / TPS
+   ========================================================= */
+
+/* popisek nahoře */
+#app .stats-grid .stat-box:nth-child(1) .stat-label,
+#app .stats-grid .stat-box:nth-child(2) .stat-label,
+#app .stats-grid .stat-box:nth-child(3) .stat-label {
+  font-size: 10px !important;
+  line-height: 18px !important;
+  font-weight: 400 !important;
+  text-transform: none !important;
+}
+
+/* velká hodnota */
+#app .stats-grid .stat-box:nth-child(1) .stat-val,
+#app .stats-grid .stat-box:nth-child(2) .stat-val,
+#app .stats-grid .stat-box:nth-child(3) .stat-val {
+  font-size: 20px !important;
+  line-height: 15px !important;
+  font-weight: 400 !important;
+}
+/* =========================================================
+   ROTACE + TAH V JEDNOM POLÍČKU: x R2 / y R' / z U
+   ========================================================= */
+
+#app #selectedAlg .next-move,
+#app #selectedAlg .done-move,
+#app #selectedAlg .wrong-move,
+#app #selectedAlg .alg-move {
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+}
+
+/* aktivní žluté políčko může být širší */
+#app #selectedAlg .next-move {
+  min-width: 82px !important;
+  height: 44px !important;
+  padding: 0 10px !important;
+  font-size: 20px !important;
+  border-radius: 12px !important;
+  box-sizing: border-box !important;
+}
+
+/* hotové / špatné políčko taky nesmí zalomit text */
+#app #selectedAlg .done-move,
+#app #selectedAlg .wrong-move {
+  min-width: 74px !important;
+  height: 42px !important;
+  padding: 0 9px !important;
+  font-size: 20px !important;
+  border-radius: 12px !important;
+  box-sizing: border-box !important;
+}
+/* =========================================================
+   MENŠÍ AKTIVNÍ POLÍČKO V ALGORITMU
+   ========================================================= */
+
+#app #selectedAlg .alg-moves-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 5px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+
+#app #selectedAlg .next-move,
+#app #selectedAlg .done-move,
+#app #selectedAlg .wrong-move,
+#app #selectedAlg .alg-move {
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: auto !important;
+  width: auto !important;
+  height: 30px !important;
+  padding: 0 7px !important;
+  font-size: 22px !important;
+  line-height: 30px !important;
+  border-radius: 8px !important;
+  box-sizing: border-box !important;
+}
+
+/* =========================================================
+   TLAČÍTKO EDIT VARIANTY ALGORITMU
+   ========================================================= */
+
+#app #selectedAlg .alg-title {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+#app #selectedAlg .edit-alg-btn {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  padding: 0 !important;
+  margin-left: 6px !important;
+
+  border-radius: 10px !important;
+  border: 1px solid rgba(0, 230, 118, .75) !important;
+  background: linear-gradient(180deg, #10261c 0%, #101616 100%) !important;
+  color: #00e676 !important;
+
+  font-size: 21px !important;
+  line-height: 34px !important;
+  font-weight: 800 !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  box-shadow:
+    inset 0 0 12px rgba(0, 230, 118, .12),
+    0 0 8px rgba(0, 230, 118, .15) !important;
+
+  cursor: pointer !important;
+}
+#app #selectedAlg .edit-alg-btn {
+  position: static !important;
+  flex: 0 0 34px !important;
+  z-index: 1 !important;
+  text-decoration: none !important;
+  user-select: none !important;
+}
+/* =========================================================
+   MODAL PRO VÝBĚR VARIANTY ALGORITMU
+   ========================================================= */
+
+.variant-modal.hidden {
+  display: none !important;
+}
+
+.variant-modal {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
+
+  background: rgba(0, 0, 0, .72) !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 18px !important;
+  box-sizing: border-box !important;
+}
+
+.variant-modal-box {
+  width: 100% !important;
+  max-width: 620px !important;
+  max-height: 82vh !important;
+
+  background: #151f25 !important;
+  border: 1px solid rgba(0, 230, 118, .65) !important;
+  border-radius: 18px !important;
+
+  box-shadow:
+    0 0 24px rgba(0, 230, 118, .22),
+    inset 0 0 18px rgba(0, 230, 118, .08) !important;
+
+  overflow: hidden !important;
+}
+
+.variant-modal-title {
+  height: 56px !important;
+  padding: 0 14px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+
+  color: #fff !important;
+  font-size: 22px !important;
+  font-weight: 800 !important;
+
+  border-bottom: 1px solid rgba(255,255,255,.12) !important;
+}
+
+#closeVariantModalBtn {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+  font-size: 28px !important;
+  color: #fff !important;
+}
+
+.variant-list {
+  max-height: 55vh !important;
+  overflow-y: auto !important;
+  padding: 12px !important;
+  box-sizing: border-box !important;
+}
+
+.variant-item {
+  width: 100% !important;
+  margin-bottom: 10px !important;
+  padding: 10px 12px !important;
+
+  border-radius: 14px !important;
+  border: 1px solid rgba(255,255,255,.16) !important;
+  background: rgba(255,255,255,.05) !important;
+
+  color: #fff !important;
+  box-sizing: border-box !important;
+}
+
+.variant-item.selected {
+  border-color: rgba(0,230,118,.9) !important;
+  background: rgba(0,230,118,.12) !important;
+}
+
+.variant-item-head {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 6px !important;
+}
+
+.variant-name {
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #00e676 !important;
+}
+
+.variant-check {
+  font-size: 22px !important;
+  color: #00e676 !important;
+}
+
+.variant-alg {
+  font-size: 17px !important;
+  line-height: 24px !important;
+  color: #e8e8e8 !important;
+  word-break: normal !important;
+}
+
+.variant-modal-actions {
+  height: 62px !important;
+  padding: 10px 12px !important;
+
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+
+  border-top: 1px solid rgba(255,255,255,.12) !important;
+  box-sizing: border-box !important;
+}
+
+#cancelVariantBtn,
+#saveVariantBtn {
+  height: 42px !important;
+  border-radius: 12px !important;
+  font-size: 19px !important;
+  font-weight: 800 !important;
+}
+
+#saveVariantBtn {
+  color: #001b0d !important;
+  background: #00e676 !important;
+}
+/* =========================================================
+   FIX: OLL / PLL nesmí lézt nad popup výběr algoritmů
+   ========================================================= */
+
+#top-dashboard {
+  z-index: 80 !important;
+  overflow: visible !important;
+}
+
+#top-dashboard #modeButtons,
+#top-dashboard #top-strip,
+#top-dashboard #training-mode {
+  z-index: 90 !important;
+}
+
+#top-dashboard .modeBtn,
+#top-dashboard #singleModeBtn,
+#top-dashboard #randomModeBtn {
+  position: relative !important;
+  z-index: 100 !important;
+}
+
+/* =========================================================
+   FIX: odstranit modré zvýraznění kliknutých tlačítek Android/WebView
+   ========================================================= */
+
+* {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+button,
+.modeBtn,
+#ollBtn,
+#pllBtn,
+#singleModeBtn,
+#randomModeBtn {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+button:focus,
+button:focus-visible,
+button:active,
+.modeBtn:focus,
+.modeBtn:focus-visible,
+.modeBtn:active,
+#ollBtn:focus,
+#ollBtn:focus-visible,
+#ollBtn:active,
+#pllBtn:focus,
+#pllBtn:focus-visible,
+#pllBtn:active {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+
+
+#app #selectedAlg .edit-alg-btn {
+  pointer-events: auto !important;
+  touch-action: none !important;
+}
+#app #selectedAlg .edit-alg-btn {
+  pointer-events: auto !important;
+  touch-action: none !important;
+  position: relative !important;
+  z-index: 999 !important;
+}
+/* FIX: tužka musí mít jistý dotyk na mobilu */
+#app #selectedAlg .edit-alg-btn {
+  min-width: 46px !important;
+  width: 46px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  margin-left: 10px !important;
+
+  position: relative !important;
+  z-index: 999 !important;
+
+  pointer-events: auto !important;
+  touch-action: none !important;
+  user-select: none !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* =========================================================
+   SAMOSTATNÁ TUŽKA VARIANT
+   ========================================================= */
+
+#app > #editAlgVariantBtn {
+  position: absolute !important;
+  right: 28px !important;
+  top: 168px !important;
+
+  width: 48px !important;
+  height: 42px !important;
+  min-width: 48px !important;
+  padding: 0 !important;
+
+  border-radius: 13px !important;
+  border: 1px solid rgba(0, 230, 118, .75) !important;
+  background: linear-gradient(180deg, #10261c 0%, #101616 100%) !important;
+  color: #00e676 !important;
+
+  font-size: 20px !important;
+  font-weight: 900 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  z-index: 500 !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  user-select: none !important;
+
+  box-shadow:
+    inset 0 0 12px rgba(0,230,118,.12),
+    0 0 8px rgba(0,230,118,.18) !important;
+}
+
+#app>#editAlgVariantBtn.hidden {
+  display: none !important;
 }

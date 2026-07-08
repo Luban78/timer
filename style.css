@@ -2194,7 +2194,7 @@ button:active,
 #app > #editAlgVariantBtn {
   position: absolute !important;
   right: 28px !important;
-  top: 178px !important;
+  top: 168px !important;
 
   width: 48px !important;
   height: 42px !important;
@@ -2206,7 +2206,7 @@ button:active,
   background: linear-gradient(180deg, #10261c 0%, #101616 100%) !important;
   color: #00e676 !important;
 
-  font-size: 25px !important;
+  font-size: 20px !important;
   font-weight: 900 !important;
 
   display: flex !important;
