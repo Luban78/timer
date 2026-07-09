@@ -957,3 +957,16 @@ body::-webkit-scrollbar,
   height: 0 !important;
   display: none !important;
 }
+/* DESKTOP - orientace pod názvem algoritmu */
+.alg-orientation-hint {
+  font-size: 16px !important;
+  margin-top: 2px !important;
+}
+
+/* DESKTOP - orientace kostky jako malý dvouřádkový štítek */
+#selectedAlg .alg-orientation-hint {
+  font-size: 12px !important;
+  line-height: 1.05 !important;
+  max-width: 110px !important;
+  margin-top: 3px !important;
+}

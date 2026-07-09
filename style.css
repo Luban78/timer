@@ -1758,3 +1758,99 @@ body::-webkit-scrollbar,
   height: 0 !important;
   display: none !important;
 }
+/* =========================================================
+   ORIENTACE KOSTKY V KARTĚ ALGORITMU
+   ========================================================= */
+
+.alg-orientation-hint {
+  margin-top: 4px;
+  color: #ffeb3b;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  opacity: .95;
+}
+/* =========================================================
+   MOBILE FIX - orientace kostky v algoritmu
+   ========================================================= */
+
+/* hlavička algoritmu jako sloupec: název nahoře, orientace pod ním */
+#selectedAlg .alg-card-head {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+
+  gap: 2px !important;
+  max-width: calc(100% - 80px) !important;
+}
+
+/* název algoritmu zpět normálně čitelný */
+#selectedAlg .alg-title {
+  font-size: 30px !important;
+  line-height: 1.05 !important;
+
+  max-width: 100% !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+/* orientace menší pod názvem */
+#selectedAlg .alg-orientation-hint {
+  margin-top: 2px !important;
+
+  color: #ffeb3b !important;
+  font-size: 15px !important;
+  line-height: 1.15 !important;
+  font-weight: 800 !important;
+
+  letter-spacing: .2px !important;
+  opacity: .95 !important;
+
+  max-width: 180px !important;
+}
+
+/* na menším mobilu ještě menší */
+@media (max-width: 420px) {
+  #selectedAlg .alg-title {
+    font-size: 25px !important;
+  }
+
+  #selectedAlg .alg-orientation-hint {
+    font-size: 14px !important;
+    max-width: 165px !important;
+  }
+}
+
+/* PAUZA jen pod kartou, ne ještě uvnitř algoritmu */
+#selectedAlg.trainer-paused::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* =========================================================
+   MOBILE - orientace kostky jako malý dvouřádkový štítek
+   ========================================================= */
+
+#selectedAlg .alg-orientation-hint {
+  margin-top: 4px !important;
+
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 1px !important;
+
+  color: #ffeb3b !important;
+  font-size: 13px !important;
+  line-height: 1.05 !important;
+  font-weight: 800 !important;
+
+  letter-spacing: .2px !important;
+  opacity: .95 !important;
+
+  max-width: 120px !important;
+}
+
+#selectedAlg .alg-orientation-hint div {
+  white-space: nowrap !important;
+}

@@ -327,12 +327,27 @@ function renderMoveRows(displaySteps) {
 
 function renderAlgorithmCard(algName, displaySteps, empty = false) {
   const safeName = escapeHtml(algName || "Nevybráno");
-
+  
+  const presetKey = localStorage.getItem("trainerColorPreset") || "yellow_green";
+  
+  const orientationTop =
+    presetKey === "white_green" ? "White" : "Yellow";
+  
+  const orientationFront = "Green";
+  
   return `
     <div class="alg-card-head">
       <div class="alg-title${empty ? " alg-title-empty" : ""}">${safeName}</div>
+      ${empty ? "" : `
+        <div class="alg-orientation-hint">
+          <div>Top: ${orientationTop}</div>
+          <div>Front: ${orientationFront}</div>
+        </div>
+      `}
     </div>
+
     ${empty ? "" : renderCubePlaceholder(algName)}
+
     <div class="alg-moves-row">
       ${empty ? "" : renderMoveRows(displaySteps)}
     </div>

@@ -196,6 +196,9 @@ const devCorrect = document.getElementById("dev-correct");
 const devWrong = document.getElementById("dev-wrong");
 const devSaveFacelets = document.getElementById("dev-save-facelets");
 const devExportMap = document.getElementById("dev-export-map");
+const colorPresetBtn = document.getElementById("colorPresetBtn");
+
+
 /*alert(
   "BASE id = " + devSaveFacelets.id +
   "\nMAP id = " + devExportMap.id +
@@ -270,6 +273,58 @@ const SLICE_CENTER_ROT = [
 let pendingVariantIndex = null;
 let trainerPaused = false;
 
+
+
+
+
+
+
+const COLOR_PRESETS = [
+  {
+    key: "yellow_green",
+    label: "Top Yellow | Front Green",
+    top: "yellow",
+    front: "green"
+  },
+  {
+    key: "white_green",
+    label: "Top White | Front Green",
+    top: "white",
+    front: "green"
+  }
+];
+
+function getColorPresetKey() {
+  return localStorage.getItem("trainerColorPreset") || "yellow_green";
+}
+
+function getColorPreset() {
+  const key = getColorPresetKey();
+  return COLOR_PRESETS.find(p => p.key === key) || COLOR_PRESETS[0];
+}
+
+function applyColorPreset() {
+  const preset = getColorPreset();
+
+  setTrainerTop(preset.top);
+  setTrainerFrontColor(preset.front);
+
+  if (colorPresetBtn) {
+    colorPresetBtn.textContent = preset.label;
+  }
+
+  document.querySelectorAll(".alg-orientation-hint").forEach(el => {
+    el.textContent = preset.label;
+  });
+}
+
+function toggleColorPreset() {
+  const current = getColorPresetKey();
+  const next = current === "yellow_green" ? "white_green" : "yellow_green";
+
+  localStorage.setItem("trainerColorPreset", next);
+  applyColorPreset();
+}
 function setTrainerPaused(value) {
   trainerPaused = !!value;
 
@@ -2064,7 +2119,11 @@ function initApp() {
     xpText,
     xpFill
   );
+  applyColorPreset();
 
+if (colorPresetBtn) {
+  colorPresetBtn.onclick = toggleColorPreset;
+}
   refreshAll();
   registerServiceWorker();
 }
