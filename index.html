@@ -21,8 +21,8 @@
 <button id="globalMenuBtn" class="global-menu-fab" type="button" aria-label="Menu obrazovek">☰</button>
 <div id="screen-menu-dropdown" class="screen-menu-dropdown" aria-label="Výběr obrazovky">
   <button id="nav-timer" type="button">🏠 Timer</button>
-  <button id="nav-stats" type="button">📊 Statistiky</button>
-  <button id="nav-settings" type="button">⚙️ Nastavení</button>
+  <button id="nav-stats" type="button">📊 Statistics</button>
+  <button id="nav-settings" type="button">⚙️ Settings</button>
 </div>
 
 <div id="main-layout">
@@ -31,11 +31,11 @@
     <div id="app-version">MG3i Trainer v0.55</div>
 
     <!-- původní připojovací tlačítka - JS je pořád používá -->
-    <button id="btn">Připojit kostku</button>
+    <button id="btn">Connect the cube</button>
     <button id="normalCubeBtn">Normal cube</button>
 
     <!-- status necháváme kvůli JS, ale vizuálně ho můžeme skrýt přes CSS -->
-    <div id="status">Odpojeno</div>
+    <div id="status">Disconnected</div>
 
     <!-- ===== NOVÝ HORNÍ DASHBOARD ===== -->
     <div id="top-dashboard">
@@ -94,7 +94,7 @@
 
     <!-- ===== ALGORITMUS A TIMER ČÁST ===== -->
     <div id="algorithm-card-wrap">
-      <div id="selectedAlg">Algoritmus: nevybráno</div>
+      <div id="selectedAlg">Algorithm: not selected</div>
       <button id="editAlgVariantBtn" class="edit-alg-btn hidden" type="button" aria-label="Vybrat variantu algoritmu">✎</button>
     </div>
 
@@ -123,7 +123,7 @@
     <div id="notation">Notace:</div>
     <div id="mode-label">Režim: Smart Cube</div>
 
-    <div id="state-msg">Připoj kostku</div>
+    <div id="state-msg">Connect the cube</div>
     <div id="tps">0.0</div>
 
     <div class="stats-grid">
@@ -133,22 +133,22 @@
       </div>
 
       <div class="stat-box">
-        <div class="stat-label">Tahy HTM</div>
+        <div class="stat-label">Moves HTM</div>
         <div id="moves-val" class="stat-val">0</div>
       </div>
 
       <div class="stat-box">
-        <div class="stat-label">Průměr TPS</div>
+        <div class="stat-label">Average TPS</div>
         <div id="avg-val" class="stat-val">0.0</div>
       </div>
 
       <div class="stat-box">
-        <div class="stat-label">Špička TPS</div>
+        <div class="stat-label">Peak TPS</div>
         <div id="max-val" class="stat-val">0.0</div>
       </div>
 
       <div class="stat-box" style="grid-column:span 4">
-        <div class="stat-label">Nejdelší<br>pauza</div>
+        <div class="stat-label">Longest<br>Pause</div>
         <div id="pause-val" class="stat-val">0.00s</div>
       </div>
     </div>
@@ -157,7 +157,7 @@
     <canvas id="graph"></canvas>
   </div>
 
-  <div id="history" aria-label="Poslední časy">
+  <div id="history" aria-label="Last Times">
     <div class="history-panel-controls">
       <button id="historyPanelToggle" class="history-toggle" type="button" aria-label="Zobrazit poslední časy">⌃</button>
       <button id="historyPinBtn" class="history-pin" type="button" aria-label="Připnout poslední časy">📌</button>
@@ -199,8 +199,8 @@
     <h2>Export historie</h2>
     <textarea id="export-text"></textarea>
     <div class="export-buttons">
-      <button id="copy-export-btn">📋 Kopírovat</button>
-      <button id="close-export-btn" class="closeBtn">Zavřít</button>
+      <button id="copy-export-btn">📋 Copy</button>
+      <button id="close-export-btn" class="closeBtn">Close</button>
     </div>
   </div>
 </div>
@@ -209,9 +209,9 @@
 <div id="import-modal" class="detail-modal">
   <div class="detail-box">
     <h2>Import historie</h2>
-    <textarea id="import-text" placeholder="Sem vlož exportovanou historii..."></textarea>
-    <button id="run-import-btn">Importovat</button>
-    <button id="close-import-btn" class="closeBtn">Zavřít</button>
+    <textarea id="import-text" placeholder="Insert exported history here..."></textarea>
+    <button id="run-import-btn">Import</button>
+    <button id="close-import-btn" class="closeBtn">Close</button>
   </div>
 </div>
 
@@ -230,16 +230,16 @@
     <div id="daily-list"></div>
   </div>
 
-  <h2>📊 Statistiky</h2>
+  <h2>📊 Statistics</h2>
 
   <div id="stats-content" class="stats-grid-screen">
     <div class="stat-card">
-      <h3>🏆 Nejlepší čas</h3>
+      <h3>🏆 Best Time</h3>
       <div id="stats-best">-</div>
     </div>
 
     <div class="stat-card">
-      <h3>⚡ Nejlepší TPS</h3>
+      <h3>⚡ Best TPS</h3>
       <div id="stats-best-tps">-</div>
     </div>
 

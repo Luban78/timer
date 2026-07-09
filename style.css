@@ -1709,3 +1709,52 @@ body.history-pinned #main-layout {
 #selectedAlg.trainer-paused::after {
   pointer-events: none !important;
 }
+
+/* =========================================================
+   GLOBAL - schovat všechny ošklivé posuvníky, scroll zůstane
+   ========================================================= */
+
+html,
+body,
+#app,
+#history,
+#history-list,
+#stats-screen,
+#settings-screen,
+.detail-modal,
+.detail-box,
+#solve-detail,
+#solve-detail-content,
+#export-modal,
+#import-modal,
+#modal,
+#modalContent,
+#algVariantModal,
+.variant-modal-box,
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#app::-webkit-scrollbar,
+#history::-webkit-scrollbar,
+#history-list::-webkit-scrollbar,
+#stats-screen::-webkit-scrollbar,
+#settings-screen::-webkit-scrollbar,
+.detail-modal::-webkit-scrollbar,
+.detail-box::-webkit-scrollbar,
+#solve-detail::-webkit-scrollbar,
+#solve-detail-content::-webkit-scrollbar,
+#export-modal::-webkit-scrollbar,
+#import-modal::-webkit-scrollbar,
+#modal::-webkit-scrollbar,
+#modalContent::-webkit-scrollbar,
+#algVariantModal::-webkit-scrollbar,
+.variant-modal-box::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}

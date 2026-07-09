@@ -1,6 +1,6 @@
 /* =========================================================
-   DESKTOP STYLE - pouze PC od 900px
-   Mobilní style.css zůstává beze změny
+   DESKTOP STYLE - čistá PC verze
+   Zapíná se jen přes media="(min-width: 900px)"
    ========================================================= */
 
 html,
@@ -13,247 +13,44 @@ body {
 }
 
 /* =========================================================
-   HLAVNÍ DESKTOP ROZLOŽENÍ
-   vlevo AO fixed, uprostřed app, vpravo historie
+   ROZLOŽENÍ
+   vlevo ovládání + AO, střed timer, vpravo historie
    ========================================================= */
 
 #main-layout {
-  width: calc(100vw - 250px) !important;
+  width: calc(100vw - 205px) !important;
   height: 100dvh !important;
   max-width: none !important;
 
-  margin-left: 230px !important;
-  padding: 18px 22px 18px 0 !important;
+  margin-left: 195px !important;
+  padding: 10px 14px 10px 0 !important;
   box-sizing: border-box !important;
 
   display: grid !important;
-  grid-template-columns: minmax(640px, 760px) minmax(360px, 1fr) !important;
-  gap: 22px !important;
+  grid-template-columns: minmax(760px, 1fr) 300px !important;
+  gap: 12px !important;
 
   overflow: hidden !important;
-  align-items: stretch !important;
 }
 
 /* =========================================================
-   STŘED - HLAVNÍ TIMER
+   STŘED - TIMER
    ========================================================= */
 
 #app {
   width: 100% !important;
+  height: calc(100dvh - 20px) !important;
   max-width: none !important;
-  height: calc(100dvh - 36px) !important;
 
   display: flex !important;
   flex-direction: column !important;
 
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-
+  overflow: hidden !important;
   padding: 0 !important;
   box-sizing: border-box !important;
 }
 
-/* skryj název aplikace i na PC */
-#app-version {
-  display: none !important;
-}
-
-/* jemnější scrollbar v app části */
-#app::-webkit-scrollbar,
-#history::-webkit-scrollbar {
-  width: 8px !important;
-}
-
-#app::-webkit-scrollbar-thumb,
-#history::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,.45) !important;
-  border-radius: 20px !important;
-}
-
-/* =========================================================
-   HORNÍ DASHBOARD
-   MENU / LEVEL / XP nahoře
-   OLL / PLL / Single / Random v jedné řadě
-   ========================================================= */
-
-#top-dashboard {
-  order: 1 !important;
-
-  display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  gap: 10px !important;
-
-  margin: 0 0 10px 0 !important;
-  width: 100% !important;
-}
-
-/* horní lišta přes celou šířku */
-#top-strip {
-  grid-column: 1 / -1 !important;
-  order: 1 !important;
-
-  display: grid !important;
-  grid-template-columns: 1fr 1fr 1.45fr !important;
-
-  margin: 0 !important;
-  min-height: 44px !important;
-  height: 44px !important;
-}
-
-/* dovolí tlačítkům z obou kontejnerů spadnout do jedné grid řady */
-#modeButtons,
-#training-mode {
-  display: contents !important;
-}
-
-/* tlačítka OLL/PLL/Single/Random */
-#ollBtn,
-#pllBtn,
-#singleModeBtn,
-#randomModeBtn {
-  order: 2 !important;
-
-  width: 100% !important;
-  min-height: 48px !important;
-  height: 48px !important;
-
-  margin: 0 !important;
-  padding: 0 12px !important;
-  box-sizing: border-box !important;
-
-  font-size: 24px !important;
-  line-height: 1 !important;
-  border-radius: 14px !important;
-}
-
-/* na PC skrýt malé popisky pod Single/Random */
-.train-subtitle,
-.mode-icon {
-  display: none !important;
-}
-
-.train-title {
-  font-size: inherit !important;
-}
-
-/* =========================================================
-   PŘIPOJIT KOSTKU / NORMAL CUBE
-   na PC menší, pod horními tlačítky
-   ========================================================= */
-
-#btn,
-#normalCubeBtn {
-  order: 2 !important;
-
-  width: 100% !important;
-  min-height: 46px !important;
-  height: 46px !important;
-
-  margin: 0 0 8px 0 !important;
-  padding: 0 14px !important;
-  box-sizing: border-box !important;
-
-  font-size: 26px !important;
-  border-radius: 14px !important;
-}
-
-/* status menší */
-#status {
-  order: 3 !important;
-  font-size: 20px !important;
-  line-height: 1.15 !important;
-  margin: 0 0 8px 0 !important;
-}
-
-/* =========================================================
-   ALGORITMUS
-   ========================================================= */
-
-#algorithm-card-wrap {
-  order: 4 !important;
-  width: 100% !important;
-  margin: 0 0 10px 0 !important;
-}
-
-#selectedAlg {
-  width: 100% !important;
-  min-height: 250px !important;
-  max-height: 34vh !important;
-
-  padding: 22px !important;
-  box-sizing: border-box !important;
-
-  overflow: hidden !important;
-}
-
-/* menší název algoritmu na PC */
-#selectedAlg .alg-title,
-#selectedAlg h2,
-#selectedAlg h3 {
-  font-size: 30px !important;
-}
-
-/* tužka */
-#editAlgVariantBtn {
-  right: 18px !important;
-  top: 18px !important;
-}
-
-/* =========================================================
-   STAV + TIMER
-   ========================================================= */
-
-#state-msg {
-  order: 5 !important;
-  font-size: 30px !important;
-  line-height: 1.1 !important;
-  margin: 4px 0 8px 0 !important;
-}
-
-#tps {
-  order: 6 !important;
-
-  width: 100% !important;
-  min-height: 135px !important;
-  height: 135px !important;
-
-  margin: 0 0 10px 0 !important;
-
-  font-size: 78px !important;
-  line-height: 1 !important;
-}
-
-/* hlavní 3 statistiky */
-.stats-grid {
-  order: 7 !important;
-
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 10px !important;
-
-  margin: 0 !important;
-}
-
-.stats-grid .stat-box {
-  min-height: 64px !important;
-  padding: 8px !important;
-}
-
-.stats-grid .stat-label {
-  font-size: 15px !important;
-}
-
-.stats-grid .stat-val {
-  font-size: 30px !important;
-}
-
-/* schovej přebytečné boxy */
-.stats-grid .stat-box:nth-child(4),
-.stats-grid .stat-box:nth-child(5) {
-  display: none !important;
-}
-
-/* spodní technické věci na PC pryč */
+#app-version,
 #notation,
 #mode-label,
 #version,
@@ -264,59 +61,306 @@ body {
 }
 
 /* =========================================================
-   AO PANEL - vlevo pořád viditelný
+   LEVEL / XP nahoře ve středu
+   ========================================================= */
+
+#top-dashboard {
+  order: 1 !important;
+  width: 100% !important;
+  margin: 0 0 7px 0 !important;
+  padding: 0 !important;
+}
+
+#top-strip {
+  display: grid !important;
+  grid-template-columns: 1fr 1.7fr !important;
+
+  height: 36px !important;
+  min-height: 36px !important;
+
+  margin: 0 !important;
+}
+
+/* menu z horní lišty pryč, menu bude vlevo */
+#top-menu-wrap {
+  display: none !important;
+}
+
+#top-strip .top-strip-center,
+#top-strip .xp-item {
+  height: 36px !important;
+  min-height: 36px !important;
+}
+
+#top-strip .top-strip-item {
+  font-size: 16px !important;
+}
+
+/* =========================================================
+   LEVÝ PANEL - MENU + OLL/PLL/SINGLE/RANDOM
+   ========================================================= */
+
+/* hlavní menu tlačítko vlevo nahoře */
+#globalMenuBtn {
+  display: flex !important;
+  position: fixed !important;
+
+  left: 14px !important;
+  top: 10px !important;
+
+  width: 165px !important;
+  height: 38px !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  z-index: 9000 !important;
+
+  background: rgba(8, 20, 24, 0.96) !important;
+  color: #fff !important;
+
+  border: 1px solid rgba(0, 230, 118, 0.75) !important;
+  border-radius: 13px !important;
+
+  font-size: 18px !important;
+  font-weight: 900 !important;
+}
+
+/* kontejnery tlačítek dáme vlevo */
+#modeButtons {
+  position: fixed !important;
+  left: 14px !important;
+  top: 58px !important;
+
+  width: 165px !important;
+
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 7px !important;
+
+  z-index: 8000 !important;
+}
+
+#training-mode {
+  position: fixed !important;
+  left: 14px !important;
+  top: 148px !important;
+
+  width: 165px !important;
+
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 7px !important;
+
+  z-index: 8000 !important;
+}
+
+#ollBtn,
+#pllBtn,
+#singleModeBtn,
+#randomModeBtn {
+  width: 165px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+
+  margin: 0 !important;
+  padding: 0 8px !important;
+
+  font-size: 18px !important;
+  border-radius: 13px !important;
+}
+
+.mode-icon,
+.train-subtitle {
+  display: none !important;
+}
+
+/* =========================================================
+   PŘIPOJENÍ
+   ========================================================= */
+
+#btn,
+#normalCubeBtn {
+  order: 2 !important;
+
+  width: 100% !important;
+  height: 38px !important;
+  min-height: 38px !important;
+
+  margin: 0 0 5px 0 !important;
+  padding: 0 12px !important;
+
+  font-size: 21px !important;
+  border-radius: 12px !important;
+}
+
+#status {
+  order: 3 !important;
+  font-size: 15px !important;
+  line-height: 1.1 !important;
+  margin: 0 0 5px 0 !important;
+}
+
+/* =========================================================
+   ALGORITMUS - větší okno, 2 řady se vejdou
+   ========================================================= */
+
+#algorithm-card-wrap {
+  order: 4 !important;
+  width: 100% !important;
+  margin: 0 0 6px 0 !important;
+}
+
+#selectedAlg {
+  width: 100% !important;
+
+  height: 255px !important;
+  min-height: 255px !important;
+  max-height: 255px !important;
+
+  padding: 14px 18px !important;
+  box-sizing: border-box !important;
+
+  overflow: hidden !important;
+}
+
+#selectedAlg .alg-title {
+  font-size: 30px !important;
+}
+
+#selectedAlg .alg-move,
+#selectedAlg .move,
+#selectedAlg span {
+  font-size: 28px !important;
+}
+
+#selectedAlg .alg-picture,
+#selectedAlg .cube-placeholder,
+#selectedAlg .alg-img {
+  transform: scale(.78) !important;
+  transform-origin: center !important;
+}
+
+#editAlgVariantBtn {
+  width: 46px !important;
+  height: 46px !important;
+  right: 16px !important;
+  top: 16px !important;
+}
+
+/* =========================================================
+   STAV + TIMER + 3 BOXES
+   ========================================================= */
+
+#state-msg {
+  order: 5 !important;
+
+  font-size: 22px !important;
+  line-height: 1.1 !important;
+
+  margin: 2px 0 5px 0 !important;
+}
+
+#tps {
+  order: 6 !important;
+
+  width: 100% !important;
+
+  height: 82px !important;
+  min-height: 82px !important;
+
+  margin: 0 0 6px 0 !important;
+
+  font-size: 54px !important;
+  line-height: 1 !important;
+}
+
+.stats-grid {
+  order: 7 !important;
+
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+
+  height: 56px !important;
+  min-height: 56px !important;
+
+  gap: 8px !important;
+  margin: 0 !important;
+}
+
+.stats-grid .stat-box {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+
+  height: 56px !important;
+  min-height: 56px !important;
+
+  padding: 4px !important;
+}
+
+.stats-grid .stat-label {
+  font-size: 12px !important;
+  line-height: 1.1 !important;
+}
+
+.stats-grid .stat-val {
+  font-size: 24px !important;
+  line-height: 1.05 !important;
+}
+
+.stats-grid .stat-box:nth-child(4),
+.stats-grid .stat-box:nth-child(5) {
+  display: none !important;
+}
+
+/* =========================================================
+   AO PANEL - vlevo dole, bez špendlíku a vnějšího dvojitého boxu
    ========================================================= */
 
 #ao-panel {
   position: fixed !important;
 
-  left: 22px !important;
-  top: 105px !important;
+  left: 14px !important;
+  bottom: 18px !important;
+  top: auto !important;
   right: auto !important;
-  bottom: auto !important;
 
-  width: 185px !important;
-  max-height: calc(100dvh - 130px) !important;
+  width: 165px !important;
 
   transform: none !important;
-  display: block !important;
 
-  z-index: 2000 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 
-  background: rgba(6, 14, 18, 0.94) !important;
-  border: 1px solid rgba(0, 230, 118, 0.75) !important;
-  border-radius: 18px !important;
-  box-shadow: 0 0 20px rgba(0, 230, 118, 0.18) !important;
-
-  padding: 12px !important;
-  box-sizing: border-box !important;
-}
-
-/* na PC žádná šipka AO */
-#aoPanelToggle,
-.ao-toggle {
-  display: none !important;
-}
-
-/* špendlík může zůstat jako značka panelu */
-#aoPinBtn {
-  position: static !important;
-  display: flex !important;
-
-  width: 34px !important;
-  height: 34px !important;
-
-  margin: 0 0 10px 0 !important;
   padding: 0 !important;
+  margin: 0 !important;
 
-  font-size: 16px !important;
-  border-radius: 10px !important;
+  z-index: 7000 !important;
+}
+
+#aoPanelToggle,
+#aoPinBtn,
+.ao-toggle,
+.ao-pin {
+  display: none !important;
 }
 
 #ao-panel #stats-box {
   display: grid !important;
   grid-template-columns: 1fr !important;
   gap: 0 !important;
+
+  width: 100% !important;
+
+  background: rgba(6, 14, 18, 0.94) !important;
+  border: 1px solid rgba(0, 230, 118, 0.75) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 0 18px rgba(0, 230, 118, 0.18) !important;
+
+  padding: 10px 12px !important;
+  box-sizing: border-box !important;
 }
 
 #ao-panel #stats-box > div {
@@ -324,10 +368,10 @@ body {
   justify-content: space-between !important;
   align-items: center !important;
 
-  padding: 9px 0 !important;
+  padding: 7px 0 !important;
   border-bottom: 1px solid rgba(255,255,255,.10) !important;
 
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 
 #ao-panel #stats-box > div:last-child {
@@ -335,29 +379,31 @@ body {
 }
 
 #ao-panel #stats-box span {
-  font-weight: 900 !important;
   color: #00e676 !important;
+  font-weight: 900 !important;
 }
 
 /* =========================================================
-   HISTORIE - pravý sloupec přes celou výšku
+   HISTORIE - vpravo menší, 2 sloupce, bez viditelného scrollbaru
    ========================================================= */
 
 #history {
-  position: relative !important;
+  width: 100% !important;
+  height: calc(100dvh - 20px) !important;
+  max-height: calc(100dvh - 20px) !important;
 
+  display: block !important;
+
+  position: relative !important;
   top: auto !important;
   right: auto !important;
   bottom: auto !important;
   left: auto !important;
 
   transform: none !important;
-  display: block !important;
 
-  width: 100% !important;
-  max-width: none !important;
-  height: calc(100dvh - 36px) !important;
-  max-height: none !important;
+  padding: 8px !important;
+  box-sizing: border-box !important;
 
   overflow-y: auto !important;
   overflow-x: hidden !important;
@@ -365,75 +411,549 @@ body {
   background: rgba(6, 14, 18, 0.94) !important;
   border: 1px solid rgba(0, 230, 118, 0.75) !important;
   border-radius: 18px !important;
-  box-shadow: 0 0 20px rgba(0, 230, 118, 0.18) !important;
+  box-shadow: 0 0 18px rgba(0, 230, 118, 0.18) !important;
 
-  padding: 14px !important;
-  box-sizing: border-box !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
-/* na PC žádný drawer ovládací panel historie */
+#history::-webkit-scrollbar,
+#history-list::-webkit-scrollbar,
+#history *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 .history-panel-controls,
 #historyPanelToggle,
 #historyPinBtn,
 .history-toggle,
-.history-pin {
-  display: none !important;
-}
-
-/* legacy tlačítka historie zatím schovat */
+.history-pin,
 #legacy-tools {
   display: none !important;
 }
 
-/* seznam časů */
 #history-list {
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-  gap: 10px !important;
-
   width: 100% !important;
+
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+
   margin: 0 !important;
   padding: 0 !important;
+
+  overflow: visible !important;
 }
 
-/* položky historie - různé možné struktury */
 #history-list > *,
 #history .history-item,
 #history li,
 #history .solve-row {
+  min-width: 0 !important;
   width: 100% !important;
-  box-sizing: border-box !important;
 
+  min-height: 58px !important;
+  max-height: 68px !important;
+
+  padding: 6px 7px !important;
   margin: 0 !important;
-  padding: 12px !important;
 
-  background: rgba(255,255,255,.06) !important;
-  border: 1px solid rgba(255,255,255,.10) !important;
-  border-radius: 0 !important;
+  overflow: hidden !important;
+
+  background: rgba(255,255,255,.045) !important;
+  border: 1px solid rgba(255,255,255,.08) !important;
+  border-radius: 8px !important;
+
+  font-size: 11px !important;
+  line-height: 1.1 !important;
 }
 
-/* text historie trochu kompaktnější */
-#history {
-  font-size: 16px !important;
-}
-
-#history b,
-#history strong {
+#history-list b,
+#history-list strong,
+#history-list .time,
+#history-list .solve-time {
+  font-size: 14px !important;
+  line-height: 1.05 !important;
   color: #00e5ff !important;
 }
 
-/* =========================================================
-   STATS / SETTINGS obrazovky na PC
-   ========================================================= */
-
-#stats-screen,
-#settings-screen {
-  width: min(1100px, calc(100vw - 80px)) !important;
-  max-width: 1100px !important;
-  margin: 24px auto !important;
+#history-list small,
+#history-list span,
+#history-list div {
+  font-size: 10px !important;
+  line-height: 1.1 !important;
 }
 
-/* menu dropdown nad vším */
+/* =========================================================
+   MENU DROPDOWN
+   ========================================================= */
+
 .screen-menu-dropdown {
   z-index: 99999 !important;
+}
+
+/* =========================================================
+   DESKTOP FIX 5 - užší historie, lepší střed, funkční menu screeny
+   ========================================================= */
+
+/* při přepnutí na Statistiky/Nastavení musí zmizet timer layout */
+body.screen-stats #main-layout,
+body.screen-settings #main-layout {
+  display: none !important;
+}
+
+/* Statistiky / Nastavení na PC zobrazit normálně */
+body.screen-stats #stats-screen {
+  display: block !important;
+}
+
+body.screen-settings #settings-screen {
+  display: block !important;
+}
+
+/* Timer screen */
+body.screen-timer #main-layout {
+  display: grid !important;
+}
+
+/* užší historie, aby bylo víc místa pro střed */
+#main-layout {
+  margin-left: 185px !important;
+  width: calc(100vw - 195px) !important;
+
+  grid-template-columns: minmax(780px, 1fr) 235px !important;
+  gap: 12px !important;
+
+  padding: 10px 14px 10px 0 !important;
+}
+
+/* historie užší a kompaktnější */
+#history {
+  width: 235px !important;
+  min-width: 235px !important;
+  max-width: 235px !important;
+
+  padding: 7px !important;
+}
+
+/* historie 2 sloupce, ale menší karty */
+#history-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 5px !important;
+}
+
+#history-list > *,
+#history .history-item,
+#history li,
+#history .solve-row {
+  min-height: 50px !important;
+  max-height: 58px !important;
+
+  padding: 5px !important;
+
+  font-size: 10px !important;
+  line-height: 1.05 !important;
+}
+
+#history-list b,
+#history-list strong,
+#history-list .time,
+#history-list .solve-time {
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
+
+#history-list small,
+#history-list span,
+#history-list div {
+  font-size: 9px !important;
+  line-height: 1.05 !important;
+}
+
+/* levý AO/menu panel trochu užší, aby střed nebyl utlačený */
+#globalMenuBtn,
+#modeButtons,
+#training-mode,
+#ollBtn,
+#pllBtn,
+#singleModeBtn,
+#randomModeBtn {
+  width: 155px !important;
+}
+
+#ao-panel {
+  width: 155px !important;
+}
+
+/* posun hlavní části trochu doleva */
+#main-layout {
+  margin-left: 175px !important;
+  width: calc(100vw - 185px) !important;
+}
+
+/* dropdown menu musí být nad vším a viditelné */
+.screen-menu-dropdown {
+  position: fixed !important;
+  left: 14px !important;
+  top: 54px !important;
+  z-index: 99999 !important;
+}
+
+/* =========================================================
+   DESKTOP START SCREEN - když není vybraný algoritmus
+   ========================================================= */
+
+/* když je algoritmus nevybraný, karta je menší */
+#selectedAlg:not(:has(.alg-card-head)):not(:has(.alg-title)) {
+  height: 175px !important;
+  min-height: 175px !important;
+  max-height: 175px !important;
+}
+
+/* na startu zmenšit text v prázdné kartě */
+#selectedAlg:not(:has(.alg-card-head)):not(:has(.alg-title)) {
+  font-size: 20px !important;
+}
+
+/* na startu zmenšit stavový text */
+#state-msg {
+  max-height: 34px !important;
+}
+
+/* když ještě není vybrán algoritmus, timer menší */
+#selectedAlg:not(:has(.alg-card-head)):not(:has(.alg-title)) ~ #state-msg + #tps {
+  height: 64px !important;
+  min-height: 64px !important;
+  font-size: 44px !important;
+}
+
+/* když není algoritmus, spodní statistiky kompaktní */
+#selectedAlg:not(:has(.alg-card-head)):not(:has(.alg-title)) ~ #state-msg + #tps + .stats-grid {
+  height: 48px !important;
+  min-height: 48px !important;
+}
+
+#selectedAlg:not(:has(.alg-card-head)):not(:has(.alg-title)) ~ #state-msg + #tps + .stats-grid .stat-box {
+  height: 48px !important;
+  min-height: 48px !important;
+}
+/* =========================================================
+   DESKTOP FIX 6 - větší algoritmus po výběru + screeny mimo menu
+   ========================================================= */
+
+/* Když už je vybraný algoritmus, dej kartě trochu víc výšky */
+#selectedAlg:has(.alg-card-head),
+#selectedAlg:has(.alg-title),
+#selectedAlg:has(.alg-moves-row) {
+  height: 275px !important;
+  min-height: 275px !important;
+  max-height: 275px !important;
+  padding-bottom: 24px !important;
+}
+
+/* Tahy v algoritmu trochu zvednout od spodní hrany */
+#selectedAlg .alg-moves-row {
+  padding-bottom: 10px !important;
+}
+
+/* Když není vybraný algoritmus, nech kartu menší */
+#selectedAlg:not(:has(.alg-card-head)):not(:has(.alg-title)):not(:has(.alg-moves-row)) {
+  height: 210px !important;
+  min-height: 210px !important;
+  max-height: 210px !important;
+}
+
+/* Aby se po zvětšení algoritmu pořád vešel timer */
+#selectedAlg:has(.alg-card-head) ~ #state-msg + #tps,
+#selectedAlg:has(.alg-title) ~ #state-msg + #tps,
+#selectedAlg:has(.alg-moves-row) ~ #state-msg + #tps {
+  height: 76px !important;
+  min-height: 76px !important;
+  font-size: 50px !important;
+}
+
+/* =========================================================
+   DESKTOP - Statistiky / Nastavení zarovnat mimo levé menu
+   ========================================================= */
+
+body.screen-stats,
+body.screen-settings {
+  overflow: hidden !important;
+}
+
+/* Kontejner statistik a nastavení */
+#stats-screen,
+#settings-screen {
+  box-sizing: border-box !important;
+
+  width: min(900px, calc(100vw - 260px)) !important;
+  max-width: 900px !important;
+
+  margin-left: 230px !important;
+  margin-right: auto !important;
+  margin-top: 40px !important;
+
+  padding: 20px !important;
+}
+
+/* Nadpisy na ostatních obrazovkách menší a ne pod menu */
+#stats-screen h2,
+#settings-screen h2 {
+  text-align: center !important;
+  font-size: 42px !important;
+  line-height: 1.1 !important;
+  margin: 0 0 22px 0 !important;
+}
+
+#settings-screen p {
+  text-align: center !important;
+  font-size: 24px !important;
+  margin: 0 0 26px 0 !important;
+}
+
+/* Tlačítka v nastavení užší, ne přes půl obrazovky */
+#settings-screen button {
+  display: block !important;
+
+  width: min(520px, 100%) !important;
+  height: 54px !important;
+
+  margin: 12px auto !important;
+
+  font-size: 24px !important;
+  border-radius: 14px !important;
+}
+
+/* Statistiky karty více uprostřed */
+#stats-screen .stat-card,
+#stats-screen #coach-card,
+#stats-screen #algorithm-section,
+#stats-screen #achievement-section {
+  width: min(760px, 100%) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Levé menu tlačítko ať nepřekrývá nadpis */
+body.screen-stats #globalMenuBtn,
+body.screen-settings #globalMenuBtn {
+  top: 14px !important;
+}
+/* =========================================================
+   DESKTOP FIX 7 - kompaktní Statistiky
+   ========================================================= */
+
+/* celá obrazovka statistik */
+body.screen-stats #stats-screen {
+  display: block !important;
+
+  width: calc(100vw - 260px) !important;
+  max-width: none !important;
+
+  height: calc(100dvh - 30px) !important;
+
+  margin-left: 230px !important;
+  margin-right: 20px !important;
+  margin-top: 14px !important;
+
+  padding: 10px 18px !important;
+  box-sizing: border-box !important;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* schovat ošklivý scrollbar, ale scroll ponechat */
+body.screen-stats #stats-screen {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+body.screen-stats #stats-screen::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* nadpis statistik nahoru */
+body.screen-stats #stats-screen h2 {
+  text-align: left !important;
+  font-size: 34px !important;
+  line-height: 1.1 !important;
+
+  margin: 10px 0 14px 0 !important;
+}
+
+/* horní XP a denní úkoly menší */
+body.screen-stats #xp-card,
+body.screen-stats .daily-card {
+  width: 100% !important;
+  max-width: none !important;
+
+  margin: 0 0 10px 0 !important;
+  padding: 12px 16px !important;
+
+  border-radius: 16px !important;
+  box-sizing: border-box !important;
+}
+
+body.screen-stats #xp-card h3,
+body.screen-stats .daily-card h4 {
+  font-size: 20px !important;
+  margin: 0 0 8px 0 !important;
+}
+
+body.screen-stats #xp-text,
+body.screen-stats #daily-list {
+  font-size: 17px !important;
+  line-height: 1.25 !important;
+}
+
+/* hlavní statistické karty víc do řádků */
+body.screen-stats #stats-content {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+
+  width: 100% !important;
+  max-width: none !important;
+
+  margin: 0 0 12px 0 !important;
+}
+
+/* jednotlivé karty menší */
+body.screen-stats .stat-card {
+  width: auto !important;
+  max-width: none !important;
+
+  margin: 0 !important;
+  padding: 12px 14px !important;
+
+  min-height: 82px !important;
+  border-radius: 15px !important;
+
+  box-sizing: border-box !important;
+}
+
+body.screen-stats .stat-card h3 {
+  font-size: 18px !important;
+  margin: 0 0 8px 0 !important;
+}
+
+body.screen-stats .stat-card div {
+  font-size: 18px !important;
+}
+
+/* coach / algoritmy / odznaky níž, ale kompaktně */
+body.screen-stats #coach-card,
+body.screen-stats #algorithm-section,
+body.screen-stats #achievement-section {
+  width: 100% !important;
+  max-width: none !important;
+
+  margin: 0 0 10px 0 !important;
+  padding: 12px 16px !important;
+
+  box-sizing: border-box !important;
+}
+
+body.screen-stats #coach-card h3,
+body.screen-stats #algorithm-section h2,
+body.screen-stats #achievement-section h2 {
+  font-size: 24px !important;
+  margin: 0 0 10px 0 !important;
+}
+
+/* seznam algoritmů/odznaků kompaktněji */
+body.screen-stats #algorithm-stats,
+body.screen-stats #achievement-list {
+  font-size: 16px !important;
+  line-height: 1.25 !important;
+}
+/* =========================================================
+   DESKTOP FIX 8 - kompaktní Nastavení
+   ========================================================= */
+
+body.screen-settings #settings-screen {
+  display: block !important;
+
+  width: min(720px, calc(100vw - 260px)) !important;
+
+  margin-left: 260px !important;
+  margin-top: 40px !important;
+
+  padding: 20px !important;
+  box-sizing: border-box !important;
+}
+
+body.screen-settings #settings-screen h2 {
+  text-align: left !important;
+  font-size: 38px !important;
+  margin: 0 0 18px 0 !important;
+}
+
+body.screen-settings #settings-screen p {
+  text-align: left !important;
+  font-size: 22px !important;
+  margin: 0 0 22px 0 !important;
+}
+
+body.screen-settings #settings-screen button {
+  width: 420px !important;
+  max-width: 100% !important;
+
+  height: 48px !important;
+
+  margin: 10px 0 !important;
+
+  font-size: 21px !important;
+  border-radius: 13px !important;
+}
+/* =========================================================
+   GLOBAL - schovat všechny ošklivé posuvníky, scroll zůstane
+   ========================================================= */
+
+html,
+body,
+#app,
+#history,
+#history-list,
+#stats-screen,
+#settings-screen,
+.detail-modal,
+.detail-box,
+#solve-detail,
+#solve-detail-content,
+#export-modal,
+#import-modal,
+#modal,
+#modalContent,
+#algVariantModal,
+.variant-modal-box,
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#app::-webkit-scrollbar,
+#history::-webkit-scrollbar,
+#history-list::-webkit-scrollbar,
+#stats-screen::-webkit-scrollbar,
+#settings-screen::-webkit-scrollbar,
+.detail-modal::-webkit-scrollbar,
+.detail-box::-webkit-scrollbar,
+#solve-detail::-webkit-scrollbar,
+#solve-detail-content::-webkit-scrollbar,
+#export-modal::-webkit-scrollbar,
+#import-modal::-webkit-scrollbar,
+#modal::-webkit-scrollbar,
+#modalContent::-webkit-scrollbar,
+#algVariantModal::-webkit-scrollbar,
+.variant-modal-box::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
 }
