@@ -32,33 +32,7 @@ body {
 }
 
 /* Pravá část = historie pořád viditelná */
-#history-panel {
-  position: relative !important;
-  
-  left: auto !important;
-  right: auto !important;
-  top: auto !important;
-  bottom: auto !important;
-  
-  transform: none !important;
-  
-  width: 100% !important;
-  max-width: none !important;
-  height: calc(100dvh - 40px) !important;
-  max-height: none !important;
-  
-  display: block !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  
-  background: rgba(6, 14, 18, 0.94) !important;
-  border: 1px solid rgba(0, 230, 118, 0.65) !important;
-  border-radius: 18px !important;
-  box-shadow: 0 0 18px rgba(0, 230, 118, 0.18) !important;
-  
-  padding: 14px !important;
-  box-sizing: border-box !important;
-}
+
 
 #history-list,
 .history-list {
@@ -67,11 +41,6 @@ body {
   gap: 8px !important;
 }
 
-#history-panel .history-item,
-#history-panel li,
-#history-panel .solve-row {
-  width: 100% !important;
-}
 /* Na PC nechceme vysouvací šipku historie */
 #history-toggle,
 .history-toggle,
@@ -148,4 +117,191 @@ body.ao-pinned #ao-panel {
 /* Timer na PC */
 #tps {
   min-height: 150px !important;
+}
+/* =========================================================
+   DESKTOP FIX - historie podle skutečného ID #history
+   ========================================================= */
+
+
+/* Ovládací prvky historie také pryč */
+#historyPanelToggle,
+#historyPinBtn,
+.history-panel-controls,
+.history-toggle,
+.history-pin {
+  display: none !important;
+}
+
+/* =========================================================
+   DESKTOP LAYOUT - plná PC verze
+   ========================================================= */
+
+html,
+body {
+  width: 100% !important;
+  min-height: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Celá plocha PC */
+#main-layout {
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-width: none !important;
+
+  display: grid !important;
+  grid-template-columns: 190px minmax(620px, 760px) minmax(360px, 1fr) !important;
+  grid-template-areas: "ao app history" !important;
+  gap: 18px !important;
+
+  padding: 18px 22px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  align-items: start !important;
+}
+
+/* Střed - hlavní aplikace */
+#app {
+  grid-area: app !important;
+
+  width: 100% !important;
+  max-width: none !important;
+  height: calc(100dvh - 36px) !important;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* OLL / PLL / Single / Random v jedné řadě */
+.mode-grid,
+.mode-buttons,
+#mode-grid,
+#modeButtons {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+/* Pokud jsou OLL/PLL a Single/Random ve dvou samostatných řádcích */
+#app .toggle-row,
+#app .mode-row,
+#app .type-row {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+/* Tlačítka nahoře menší pro PC */
+#app button {
+  min-height: 46px !important;
+}
+
+/* Karta algoritmu */
+#selectedAlg {
+  min-height: 310px !important;
+  max-height: 42vh !important;
+}
+
+/* Timer */
+#tps {
+  min-height: 150px !important;
+}
+
+/* AO panel vlevo */
+#ao-panel {
+  grid-area: ao !important;
+
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  left: auto !important;
+  bottom: auto !important;
+
+  transform: none !important;
+
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+
+  display: block !important;
+  align-self: start !important;
+
+  background: rgba(6, 14, 18, 0.94) !important;
+  border: 1px solid rgba(0, 230, 118, 0.65) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 0 18px rgba(0, 230, 118, 0.18) !important;
+
+  padding: 12px !important;
+  box-sizing: border-box !important;
+}
+
+/* Na PC nechceme AO šipku ani vysouvání */
+#aoPanelToggle,
+.ao-toggle {
+  display: none !important;
+}
+
+#ao-panel #stats-box {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+
+/* Historie vpravo přes celou výšku */
+#history {
+  grid-area: history !important;
+
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+
+  transform: none !important;
+
+  display: block !important;
+
+  width: 100% !important;
+  max-width: none !important;
+  height: calc(100dvh - 36px) !important;
+  max-height: none !important;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+
+  background: rgba(6, 14, 18, 0.94) !important;
+  border: 1px solid rgba(0, 230, 118, 0.65) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 0 18px rgba(0, 230, 118, 0.18) !important;
+
+  padding: 14px !important;
+  box-sizing: border-box !important;
+}
+
+/* Na PC schovat šipku a špendlík historie */
+#historyPanelToggle,
+#historyPinBtn,
+.history-panel-controls,
+.history-toggle,
+.history-pin {
+  display: none !important;
+}
+
+/* Historie na PC jako normální seznam */
+#history-list,
+.history-list,
+#historyContent,
+.history-content {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+
+/* Jednotlivé časy v historii */
+#history .history-item,
+#history li,
+#history .solve-row,
+#history > div:not(.history-panel-controls) {
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
