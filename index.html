@@ -9,9 +9,9 @@
   <meta name="apple-mobile-web-app-title" content="MG Trainer">
 
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=navrh1-menu-history-2">
+  <link rel="stylesheet" href="style.css?v=navrh1-final-dropdowns-2">
   
-  <link rel="stylesheet" href="desktopStyle.css?v=1" media="(min-width: 900px)">
+  <link rel="stylesheet" href="desktopStyle.css?v=3" media="(min-width: 900px)">
 
   <title>MG3i Trainer v0.55</title>
 </head>
@@ -21,8 +21,31 @@
 <button id="globalMenuBtn" class="global-menu-fab" type="button" aria-label="Menu obrazovek">☰</button>
 <div id="screen-menu-dropdown" class="screen-menu-dropdown" aria-label="Výběr obrazovky">
   <button id="nav-timer" type="button">🏠 Timer</button>
-  <button id="nav-stats" type="button">📊 Statistics</button>
-  <button id="nav-settings" type="button">⚙️ Settings</button>
+  <button id="nav-stats" type="button">📊 Statistiky</button>
+  <button id="nav-settings" type="button">⚙️ Nastavení</button>
+</div>
+
+<div id="screen-top-strip" class="screen-top-strip" aria-label="Horní lišta obrazovky">
+  <div class="top-strip-item top-menu-item">
+    <button id="screen-top-menu-btn" type="button" aria-label="Menu obrazovek">
+      <span class="strip-icon">☰</span>
+      <span>MENU</span>
+    </button>
+  </div>
+
+  <div class="top-strip-item top-strip-center">
+    <span>LEVEL <b id="screen-top-level">12</b></span>
+  </div>
+
+  <div class="top-strip-item xp-item">
+    <div class="xp-head">
+      <span>XP</span>
+      <span id="screen-top-xp-text">720 / 1000</span>
+    </div>
+    <div class="top-xp-bar">
+      <div id="screen-top-xp-fill"></div>
+    </div>
+  </div>
 </div>
 
 <div id="main-layout">
@@ -39,19 +62,6 @@
 
     <!-- ===== NOVÝ HORNÍ DASHBOARD ===== -->
     <div id="top-dashboard">
-
-      <!-- OLL / PLL - stejné ID kvůli JS -->
-      <div id="modeButtons">
-        <button class="modeBtn" id="ollBtn">
-          <span>OLL</span>
-          <span class="mode-icon">▧</span>
-        </button>
-
-        <button class="modeBtn" id="pllBtn">
-          <span>PLL</span>
-          <span class="mode-icon">▧</span>
-        </button>
-      </div>
 
       <!-- horní info lišta bez FACELETS -->
       <div id="top-strip">
@@ -77,8 +87,47 @@
         </div>
       </div>
 
-      <!-- Single / Random - stejné ID kvůli JS -->
-      <div id="training-mode">
+      <!-- kompaktní horní volby -->
+      <div id="compact-controls" class="compact-controls">
+        <div class="compact-dropdown" id="puzzleModeDropdown">
+          <button id="puzzleModeBtn" class="compact-main-btn" type="button" aria-label="Vybrat režim">
+            <span id="puzzleModeLabel">WCA 3x3</span>
+            <span class="compact-arrow">▾</span>
+          </button>
+          <div class="compact-menu" id="puzzleModeMenu">
+            <button type="button" data-puzzle-mode="wca">WCA 3x3</button>
+            <button type="button" data-puzzle-mode="oll">OLL</button>
+            <button type="button" data-puzzle-mode="pll">PLL</button>
+          </div>
+        </div>
+
+        <div class="compact-dropdown" id="trainingModeDropdown">
+          <button id="trainingModeBtn" class="compact-main-btn" type="button" aria-label="Vybrat trénink">
+            <span id="trainingModeLabel">Next Scramble</span>
+            <span class="compact-arrow">▾</span>
+          </button>
+          <div class="compact-menu" id="trainingModeMenu">
+            <button type="button" data-training-mode="scramble">Next Scramble</button>
+            <button type="button" data-training-mode="single">Single</button>
+            <button type="button" data-training-mode="random">Random</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- původní tlačítka necháváme kvůli JS, ale CSS je skryje -->
+      <div id="modeButtons" class="legacy-top-buttons">
+        <button class="modeBtn" id="ollBtn">
+          <span>OLL</span>
+          <span class="mode-icon">▧</span>
+        </button>
+
+        <button class="modeBtn" id="pllBtn">
+          <span>PLL</span>
+          <span class="mode-icon">▧</span>
+        </button>
+      </div>
+
+      <div id="training-mode" class="legacy-top-buttons">
         <button id="singleModeBtn">
           <span class="train-title">Single</span>
           <span class="train-subtitle">Focus &amp; Improve</span>
@@ -230,7 +279,7 @@
     <div id="daily-list"></div>
   </div>
 
-  <h2>📊 Statistics</h2>
+  <h2>📊 Statistiky</h2>
 
   <div id="stats-content" class="stats-grid-screen">
     <div class="stat-card">
@@ -285,6 +334,9 @@
 <div id="settings-screen" style="display:none; padding:20px;">
   <h2>⚙️ Nastavení</h2>
   <p>Správa dat aplikace</p>
+  <button id="settingsCubeModeBtn" type="button">
+    Normal cube
+  </button>
   <button id="colorPresetBtn" type="button">
   Top Yellow | Front Green
 </button>
@@ -332,7 +384,7 @@
     </div>
   </div>
 </div>
-<script type="module" src="./app.js?v=10003"></script>
+<script type="module" src="./app.js?v=10005"></script>
 
 </body>
 </html>

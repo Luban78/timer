@@ -98,6 +98,12 @@ const btn = document.getElementById("btn");
 const modeButtons = document.getElementById("modeButtons");
 const pllBtn = document.getElementById("pllBtn");
 const ollBtn = document.getElementById("ollBtn");
+const puzzleModeBtn = document.getElementById("puzzleModeBtn");
+const puzzleModeLabel = document.getElementById("puzzleModeLabel");
+const puzzleModeMenu = document.getElementById("puzzleModeMenu");
+const trainingModeBtn = document.getElementById("trainingModeBtn");
+const trainingModeLabel = document.getElementById("trainingModeLabel");
+const trainingModeMenu = document.getElementById("trainingModeMenu");
 const modal = document.getElementById("modal");
 const algList = document.getElementById("algList");
 const closeModal = document.getElementById("closeModal");
@@ -144,6 +150,7 @@ const navSettings = document.getElementById("nav-settings");
 const topMenuWrap = document.getElementById("top-menu-wrap");
 const topMenuBtn = document.getElementById("top-menu-btn");
 const globalMenuBtn = document.getElementById("globalMenuBtn");
+const screenTopMenuBtn = document.getElementById("screen-top-menu-btn");
 const screenMenuDropdown = document.getElementById("screen-menu-dropdown");
 const aoPanel = document.getElementById("ao-panel");
 const aoPanelToggle = document.getElementById("aoPanelToggle");
@@ -161,6 +168,7 @@ const settingsExportBtn = document.getElementById("settings-export-btn");
 const settingsImportBtn = document.getElementById("settings-import-btn");
 const settingsClearBtn = document.getElementById("settings-clear-btn");
 const settingsResetProfileBtn = document.getElementById("settings-reset-profile-btn");
+const settingsCubeModeBtn = document.getElementById("settingsCubeModeBtn");
 
 const statsBest = document.getElementById("stats-best");
 const statsBestTPS = document.getElementById("stats-best-tps");
@@ -314,7 +322,8 @@ function applyColorPreset() {
   }
 
   document.querySelectorAll(".alg-orientation-hint").forEach(el => {
-    el.textContent = preset.label;
+    const top = preset.key === "white_green" ? "White" : "Yellow";
+    el.innerHTML = `<div>Top: ${top}</div><div>Front: Green</div>`;
   });
 }
 
@@ -428,9 +437,134 @@ function updateModeLabel() {
       : "Režim: Smart Cube";
 }
 
+function updateScreenTopBar() {
+  const screenLevel = document.getElementById("screen-top-level");
+  const screenXpText = document.getElementById("screen-top-xp-text");
+  const screenXpFill = document.getElementById("screen-top-xp-fill");
+  const topLevel = document.getElementById("top-level");
+  const topXpText = document.getElementById("top-xp-text");
+  const topXpFill = document.getElementById("top-xp-fill");
+
+  if (screenLevel && topLevel) screenLevel.textContent = topLevel.textContent || "12";
+  if (screenXpText && topXpText) screenXpText.textContent = topXpText.textContent || "720 / 1000";
+  if (screenXpFill && topXpFill) screenXpFill.style.width = topXpFill.style.width || "72%";
+}
+
+function updateSettingsCubeModeButton() {
+  if (!settingsCubeModeBtn) return;
+
+  settingsCubeModeBtn.textContent = cubeMode === "normal" ? "Connect the cube" : "Normal cube";
+  settingsCubeModeBtn.dataset.targetCubeMode = cubeMode === "normal" ? "smart" : "normal";
+}
+
+function switchToNormalCubeMode() {
+  cubeMode = "normal";
+  localStorage.setItem("cubeMode", cubeMode);
+  isConnected = true;
+
+  if (btn) btn.style.display = "none";
+  if (normalCubeBtn) normalCubeBtn.style.display = "none";
+  if (modeButtons) modeButtons.style.display = "none";
+
+  updateModeLabel();
+  updateSettingsCubeModeButton();
+
+  if (status) status.innerText = "Normal Cube režim";
+  if (stateMsg) stateMsg.innerText = "PŘIPRAVEN";
+  showTrainerDashboard();
+}
+
+
 function updateTrainingButtons() {
   singleModeBtn.classList.toggle("active", trainingMode === "single");
   randomModeBtn.classList.toggle("active", trainingMode === "random");
+
+  if (trainingModeLabel) {
+    trainingModeLabel.textContent =
+      trainingMode === "random" ? "Random" :
+      trainingMode === "single" ? "Single" :
+      "Next Scramble";
+  }
+}
+
+function closeCompactMenus() {
+  document.body.classList.remove("puzzle-menu-open", "training-menu-open");
+}
+
+function setPuzzleModeLabel(label) {
+  if (puzzleModeLabel) puzzleModeLabel.textContent = label;
+}
+
+function setupCompactControls() {
+  if (puzzleModeBtn) {
+    puzzleModeBtn.onclick = e => {
+      e.preventDefault();
+      e.stopPropagation();
+      document.body.classList.toggle("puzzle-menu-open");
+      document.body.classList.remove("training-menu-open");
+    };
+  }
+
+  if (trainingModeBtn) {
+    trainingModeBtn.onclick = e => {
+      e.preventDefault();
+      e.stopPropagation();
+      document.body.classList.toggle("training-menu-open");
+      document.body.classList.remove("puzzle-menu-open");
+    };
+  }
+
+  if (puzzleModeMenu) {
+    puzzleModeMenu.querySelectorAll("[data-puzzle-mode]").forEach(btn => {
+      btn.onclick = e => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const mode = btn.dataset.puzzleMode;
+
+        if (mode === "wca") {
+          setPuzzleModeLabel("WCA 3x3");
+        } else if (mode === "oll") {
+          // OLL menu doplníme později. Zatím jen nastavíme popisek,
+          // ať se nespouští starý debug na původním OLL tlačítku.
+          setPuzzleModeLabel("OLL");
+        } else if (mode === "pll") {
+          setPuzzleModeLabel("PLL");
+          if (pllBtn) pllBtn.click();
+        }
+
+        closeCompactMenus();
+      };
+    });
+  }
+
+  if (trainingModeMenu) {
+    trainingModeMenu.querySelectorAll("[data-training-mode]").forEach(btn => {
+      btn.onclick = e => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const mode = btn.dataset.trainingMode;
+
+        if (mode === "scramble") {
+          if (trainingModeLabel) trainingModeLabel.textContent = "Next Scramble";
+        } else if (mode === "single") {
+          if (singleModeBtn) singleModeBtn.click();
+        } else if (mode === "random") {
+          if (randomModeBtn) randomModeBtn.click();
+        }
+
+        closeCompactMenus();
+      };
+    });
+  }
+
+  document.addEventListener("pointerdown", e => {
+    if (e.target.closest("#compact-controls")) return;
+    closeCompactMenus();
+  });
+
+  updateTrainingButtons();
 }
 
 function setupTrainingButtons() {
@@ -569,10 +703,12 @@ function setupNavigation() {
 
   if (topMenuBtn) topMenuBtn.onclick = toggleTopMenu;
   if (globalMenuBtn) globalMenuBtn.onclick = toggleTopMenu;
+  if (screenTopMenuBtn) screenTopMenuBtn.onclick = toggleTopMenu;
 
   document.addEventListener("pointerdown", e => {
     if (e.target.closest("#top-menu-btn")) return;
     if (e.target.closest("#globalMenuBtn")) return;
+    if (e.target.closest("#screen-top-menu-btn")) return;
     if (e.target.closest("#screen-menu-dropdown")) return;
     closeTopMenu();
   });
@@ -612,6 +748,8 @@ function showScreen(screen) {
   document.body.classList.toggle("screen-timer", screen === "timer");
   document.body.classList.toggle("screen-stats", screen === "stats");
   document.body.classList.toggle("screen-settings", screen === "settings");
+  updateScreenTopBar();
+  updateSettingsCubeModeButton();
 
   if (mainLayout) {
     mainLayout.style.display = screen === "timer" ? "grid" : "none";
@@ -772,22 +910,7 @@ function setupImportExport() {
 
 function setupCubeButtons() {
   normalCubeBtn.onclick = () => {
-    cubeMode = "normal";
-    localStorage.setItem("cubeMode", cubeMode);
-
-    isConnected = true;
-
-    btn.style.display = "none";
-    normalCubeBtn.style.display = "none";
-    modeButtons.style.display = "grid";
-
-    updateModeLabel();
-
-    status.innerText = "Normal Cube režim";
-    showTrainerDashboard();
-    /*stateMsg.innerText = "Vyber algoritmus a klepni pro start";
-    stateMsg.style.color = "yellow";
-    */
+    switchToNormalCubeMode();
   };
 
   btn.onclick = async e => {
@@ -834,6 +957,7 @@ function setupCubeButtons() {
 
       status.innerText = "Připojeno, začni otočením kostky";
       showTrainerDashboard();
+      updateSettingsCubeModeButton();
       stateMsg.innerText = "PŘIPRAVEN";
 
       beep(523, .08);
@@ -2101,6 +2225,7 @@ function initApp() {
   updateModeLabel();
 
   setupTrainingButtons();
+  setupCompactControls();
   setupDevButtons();
   setupNavigation();
   setupAoPanel();
@@ -2124,6 +2249,27 @@ function initApp() {
 if (colorPresetBtn) {
   colorPresetBtn.onclick = toggleColorPreset;
 }
+
+if (settingsCubeModeBtn) {
+  settingsCubeModeBtn.onclick = e => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (cubeMode === "normal") {
+      // Klik je skutečný uživatelský gesture, takže Bluetooth dialog má šanci projít.
+      if (btn && typeof btn.onclick === "function") {
+        btn.onclick({ stopPropagation() {} });
+      }
+    } else {
+      switchToNormalCubeMode();
+    }
+
+    updateSettingsCubeModeButton();
+  };
+}
+
+updateSettingsCubeModeButton();
+updateScreenTopBar();
   refreshAll();
   registerServiceWorker();
 }

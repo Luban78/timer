@@ -1854,3 +1854,319 @@ body::-webkit-scrollbar,
 #selectedAlg .alg-orientation-hint div {
   white-space: nowrap !important;
 }
+/* =========================================================
+   COMPACT TOP CONTROLS - mobil + základ
+   Dvě horní volby místo čtyř velkých tlačítek
+   ========================================================= */
+
+.legacy-top-buttons {
+  display: none !important;
+}
+
+#compact-controls {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  width: 100% !important;
+  margin: 12px 0 12px 0 !important;
+  position: relative !important;
+  z-index: 2500 !important;
+}
+
+.compact-dropdown {
+  position: relative !important;
+  min-width: 0 !important;
+}
+
+.compact-main-btn {
+  width: 100% !important;
+  min-height: 64px !important;
+  height: 64px !important;
+  padding: 0 14px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+
+  background: linear-gradient(180deg, rgba(0, 230, 118, .18), rgba(0, 0, 0, .45)) !important;
+  color: #fff !important;
+  border: 1px solid #00e676 !important;
+  border-radius: 18px !important;
+  box-shadow: inset 0 0 24px rgba(0, 230, 118, .12) !important;
+
+  font-size: 27px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+.compact-arrow {
+  color: #00e676 !important;
+  font-size: .85em !important;
+  line-height: 1 !important;
+}
+
+.compact-menu {
+  display: none !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: calc(100% + 8px) !important;
+
+  padding: 8px !important;
+  border: 1px solid rgba(0, 230, 118, .85) !important;
+  border-radius: 16px !important;
+  background: rgba(5, 12, 16, .98) !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.45), 0 0 18px rgba(0,230,118,.20) !important;
+  z-index: 9000 !important;
+}
+
+body.puzzle-menu-open #puzzleModeMenu,
+body.training-menu-open #trainingModeMenu {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 7px !important;
+}
+
+.compact-menu button {
+  width: 100% !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 0 10px !important;
+
+  background: rgba(255,255,255,.06) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  border-radius: 12px !important;
+
+  font-size: 20px !important;
+  font-weight: 850 !important;
+}
+
+.compact-menu button:active {
+  background: rgba(0, 230, 118, .22) !important;
+}
+
+@media (max-width: 420px) {
+  .compact-main-btn {
+    min-height: 58px !important;
+    height: 58px !important;
+    font-size: 23px !important;
+    border-radius: 16px !important;
+  }
+
+  .compact-menu button {
+    min-height: 44px !important;
+    height: 44px !important;
+    font-size: 18px !important;
+  }
+}
+
+/* =========================================================
+   FINAL MOBILE POLISH 9.7.1 - kompaktní horní volby + screeny
+   ========================================================= */
+
+/* Globální horní lišta pro Statistiky/Nastavení */
+#screen-top-strip {
+  display: none !important;
+}
+
+body.screen-stats #screen-top-strip,
+body.screen-settings #screen-top-strip {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10050 !important;
+
+  width: calc(100% - 24px) !important;
+  margin: 10px 12px 8px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+
+  border-radius: 14px !important;
+  border: 1px solid rgba(120, 160, 180, .38) !important;
+  background: rgba(16, 27, 34, .96) !important;
+
+  display: grid !important;
+  grid-template-columns: .82fr 1fr 1.28fr !important;
+  overflow: hidden !important;
+}
+
+#screen-top-menu-btn {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  color: #fff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  padding: 0 !important;
+}
+
+body.screen-stats .global-menu-fab,
+body.screen-settings .global-menu-fab {
+  display: none !important;
+}
+
+body.screen-stats .screen-menu-dropdown,
+body.screen-settings .screen-menu-dropdown {
+  top: 58px !important;
+  left: 12px !important;
+}
+
+/* Timer: horní lišta vždy první, pod ní teprve 2 dropdown tlačítka */
+#top-dashboard {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+  margin: 0 !important;
+}
+
+#top-strip {
+  order: 1 !important;
+}
+
+#compact-controls {
+  order: 2 !important;
+  margin: 8px 0 8px 0 !important;
+}
+
+/* Kompaktní volby se ukážou až po Connect/Normal cube */
+body:not(.trainer-ready) #compact-controls {
+  display: none !important;
+}
+
+body.trainer-ready #compact-controls {
+  display: grid !important;
+}
+
+/* Staré OLL/PLL/Single/Random už nesmí být vidět */
+#modeButtons,
+#training-mode,
+.legacy-top-buttons,
+body.trainer-ready #modeButtons,
+body.trainer-ready #training-mode,
+body:not(.trainer-ready) #modeButtons,
+body:not(.trainer-ready) #training-mode {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+
+/* 2 hlavní tlačítka nahoře - menší text jako Connect/Normal cube, bez ošklivé šipky */
+.compact-main-btn {
+  min-height: 46px !important;
+  height: 46px !important;
+  border-radius: 13px !important;
+  font-size: clamp(20px, 5.2vw, 30px) !important;
+  line-height: 1.05 !important;
+  padding: 0 10px !important;
+}
+
+.compact-arrow {
+  display: none !important;
+}
+
+.compact-menu {
+  top: calc(100% + 6px) !important;
+  padding: 7px !important;
+  border-radius: 14px !important;
+}
+
+.compact-menu button {
+  min-height: 42px !important;
+  height: 42px !important;
+  font-size: 18px !important;
+  border-radius: 11px !important;
+}
+
+/* Názvy obrazovek: nahoře pod lištou, menší, nepřekrývají menu */
+#stats-screen,
+#settings-screen {
+  min-height: 100dvh !important;
+  padding: 0 14px 24px !important;
+  font-size: 16px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+#stats-screen > *,
+#settings-screen > * {
+  max-width: 760px !important;
+}
+
+#stats-screen h2,
+#settings-screen h2 {
+  text-align: center !important;
+  font-size: clamp(30px, 7vw, 44px) !important;
+  line-height: 1.08 !important;
+  margin: 14px auto 18px !important;
+}
+
+#settings-screen p {
+  text-align: left !important;
+  font-size: clamp(18px, 4.4vw, 24px) !important;
+  margin: 0 auto 16px !important;
+}
+
+/* Celkově menší texty mimo timer */
+#stats-screen .stat-card,
+#settings-screen button {
+  font-size: clamp(16px, 4.2vw, 22px) !important;
+}
+
+#stats-screen .stat-card {
+  padding: 12px 14px !important;
+  margin-bottom: 10px !important;
+  border-radius: 16px !important;
+}
+
+#stats-screen .stat-card h3,
+#stats-screen .stat-card h4,
+#coach-card h3,
+#algorithm-section h2,
+#achievement-section h2 {
+  font-size: clamp(20px, 5vw, 28px) !important;
+  margin-bottom: 8px !important;
+}
+
+#stats-screen .stat-card div,
+#stats-screen .stat-card p,
+#daily-list,
+#achievement-list,
+#algorithm-stats {
+  font-size: clamp(16px, 4.4vw, 24px) !important;
+  line-height: 1.25 !important;
+}
+
+/* Nastavení jako menší karty */
+#settings-screen button {
+  width: 100% !important;
+  min-height: 54px !important;
+  height: auto !important;
+  margin: 10px auto !important;
+  padding: 10px 14px !important;
+  border-radius: 16px !important;
+  justify-content: center !important;
+}
+
+#settingsCubeModeBtn::before {
+  content: "▣";
+  margin-right: 10px;
+  color: #00e676;
+}
+
+#colorPresetBtn::before {
+  content: "▦";
+  margin-right: 10px;
+  color: #ffeb3b;
+}
