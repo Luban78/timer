@@ -1686,3 +1686,25 @@ body.history-pinned #main-layout {
     top: 310px !important;
   }
 }
+/* =========================================================
+   PAUZA TRAINERU
+   ========================================================= */
+
+#selectedAlg.trainer-paused {
+  outline: 2px solid #ffeb3b !important;
+  box-shadow: 0 0 18px rgba(255, 235, 59, .35) !important;
+}
+
+#selectedAlg.trainer-paused::after {
+  content: "PAUZA";
+  position: absolute;
+  right: 18px;
+  bottom: 14px;
+  color: #ffeb3b;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+#selectedAlg.trainer-paused::after {
+  pointer-events: none !important;
+}

@@ -268,7 +268,35 @@ const SLICE_CENTER_ROT = [
   [4, 0, 2, 1, 3, 5]  // S / z
 ];
 let pendingVariantIndex = null;
+let trainerPaused = false;
 
+function setTrainerPaused(value) {
+  trainerPaused = !!value;
+
+  if (selectedAlg) {
+    if (selectedAlg) {
+  selectedAlg.addEventListener("pointerdown", e => {
+    if (e.target.closest("#editAlgVariantBtn")) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    
+    toggleTrainerPaused();
+  });
+}
+    selectedAlg.classList.toggle("trainer-paused", trainerPaused);
+  }
+
+  if (stateMsg) {
+    stateMsg.textContent = trainerPaused ? "PAUZA" : "PŘIPRAVEN";
+  }
+}
+
+function toggleTrainerPaused() {
+  if (!currentAlgorithmName || currentAlgorithmName === "Nevybráno") return;
+  setTrainerPaused(!trainerPaused);
+}
 //localStorage.setItem("pllVariant:Jb-perm", "2");
 
 function showTrainerDashboard() {
@@ -806,6 +834,7 @@ selectedAlg.innerText = "Algoritmus: " + selectedAlg.dataset.algText;
 
 prepareNext();
 renderAlgorithmPreview(selectedAlg);
+setTrainerPaused(false);
 const editBtn = document.getElementById("editAlgVariantBtn");
 if (editBtn) editBtn.classList.remove("hidden");
         clearPendingMove();
@@ -1082,6 +1111,7 @@ selectedAlg.innerText = "Algoritmus: " + selectedAlg.dataset.algText;
   
   prepareNext();
   renderAlgorithmPreview(selectedAlg);
+  setTrainerPaused(false);
   
 }
 
@@ -1367,6 +1397,24 @@ function showMoveDebug(info = {}) {
   }
   
   box.style.display = "block";
+  box.style.position = "fixed";
+box.style.left = "10px";
+box.style.top = "80px";
+box.style.right = "auto";
+box.style.bottom = "auto";
+box.style.width = "260px";
+box.style.maxWidth = "calc(100vw - 20px)";
+box.style.maxHeight = "45vh";
+box.style.overflow = "auto";
+box.style.zIndex = "99999";
+box.style.background = "rgba(0,0,0,0.88)";
+box.style.color = "#fff";
+box.style.border = "1px solid #00e676";
+box.style.borderRadius = "10px";
+box.style.padding = "10px";
+box.style.fontSize = "15px";
+box.style.lineHeight = "19px";
+box.style.whiteSpace = "pre-line";
   
   box.innerText =
   "DEBUG TAH\n" +
@@ -1380,6 +1428,9 @@ function showMoveDebug(info = {}) {
 
 
 function handleSmartRawMove(move) {
+    if (trainerPaused) {
+    return;
+  }
   window.__smartInCount = (window.__smartInCount || 0) + 1;
 
 if (mDebug) {
@@ -1488,6 +1539,9 @@ let sliceMove = adaptedSlice.move;
 }
 
 function handleRawMove(move) {
+    if (trainerPaused) {
+    return;
+  }
   if (activeScreen !== "timer") return;
   if (cubeMode === "normal") return;
   if (trainerLocked) return;
@@ -1500,7 +1554,38 @@ function handleRawMove(move) {
   if (!isSolving && seq.length > 0) {
     prepareNext();
   }
-
+    const expectedMove = normalizeMove(getExpectedMove());
+  
+  // FIX: běžné tahy nečekají v double-bufferu.
+  // Debug okno aplikaci zpomalovalo, a tím maskovalo chybu.
+  // Buffer necháme jen pro očekávané dvojtahy typu R2/U2/M2.
+  if (
+    expectedMove &&
+    !expectedMove.endsWith("2") &&
+    !isSliceNotationMove(expectedMove)
+  ) {
+    if (pendingMove) {
+      clearTimeout(pendingTimer);
+      pendingTimer = null;
+      commitMove(pendingMove, pendingMoveTime);
+      pendingMove = null;
+      pendingMoveTime = 0;
+    }
+    
+    commitMove(move, now);
+    return;
+  }
+  
+  // Když kostka pošle R2/U2 přímo jako jeden tah, potvrď ho hned.
+  if (
+    expectedMove &&
+    expectedMove.endsWith("2") &&
+    normalizeMove(move) === expectedMove
+  ) {
+    clearPendingMove();
+    commitMove(move, now);
+    return;
+  }
   const doubleWindow =
     isSliceNotationMove(pendingMove) || isSliceNotationMove(move)
       ? SLICE_DOUBLE_MOVE_WINDOW
