@@ -205,6 +205,11 @@ const devWrong = document.getElementById("dev-wrong");
 const devSaveFacelets = document.getElementById("dev-save-facelets");
 const devExportMap = document.getElementById("dev-export-map");
 const colorPresetBtn = document.getElementById("colorPresetBtn");
+const algorithmStatsScreen = document.getElementById("algorithm-stats-screen");
+const algorithmStatsTitle = document.getElementById("algorithmStatsTitle");
+const openOllStats = document.getElementById("openOllStats");
+const openPllStats = document.getElementById("openPllStats");
+const backToStatsBtn = document.getElementById("backToStatsBtn");
 
 
 /*alert(
@@ -227,7 +232,9 @@ let waitingForStateAfterMove = false;
 let moveDebugEnabled = false;
 let activeScreen = "timer";
 let cubeMode = localStorage.getItem("cubeMode") || "smart";
-let trainingMode = "single";
+let trainingMode = localStorage.getItem("trainingMode") || "single";
+let puzzleMode = localStorage.getItem("puzzleMode") || "wca";
+let algorithmStatsFilter = "pll";
 let lastStateSignature = "";
 let faceletCount = 0;
 let trainerLocked = false;
@@ -476,15 +483,9 @@ function switchToNormalCubeMode() {
 
 
 function updateTrainingButtons() {
-  singleModeBtn.classList.toggle("active", trainingMode === "single");
-  randomModeBtn.classList.toggle("active", trainingMode === "random");
-
-  if (trainingModeLabel) {
-    trainingModeLabel.textContent =
-      trainingMode === "random" ? "Random" :
-      trainingMode === "single" ? "Single" :
-      "Next Scramble";
-  }
+  if (singleModeBtn) singleModeBtn.classList.toggle("active", trainingMode === "single");
+  if (randomModeBtn) randomModeBtn.classList.toggle("active", trainingMode === "random");
+  updateCompactControlsState();
 }
 
 function closeCompactMenus() {
@@ -495,7 +496,54 @@ function setPuzzleModeLabel(label) {
   if (puzzleModeLabel) puzzleModeLabel.textContent = label;
 }
 
+function setTrainingModeLabel(label) {
+  if (trainingModeLabel) trainingModeLabel.textContent = label;
+}
+
+function updateCompactControlsState() {
+  document.body.classList.toggle("puzzle-wca", puzzleMode === "wca");
+  document.body.classList.toggle("puzzle-oll", puzzleMode === "oll");
+  document.body.classList.toggle("puzzle-pll", puzzleMode === "pll");
+
+  const puzzleLabel =
+    puzzleMode === "oll" ? "OLL" :
+    puzzleMode === "pll" ? "PLL" :
+    "WCA 3x3";
+
+  setPuzzleModeLabel(puzzleLabel);
+
+  if (puzzleMode === "wca") {
+    setTrainingModeLabel("Next Scramble");
+    if (trainingModeBtn) trainingModeBtn.setAttribute("aria-label", "Next Scramble");
+  } else {
+    const label = trainingMode === "random" ? "Random" : "Single";
+    setTrainingModeLabel(label);
+    if (trainingModeBtn) trainingModeBtn.setAttribute("aria-label", "Vybrat trénink");
+  }
+}
+
+function setPuzzleMode(mode) {
+  puzzleMode = mode;
+  localStorage.setItem("puzzleMode", puzzleMode);
+
+  if (puzzleMode === "wca") {
+    // WCA režim bude později používat jen Next Scramble.
+    closeCompactMenus();
+  }
+
+  updateCompactControlsState();
+}
+
+function setTrainingMode(mode) {
+  if (mode !== "single" && mode !== "random") return;
+  trainingMode = mode;
+  localStorage.setItem("trainingMode", trainingMode);
+  updateTrainingButtons();
+}
+
 function setupCompactControls() {
+  updateCompactControlsState();
+
   if (puzzleModeBtn) {
     puzzleModeBtn.onclick = e => {
       e.preventDefault();
@@ -509,6 +557,13 @@ function setupCompactControls() {
     trainingModeBtn.onclick = e => {
       e.preventDefault();
       e.stopPropagation();
+
+      if (puzzleMode === "wca") {
+        // Generátor scramblu doplníme později. Zatím se jen zavře menu.
+        closeCompactMenus();
+        return;
+      }
+
       document.body.classList.toggle("training-menu-open");
       document.body.classList.remove("puzzle-menu-open");
     };
@@ -521,18 +576,13 @@ function setupCompactControls() {
         e.stopPropagation();
 
         const mode = btn.dataset.puzzleMode;
+        setPuzzleMode(mode);
 
-        if (mode === "wca") {
-          setPuzzleModeLabel("WCA 3x3");
-        } else if (mode === "oll") {
-          // OLL menu doplníme později. Zatím jen nastavíme popisek,
-          // ať se nespouští starý debug na původním OLL tlačítku.
-          setPuzzleModeLabel("OLL");
-        } else if (mode === "pll") {
-          setPuzzleModeLabel("PLL");
-          if (pllBtn) pllBtn.click();
+        if (mode === "pll" && pllBtn) {
+          pllBtn.click();
         }
 
+        // OLL menu doplníme, až přidáme OLL algoritmy.
         closeCompactMenus();
       };
     });
@@ -545,12 +595,11 @@ function setupCompactControls() {
         e.stopPropagation();
 
         const mode = btn.dataset.trainingMode;
-
-        if (mode === "scramble") {
-          if (trainingModeLabel) trainingModeLabel.textContent = "Next Scramble";
-        } else if (mode === "single") {
+        if (mode === "single") {
+          setTrainingMode("single");
           if (singleModeBtn) singleModeBtn.click();
         } else if (mode === "random") {
+          setTrainingMode("random");
           if (randomModeBtn) randomModeBtn.click();
         }
 
@@ -563,8 +612,6 @@ function setupCompactControls() {
     if (e.target.closest("#compact-controls")) return;
     closeCompactMenus();
   });
-
-  updateTrainingButtons();
 }
 
 function setupTrainingButtons() {
@@ -748,16 +795,18 @@ function showScreen(screen) {
   document.body.classList.toggle("screen-timer", screen === "timer");
   document.body.classList.toggle("screen-stats", screen === "stats");
   document.body.classList.toggle("screen-settings", screen === "settings");
+  document.body.classList.toggle("screen-algstats", screen === "algstats");
   updateScreenTopBar();
   updateSettingsCubeModeButton();
 
   if (mainLayout) {
     mainLayout.style.display = screen === "timer" ? "grid" : "none";
-}
-appScreen.style.display = screen === "timer" ? "flex" : "none";
-historyPanel.style.display = screen === "timer" ? "block" : "none";
-settingsScreen.style.display = screen === "settings" ? "block" : "none";
-statsScreen.style.display = screen === "stats" ? "block" : "none";
+  }
+  if (appScreen) appScreen.style.display = screen === "timer" ? "flex" : "none";
+  if (historyPanel) historyPanel.style.display = screen === "timer" ? "block" : "none";
+  if (settingsScreen) settingsScreen.style.display = screen === "settings" ? "block" : "none";
+  if (statsScreen) statsScreen.style.display = screen === "stats" ? "block" : "none";
+  if (algorithmStatsScreen) algorithmStatsScreen.style.display = screen === "algstats" ? "block" : "none";
 }
 
 function setupAoPanel() {
@@ -1173,16 +1222,36 @@ function setupProfileButtons() {
   settingsResetProfileBtn.onclick = resetProfile;
 }
 
+function isPllAlgorithmName(name) {
+  if (!name) return false;
+  if (Object.prototype.hasOwnProperty.call(pllAlgs, name)) return true;
+  return /-perm$/i.test(name) || /perm/i.test(name);
+}
+
+function renderAlgorithmStatsScreen(filter = algorithmStatsFilter) {
+  algorithmStatsFilter = filter;
+  if (algorithmStatsTitle) {
+    algorithmStatsTitle.textContent = filter === "oll" ? "Statistiky OLL" : "Statistiky PLL";
+  }
+  updateAlgorithmStats();
+}
+
 function updateAlgorithmStats() {
-  const algStats = getAlgorithmStats(savedSolves);
+  if (!algorithmStatsDiv) return;
+
+  const allStats = getAlgorithmStats(savedSolves);
+  const algStats = allStats.filter(a => {
+    const isPll = isPllAlgorithmName(a.name);
+    return algorithmStatsFilter === "pll" ? isPll : !isPll;
+  });
 
   if (algStats.length === 0) {
-    algorithmStatsDiv.innerHTML = "<p>Zatím žádná data algoritmů.</p>";
+    algorithmStatsDiv.innerHTML = `<p class="empty-alg-stats">Zatím žádná data pro ${algorithmStatsFilter === "oll" ? "OLL" : "PLL"}.</p>`;
     return;
   }
 
   algorithmStatsDiv.innerHTML = algStats.map(a => `
-    <div class="stat-card">
+    <div class="stat-card alg-stat-row">
       <h3>${a.name}</h3>
       <div>${a.count}×</div>
       <p>Best: ${a.best.toFixed(2)} s</p>
@@ -2266,6 +2335,24 @@ if (settingsCubeModeBtn) {
 
     updateSettingsCubeModeButton();
   };
+}
+
+if (openOllStats) {
+  openOllStats.onclick = () => {
+    renderAlgorithmStatsScreen("oll");
+    showScreen("algstats");
+  };
+}
+
+if (openPllStats) {
+  openPllStats.onclick = () => {
+    renderAlgorithmStatsScreen("pll");
+    showScreen("algstats");
+  };
+}
+
+if (backToStatsBtn) {
+  backToStatsBtn.onclick = () => showScreen("stats");
 }
 
 updateSettingsCubeModeButton();
