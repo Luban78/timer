@@ -9,9 +9,9 @@
   <meta name="apple-mobile-web-app-title" content="MG Trainer">
 
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=navrh1-final-dropdowns-2">
+  <link rel="stylesheet" href="style.css?v=profi-fix-1">
   
-  <link rel="stylesheet" href="desktopStyle.css?v=3" media="(min-width: 900px)">
+  <link rel="stylesheet" href="desktopStyle.css?v=profi-fix-1" media="(min-width: 900px)">
 
   <title>MG3i Trainer v0.55</title>
 </head>
@@ -20,9 +20,9 @@
 
 <button id="globalMenuBtn" class="global-menu-fab" type="button" aria-label="Menu obrazovek">☰</button>
 <div id="screen-menu-dropdown" class="screen-menu-dropdown" aria-label="Výběr obrazovky">
-  <button id="nav-timer" type="button">🏠 Timer</button>
-  <button id="nav-stats" type="button">📊 Statistiky</button>
-  <button id="nav-settings" type="button">⚙️ Nastavení</button>
+  <button id="nav-timer" type="button">Timer</button>
+  <button id="nav-stats" type="button">Statistiky</button>
+  <button id="nav-settings" type="button">Nastavení</button>
 </div>
 
 <div id="screen-top-strip" class="screen-top-strip" aria-label="Horní lišta obrazovky">
@@ -319,15 +319,31 @@
     <p id="coach-detail">Zatím málo dat.</p>
   </div>
 
-  <div id="algorithm-section">
-    <h2>🧩 Statistiky algoritmů</h2>
-    <div id="algorithm-stats"></div>
+  <div id="algorithm-section" class="algorithm-section-overview">
+    <h2>Statistiky algoritmů</h2>
+    <div class="algorithm-type-grid">
+      <button id="openOllStats" class="algorithm-type-card" type="button">
+        <span>OLL</span>
+        <small>Statistiky OLL algoritmů</small>
+      </button>
+      <button id="openPllStats" class="algorithm-type-card" type="button">
+        <span>PLL</span>
+        <small>Statistiky PLL algoritmů</small>
+      </button>
+    </div>
   </div>
 
   <div id="achievement-section">
     <h2>🏅 Odznaky</h2>
     <div id="achievement-list"></div>
   </div>
+</div>
+
+<!-- ===== STATISTIKY ALGORITMŮ SCREEN ===== -->
+<div id="algorithm-stats-screen" style="display:none;">
+  <h2 id="algorithmStatsTitle">Statistiky PLL</h2>
+  <button id="backToStatsBtn" class="back-to-stats" type="button">Zpět na statistiky</button>
+  <div id="algorithm-stats"></div>
 </div>
 
 <!-- ===== NASTAVENÍ SCREEN ===== -->
@@ -384,7 +400,7 @@
     </div>
   </div>
 </div>
-<script type="module" src="./app.js?v=10005"></script>
+<script type="module" src="./app.js?v=10006"></script>
 
 </body>
 </html>

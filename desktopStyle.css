@@ -1173,3 +1173,185 @@ body.screen-stats .stat-card div,
 body.screen-stats .stat-card p {
   font-size: 16px !important;
 }
+
+/* =========================================================
+   FINAL DESIGN DESKTOP POLISH - 3D cube + cleaner stat/settings
+   ========================================================= */
+
+#selectedAlg:not(:has(.alg-empty-marker)) {
+  height: 330px !important;
+  min-height: 330px !important;
+  max-height: 330px !important;
+  padding: 16px 22px !important;
+}
+
+#selectedAlg:has(.alg-empty-marker) {
+  height: 230px !important;
+  min-height: 230px !important;
+  max-height: 230px !important;
+}
+
+.alg-picture.alg-picture-3d {
+  width: 260px !important;
+  height: 205px !important;
+  margin: -8px auto 6px !important;
+}
+
+.alg-picture.alg-picture-3d::before,
+.alg-picture.alg-picture-3d::after {
+  display: none !important;
+}
+
+.alg-picture.alg-picture-3d img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+#selectedAlg .alg-title {
+  font-size: 30px !important;
+}
+
+#selectedAlg .alg-orientation-hint {
+  font-size: 13px !important;
+  line-height: 1.08 !important;
+  color: #ffeb3b !important;
+}
+
+.alg-move,
+.next-move,
+.done-move,
+.wrong-move {
+  font-size: 24px !important;
+}
+
+.alg-move-line {
+  gap: 16px !important;
+}
+
+body.screen-settings #settingsCubeModeBtn::after {
+  content: "" !important;
+  width: 60px !important;
+  height: 30px !important;
+  right: 18px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, #00d86f, #17f08a) !important;
+}
+body.screen-settings #settingsCubeModeBtn::after {
+  background:
+    radial-gradient(circle at 74% 50%, #fff 0 11px, rgba(255,255,255,0) 12px),
+    linear-gradient(90deg, #00d86f, #17f08a) !important;
+}
+
+/* =========================================================
+   DESKTOP PROFI FIX - zpet z mockupu na cisty layout
+   ========================================================= */
+
+html, body, #app, #history, #history-list, #stats-screen, #settings-screen,
+#algorithm-stats-screen, .detail-modal, .detail-box, * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar, #app::-webkit-scrollbar,
+#history::-webkit-scrollbar, #history-list::-webkit-scrollbar,
+#stats-screen::-webkit-scrollbar, #settings-screen::-webkit-scrollbar,
+#algorithm-stats-screen::-webkit-scrollbar, .detail-modal::-webkit-scrollbar,
+.detail-box::-webkit-scrollbar, *::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+
+body.screen-timer #app {
+  overflow: hidden !important;
+}
+
+.legacy-top-buttons,
+#modeButtons,
+#training-mode {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.compact-arrow { display: none !important; }
+body.puzzle-wca #trainingModeMenu,
+body.puzzle-wca.training-menu-open #trainingModeMenu { display: none !important; }
+body.puzzle-oll #trainingModeMenu button[data-training-mode="scramble"],
+body.puzzle-pll #trainingModeMenu button[data-training-mode="scramble"] { display: none !important; }
+
+#selectedAlg:not(:has(.alg-empty-marker)) {
+  height: 275px !important;
+  min-height: 275px !important;
+  max-height: 275px !important;
+}
+.alg-picture {
+  width: 70px !important;
+  height: 70px !important;
+  margin: 2px auto 6px !important;
+  filter: none !important;
+}
+.alg-picture img { display: none !important; }
+.alg-cube-placeholder {
+  width: 66px !important;
+  height: 66px !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 4px !important;
+  padding: 7px !important;
+  border-radius: 10px !important;
+  background: rgba(0,0,0,.20) !important;
+}
+.cube-cell { border-radius: 4px !important; background: rgba(85,104,112,.55) !important; }
+.cube-cell.is-corner { background: #ffe24a !important; }
+.alg-move, .next-move, .done-move, .wrong-move { font-size: 27px !important; }
+
+body.screen-stats #main-layout,
+body.screen-settings #main-layout,
+body.screen-algstats #main-layout { display: none !important; }
+body.screen-stats #stats-screen,
+body.screen-settings #settings-screen,
+body.screen-algstats #algorithm-stats-screen { display: block !important; }
+
+body.screen-stats #screen-top-strip,
+body.screen-settings #screen-top-strip,
+body.screen-algstats #screen-top-strip {
+  display: grid !important;
+  width: min(900px, calc(100vw - 320px)) !important;
+  margin-left: 250px !important;
+  margin-top: 14px !important;
+}
+
+body.screen-stats #stats-screen,
+body.screen-settings #settings-screen,
+body.screen-algstats #algorithm-stats-screen {
+  width: min(1000px, calc(100vw - 320px)) !important;
+  margin-left: 250px !important;
+  margin-top: 18px !important;
+  padding: 0 0 30px !important;
+  overflow-y: auto !important;
+}
+
+#stats-screen h2,
+#settings-screen h2,
+#algorithm-stats-screen h2 {
+  font-size: 38px !important;
+  margin: 18px 0 18px !important;
+  text-align: center !important;
+}
+#settings-screen p { font-size: 20px !important; margin-bottom: 14px !important; }
+#settings-screen button {
+  min-height: 52px !important;
+  height: 52px !important;
+  max-width: 600px !important;
+  font-size: 22px !important;
+  padding: 0 16px !important;
+}
+#settings-screen button::before,
+#settings-screen button::after { display:none !important; content:none !important; }
+#stats-screen #stats-content { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 10px !important; }
+#stats-screen #stats-content .stat-card { min-height: 96px !important; padding: 10px !important; }
+.algorithm-type-grid { display:grid !important; grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 12px !important; }
+#algorithm-stats-screen #algorithm-stats { display:grid !important; grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 12px !important; }

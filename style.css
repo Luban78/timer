@@ -2170,3 +2170,873 @@ body:not(.trainer-ready) #training-mode {
   margin-right: 10px;
   color: #ffeb3b;
 }
+
+/* =========================================================
+   FINAL DESIGN POLISH - podle schválených návrhů
+   ========================================================= */
+
+:root {
+  --design-bg: #020807;
+  --design-card: rgba(14, 29, 36, .94);
+  --design-card-2: rgba(8, 18, 21, .96);
+  --design-line: rgba(0, 230, 118, .78);
+  --design-glow: rgba(0, 230, 118, .22);
+  --design-yellow: #ffeb3b;
+}
+
+html,
+body {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0, 230, 118, .12), transparent 32%),
+    radial-gradient(circle at 50% 62%, rgba(0, 229, 255, .06), transparent 38%),
+    linear-gradient(180deg, #04100e 0%, #020706 100%) !important;
+}
+
+#app-version {
+  display: none !important;
+}
+
+/* horní lišta vždy jako první a čistě */
+#top-dashboard {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+  margin: 0 !important;
+}
+
+#top-strip,
+#screen-top-strip {
+  box-shadow: inset 0 0 18px rgba(255,255,255,.025), 0 0 18px rgba(0,0,0,.28) !important;
+}
+
+/* dvě nové horní volby */
+#compact-controls {
+  width: 100% !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  margin: 4px 0 2px !important;
+}
+
+body.trainer-ready #compact-controls {
+  display: grid !important;
+}
+
+.compact-main-btn {
+  min-height: 54px !important;
+  height: 54px !important;
+  border-radius: 17px !important;
+  border: 1px solid var(--design-line) !important;
+  background: linear-gradient(180deg, rgba(19, 61, 41, .88), rgba(7, 17, 18, .98)) !important;
+  color: #fff !important;
+  font-size: clamp(20px, 5vw, 28px) !important;
+  font-weight: 850 !important;
+  letter-spacing: -.02em !important;
+  box-shadow: inset 0 0 24px rgba(0,230,118,.12), 0 0 16px rgba(0,230,118,.12) !important;
+}
+
+.compact-main-btn:active,
+.compact-dropdown.open .compact-main-btn {
+  background: linear-gradient(180deg, #13ec82, #02ce72) !important;
+  color: #06100a !important;
+}
+
+.compact-arrow {
+  display: none !important;
+}
+
+.compact-menu {
+  background: rgba(7, 17, 18, .98) !important;
+  border: 1px solid rgba(0,230,118,.78) !important;
+  box-shadow: 0 16px 28px rgba(0,0,0,.48), 0 0 20px rgba(0,230,118,.18) !important;
+}
+
+.compact-menu button {
+  background: rgba(255,255,255,.055) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+}
+
+/* stará 4 tlačítka držet pryč */
+#modeButtons,
+#training-mode,
+.legacy-top-buttons {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+/* připojení */
+#btn,
+#normalCubeBtn {
+  min-height: 56px !important;
+  border-radius: 17px !important;
+  background: linear-gradient(180deg, rgba(15, 55, 36, .88), rgba(7, 18, 18, .98)) !important;
+  box-shadow: inset 0 0 24px rgba(0,230,118,.11), 0 0 18px rgba(0,230,118,.10) !important;
+  font-size: clamp(25px, 6.5vw, 36px) !important;
+}
+
+/* karta algoritmu podle návrhu */
+#selectedAlg {
+  position: relative !important;
+  border-radius: 24px !important;
+  border: 1.5px solid rgba(255, 235, 59, .88) !important;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(0, 230, 118, .11), transparent 38%),
+    linear-gradient(180deg, rgba(15, 29, 36, .98), rgba(5, 12, 14, .98)) !important;
+  box-shadow:
+    0 0 22px rgba(255,235,59,.18),
+    inset 0 0 36px rgba(255,255,255,.018) !important;
+}
+
+#selectedAlg:has(.alg-empty-marker) {
+  min-height: 210px !important;
+  height: 210px !important;
+}
+
+#selectedAlg:not(:has(.alg-empty-marker)) {
+  min-height: clamp(500px, 57dvh, 620px) !important;
+  height: clamp(500px, 57dvh, 620px) !important;
+  padding: clamp(16px, 4vw, 28px) !important;
+}
+
+.alg-card-head {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 3px !important;
+  padding-right: 58px !important;
+  z-index: 2 !important;
+}
+
+#selectedAlg .alg-title {
+  font-size: clamp(30px, 8.2vw, 42px) !important;
+  color: var(--green) !important;
+  line-height: 1.02 !important;
+}
+
+#selectedAlg .alg-title-empty {
+  font-size: clamp(18px, 5vw, 26px) !important;
+  color: #fff !important;
+}
+
+#selectedAlg .alg-orientation-hint {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 1px !important;
+  color: var(--design-yellow) !important;
+  font-size: clamp(15px, 4vw, 20px) !important;
+  line-height: 1.08 !important;
+  font-weight: 800 !important;
+  max-width: 145px !important;
+  margin-top: 3px !important;
+}
+
+/* velký náhled kostky */
+.alg-picture.alg-picture-3d {
+  width: min(66vw, 300px) !important;
+  height: min(52vw, 245px) !important;
+  margin: 6px auto 10px !important;
+  filter: drop-shadow(0 20px 28px rgba(0,0,0,.48)) drop-shadow(0 0 18px rgba(0,230,118,.18));
+}
+
+.alg-picture.alg-picture-3d::before,
+.alg-picture.alg-picture-3d::after {
+  display: none !important;
+}
+
+.alg-picture.alg-picture-3d img {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  object-fit: contain !important;
+}
+
+.alg-moves-row {
+  gap: clamp(9px, 1.55dvh, 16px) !important;
+  margin-top: clamp(4px, 1dvh, 12px) !important;
+}
+
+.alg-move-line {
+  gap: clamp(9px, 3vw, 20px) !important;
+  min-height: clamp(30px, 4.8dvh, 44px) !important;
+}
+
+.alg-move,
+.next-move,
+.done-move,
+.wrong-move {
+  font-size: clamp(21px, 5.6vw, 34px) !important;
+  line-height: 1 !important;
+}
+
+.next-move,
+.done-move,
+.wrong-move {
+  border-radius: 11px !important;
+  padding: 4px 10px !important;
+}
+
+/* timer blok více podle návrhu */
+#state-msg {
+  margin: 4px 0 -2px !important;
+  color: var(--design-yellow) !important;
+  font-size: clamp(24px, 6.2vw, 38px) !important;
+  font-weight: 950 !important;
+  letter-spacing: .01em !important;
+}
+
+#tps {
+  min-height: clamp(118px, 17dvh, 168px) !important;
+  border-radius: 18px !important;
+  border: 1.5px solid rgba(0,230,118,.85) !important;
+  background: radial-gradient(circle at 50% 55%, rgba(0,230,118,.08), transparent 45%), rgba(0,0,0,.74) !important;
+  box-shadow: inset 0 0 32px rgba(0,230,118,.035), 0 0 18px rgba(0,230,118,.11) !important;
+  font-size: clamp(78px, 17vw, 130px) !important;
+}
+
+.stats-grid {
+  border: 1px solid rgba(0,230,118,.72) !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  gap: 0 !important;
+  background: rgba(10, 18, 20, .88) !important;
+}
+
+.stats-grid .stat-box {
+  border-radius: 0 !important;
+  border: none !important;
+  border-right: 1px solid rgba(0,230,118,.45) !important;
+  background: transparent !important;
+  min-height: 96px !important;
+}
+
+.stats-grid .stat-box:nth-child(3) {
+  border-right: none !important;
+}
+
+.stats-grid .stat-label {
+  color: rgba(255,255,255,.62) !important;
+  font-size: clamp(13px, 3.2vw, 19px) !important;
+}
+
+.stats-grid .stat-val {
+  color: var(--green) !important;
+  font-weight: 800 !important;
+}
+
+/* mobil: v mockupu jsou názvy mimo timer menší */
+body.screen-stats #stats-screen,
+body.screen-settings #settings-screen {
+  background:
+    radial-gradient(circle at 50% 0, rgba(0,230,118,.08), transparent 30%),
+    linear-gradient(180deg, rgba(2,8,7,.98), rgba(1,6,6,.98)) !important;
+}
+
+/* obrazovky statistik a nastavení podle návrhů */
+body.screen-stats #stats-screen,
+body.screen-settings #settings-screen {
+  padding: 0 14px 26px !important;
+  overflow-y: auto !important;
+  scrollbar-width: none !important;
+}
+
+body.screen-stats #stats-screen::-webkit-scrollbar,
+body.screen-settings #settings-screen::-webkit-scrollbar {
+  display: none !important;
+}
+
+body.screen-stats #stats-screen h2,
+body.screen-settings #settings-screen h2 {
+  text-align: center !important;
+  font-size: clamp(36px, 9.5vw, 56px) !important;
+  line-height: 1 !important;
+  margin: 22px auto 24px !important;
+  text-shadow: 0 0 18px rgba(255,255,255,.12) !important;
+}
+
+body.screen-settings #settings-screen p {
+  color: rgba(0,230,118,.78) !important;
+  font-size: clamp(18px, 4.6vw, 24px) !important;
+  font-weight: 700 !important;
+  margin: 0 auto 20px !important;
+  max-width: 760px !important;
+}
+
+body.screen-settings #settings-screen button {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  max-width: 760px !important;
+  min-height: 78px !important;
+  margin: 14px auto !important;
+  padding: 12px 54px 12px 72px !important;
+  border-radius: 20px !important;
+  border: 1.4px solid rgba(0,230,118,.82) !important;
+  background: linear-gradient(180deg, rgba(18, 31, 38, .96), rgba(6, 14, 16, .98)) !important;
+  color: #fff !important;
+  font-size: clamp(20px, 5.2vw, 32px) !important;
+  font-weight: 650 !important;
+  box-shadow: 0 0 18px rgba(0,230,118,.12), inset 0 0 28px rgba(255,255,255,.018) !important;
+}
+
+body.screen-settings #settings-screen button::after {
+  content: "›";
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--green);
+  font-size: 42px;
+  line-height: 1;
+  font-weight: 300;
+}
+
+body.screen-settings #settings-screen button::before {
+  position: absolute !important;
+  left: 24px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  font-size: 34px !important;
+  line-height: 1 !important;
+}
+
+#settingsCubeModeBtn::before { content: "▱" !important; color: var(--green) !important; }
+#colorPresetBtn::before { content: "▦" !important; color: var(--design-yellow) !important; }
+#settings-export-btn::before { content: "⇧" !important; color: var(--green) !important; }
+#settings-import-btn::before { content: "⇩" !important; color: var(--green) !important; }
+#settings-clear-btn::before { content: "⌫" !important; color: #ff6b85 !important; }
+#settings-reset-profile-btn::before { content: "↻" !important; color: #ff6b85 !important; }
+
+body.screen-settings #settings-screen button.danger {
+  border-color: rgba(255, 23, 68, .86) !important;
+  color: #ff8da1 !important;
+  background: linear-gradient(180deg, rgba(62, 12, 24, .88), rgba(24, 6, 10, .98)) !important;
+  box-shadow: 0 0 18px rgba(255,23,68,.12) !important;
+}
+
+/* Statistiky: kompaktní návrhový grid */
+body.screen-stats #xp-card,
+body.screen-stats .daily-card,
+body.screen-stats #coach-card,
+body.screen-stats #algorithm-section,
+body.screen-stats #achievement-section {
+  max-width: 760px !important;
+  width: 100% !important;
+  margin: 0 auto 12px !important;
+  padding: 14px 16px !important;
+  border-radius: 18px !important;
+  border: 1.3px solid rgba(0,230,118,.78) !important;
+  background: linear-gradient(180deg, rgba(18, 31, 38, .95), rgba(7, 15, 17, .98)) !important;
+  box-shadow: 0 0 18px rgba(0,230,118,.11), inset 0 0 28px rgba(255,255,255,.016) !important;
+}
+
+body.screen-stats #stats-content {
+  max-width: 760px !important;
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin: 0 auto 12px !important;
+}
+
+body.screen-stats #stats-content .stat-card {
+  min-height: 128px !important;
+  margin: 0 !important;
+  padding: 12px 8px !important;
+  text-align: center !important;
+  border: 1.3px solid rgba(0,230,118,.82) !important;
+  border-radius: 16px !important;
+  background: linear-gradient(180deg, rgba(18, 31, 38, .95), rgba(7, 15, 17, .98)) !important;
+}
+
+body.screen-stats .stat-card h3,
+body.screen-stats .stat-card h4 {
+  font-size: clamp(14px, 3.6vw, 20px) !important;
+  line-height: 1.12 !important;
+  margin: 0 0 8px !important;
+}
+
+body.screen-stats #stats-content .stat-card > div {
+  font-size: clamp(24px, 6vw, 34px) !important;
+  font-weight: 900 !important;
+  color: #fff !important;
+}
+
+body.screen-stats #daily-list {
+  font-size: clamp(16px, 4.4vw, 24px) !important;
+  line-height: 1.35 !important;
+}
+
+@media (max-width: 430px) {
+  #selectedAlg:not(:has(.alg-empty-marker)) {
+    min-height: 510px !important;
+    height: 510px !important;
+  }
+
+  .alg-picture.alg-picture-3d {
+    width: 250px !important;
+    height: 210px !important;
+    margin-top: 0 !important;
+  }
+
+  .alg-move-line {
+    gap: 11px !important;
+  }
+
+  .alg-move,
+  .next-move,
+  .done-move,
+  .wrong-move {
+    font-size: 26px !important;
+  }
+
+  #tps {
+    min-height: 128px !important;
+  }
+
+  .stats-grid .stat-box {
+    min-height: 92px !important;
+  }
+}
+
+/* settings první řádek jako přepínač podle návrhu */
+body.screen-settings #settingsCubeModeBtn::after {
+  content: "" !important;
+  width: 66px !important;
+  height: 34px !important;
+  right: 20px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, #00d86f, #17f08a) !important;
+  box-shadow: inset 0 0 12px rgba(255,255,255,.18), 0 0 14px rgba(0,230,118,.2) !important;
+}
+
+body.screen-settings #settingsCubeModeBtn .dummy {}
+
+body.screen-settings #settingsCubeModeBtn::before {
+  content: "▱" !important;
+}
+
+body.screen-settings #settingsCubeModeBtn {
+  padding-right: 105px !important;
+}
+
+body.screen-settings #settingsCubeModeBtn::marker { display: none; }
+
+body.screen-settings #settingsCubeModeBtn {
+  --switch-dot: radial-gradient(circle, #fff 0 58%, transparent 60%);
+}
+
+body.screen-settings #settingsCubeModeBtn span.switch-dot { display:none; }
+body.screen-settings #settingsCubeModeBtn::after {
+  background:
+    radial-gradient(circle at 74% 50%, #fff 0 12px, rgba(255,255,255,0) 13px),
+    linear-gradient(90deg, #00d86f, #17f08a) !important;
+}
+
+/* =========================================================
+   PROFI FIX 10.0 - uklid po mockupu, zpet na cisty neon design
+   ========================================================= */
+
+/* Vsechny obrazovky: skryte scrollbary, ale scrollovani zustava */
+html, body, #app, #history, #history-list, #stats-screen, #settings-screen,
+#algorithm-stats-screen, .detail-modal, .detail-box, #modal, #modalContent,
+#algVariantModal, .variant-modal-box, * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar, #app::-webkit-scrollbar,
+#history::-webkit-scrollbar, #history-list::-webkit-scrollbar,
+#stats-screen::-webkit-scrollbar, #settings-screen::-webkit-scrollbar,
+#algorithm-stats-screen::-webkit-scrollbar, .detail-modal::-webkit-scrollbar,
+.detail-box::-webkit-scrollbar, #modal::-webkit-scrollbar, #modalContent::-webkit-scrollbar,
+#algVariantModal::-webkit-scrollbar, .variant-modal-box::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+
+/* Timer obrazovka nesmi byt posuvna */
+body.screen-timer {
+  overflow: hidden !important;
+}
+body.screen-timer #main-layout,
+body.screen-timer #app {
+  height: 100dvh !important;
+  overflow: hidden !important;
+}
+
+/* Horni lista na timeru vzdy uplne nahore */
+#top-dashboard {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+  margin: 0 0 8px 0 !important;
+}
+#top-strip {
+  order: 1 !important;
+  margin: 0 !important;
+  height: 44px !important;
+  min-height: 44px !important;
+}
+#compact-controls {
+  order: 2 !important;
+  margin: 6px 0 8px 0 !important;
+}
+
+/* Stara ctyri tlacitka definitivne pryc */
+#modeButtons, #training-mode, .legacy-top-buttons {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Nove dve volby: kompaktně, bez sipek */
+body:not(.trainer-ready) #compact-controls { display: none !important; }
+body.trainer-ready #compact-controls {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+.compact-main-btn {
+  min-height: 48px !important;
+  height: 48px !important;
+  border-radius: 15px !important;
+  font-size: clamp(20px, 5.1vw, 28px) !important;
+  font-weight: 850 !important;
+  line-height: 1.05 !important;
+  padding: 0 10px !important;
+  background: linear-gradient(180deg, rgba(0,230,118,.18), rgba(3,12,12,.95)) !important;
+  color: #fff !important;
+  border: 1px solid rgba(0,230,118,.85) !important;
+  box-shadow: inset 0 0 20px rgba(0,230,118,.10), 0 0 14px rgba(0,230,118,.10) !important;
+}
+.compact-arrow { display: none !important; }
+.compact-menu {
+  border-radius: 14px !important;
+  padding: 7px !important;
+  background: rgba(6,14,16,.98) !important;
+  border: 1px solid rgba(0,230,118,.82) !important;
+}
+.compact-menu button {
+  min-height: 42px !important;
+  height: 42px !important;
+  border-radius: 11px !important;
+  font-size: 18px !important;
+}
+/* WCA = prave tlacitko neni rozbalovaci menu Single/Random */
+body.puzzle-wca #trainingModeMenu { display: none !important; }
+body.puzzle-wca.training-menu-open #trainingModeMenu { display: none !important; }
+body.puzzle-oll #trainingModeMenu button[data-training-mode="scramble"],
+body.puzzle-pll #trainingModeMenu button[data-training-mode="scramble"] {
+  display: none !important;
+}
+
+/* Algoritmus: pryc 3D obrazek, zpet puvodni maly placeholder */
+#selectedAlg:not(:has(.alg-empty-marker)) {
+  height: clamp(365px, 49dvh, 455px) !important;
+  min-height: clamp(365px, 49dvh, 455px) !important;
+  max-height: clamp(365px, 49dvh, 455px) !important;
+  padding: 16px 20px !important;
+  overflow: hidden !important;
+}
+#selectedAlg:has(.alg-empty-marker) {
+  height: 190px !important;
+  min-height: 190px !important;
+  max-height: 190px !important;
+}
+#selectedAlg .alg-title {
+  font-size: clamp(31px, 8vw, 40px) !important;
+  line-height: 1.02 !important;
+}
+#selectedAlg .alg-orientation-hint {
+  font-size: clamp(15px, 4vw, 19px) !important;
+  line-height: 1.08 !important;
+  max-width: 150px !important;
+  margin-top: 3px !important;
+}
+.alg-picture {
+  width: 82px !important;
+  height: 82px !important;
+  margin: 4px auto 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  filter: none !important;
+  transform: none !important;
+}
+.alg-picture::before,
+.alg-picture::after {
+  display: block !important;
+}
+.alg-cube-placeholder {
+  width: 76px !important;
+  height: 76px !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  grid-template-rows: repeat(3, 1fr) !important;
+  gap: 5px !important;
+  padding: 8px !important;
+  border-radius: 12px !important;
+  background: rgba(0,0,0,.22) !important;
+  box-shadow: 0 0 16px rgba(255,235,59,.16) !important;
+}
+.cube-cell {
+  border-radius: 5px !important;
+  background: rgba(85, 104, 112, .55) !important;
+}
+.cube-cell.is-corner { background: #ffe24a !important; }
+.alg-picture img { display: none !important; }
+.alg-moves-row {
+  margin-top: 6px !important;
+  gap: 8px !important;
+}
+.alg-move-line {
+  gap: 14px !important;
+  justify-content: center !important;
+}
+.alg-move, .next-move, .done-move, .wrong-move {
+  font-size: clamp(27px, 7vw, 38px) !important;
+  line-height: 1.05 !important;
+}
+.next-move {
+  padding: .05em .24em !important;
+  border-radius: 10px !important;
+}
+
+/* Timer dole: vse se musi vejit na jednu obrazovku */
+#state-msg {
+  font-size: clamp(26px, 7vw, 38px) !important;
+  line-height: 1.05 !important;
+  margin: 6px 0 6px !important;
+}
+#tps {
+  min-height: 110px !important;
+  height: 110px !important;
+  font-size: clamp(72px, 17vw, 104px) !important;
+  margin-bottom: 8px !important;
+}
+.stats-grid {
+  height: 78px !important;
+  min-height: 78px !important;
+  gap: 0 !important;
+  margin: 0 !important;
+}
+.stats-grid .stat-box {
+  min-height: 78px !important;
+  height: 78px !important;
+  border-radius: 0 !important;
+  padding: 5px !important;
+}
+.stats-grid .stat-label {
+  font-size: clamp(13px, 3.4vw, 18px) !important;
+}
+.stats-grid .stat-val {
+  font-size: clamp(24px, 6vw, 34px) !important;
+}
+
+@media (max-height: 760px) {
+  #selectedAlg:not(:has(.alg-empty-marker)) {
+    height: 350px !important;
+    min-height: 350px !important;
+    max-height: 350px !important;
+  }
+  .alg-picture { width: 68px !important; height: 68px !important; margin: 2px auto 6px !important; }
+  .alg-cube-placeholder { width: 64px !important; height: 64px !important; gap: 4px !important; padding: 7px !important; }
+  .alg-move, .next-move, .done-move, .wrong-move { font-size: clamp(24px, 6.1vw, 32px) !important; }
+  #tps { height: 96px !important; min-height: 96px !important; }
+  .stats-grid, .stats-grid .stat-box { height: 68px !important; min-height: 68px !important; }
+}
+
+/* Settings a statistiky: profesionalne, mensi, bez ikon/šipek */
+#screen-menu-dropdown button {
+  font-size: 20px !important;
+  min-height: 46px !important;
+  padding: 0 16px !important;
+}
+body.screen-stats #screen-top-strip,
+body.screen-settings #screen-top-strip,
+body.screen-algstats #screen-top-strip {
+  display: grid !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10050 !important;
+  width: calc(100% - 24px) !important;
+  margin: 10px 12px 8px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+}
+body.screen-stats #stats-screen,
+body.screen-settings #settings-screen,
+body.screen-algstats #algorithm-stats-screen {
+  min-height: 100dvh !important;
+  padding: 0 16px 28px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  background: radial-gradient(circle at 50% 0, rgba(0,230,118,.08), transparent 30%), linear-gradient(180deg, #020807, #010505) !important;
+}
+#stats-screen > *, #settings-screen > *, #algorithm-stats-screen > * {
+  max-width: 760px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+#stats-screen h2,
+#settings-screen h2,
+#algorithm-stats-screen h2 {
+  text-align: center !important;
+  font-size: clamp(30px, 7.4vw, 44px) !important;
+  line-height: 1.05 !important;
+  margin: 18px auto 18px !important;
+  text-shadow: none !important;
+}
+#settings-screen p {
+  color: rgba(0,230,118,.78) !important;
+  font-size: clamp(17px, 4.2vw, 22px) !important;
+  font-weight: 700 !important;
+  margin: 0 auto 16px !important;
+}
+#settings-screen button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-height: 56px !important;
+  height: 56px !important;
+  margin: 10px auto !important;
+  padding: 0 16px !important;
+  border-radius: 16px !important;
+  font-size: clamp(18px, 4.8vw, 25px) !important;
+  font-weight: 800 !important;
+  border: 1.2px solid rgba(0,230,118,.82) !important;
+  background: linear-gradient(180deg, rgba(18,31,38,.94), rgba(7,15,17,.98)) !important;
+  box-shadow: 0 0 12px rgba(0,230,118,.10) !important;
+}
+#settings-screen button::before,
+#settings-screen button::after {
+  display: none !important;
+  content: none !important;
+}
+#settings-screen button.danger {
+  color: #ff8da1 !important;
+  border-color: rgba(255,23,68,.85) !important;
+  background: linear-gradient(180deg, rgba(45,10,18,.88), rgba(18,5,8,.98)) !important;
+}
+
+/* Statistiky mensi a prehledne */
+#stats-screen #xp-card,
+#stats-screen .daily-card,
+#stats-screen #coach-card,
+#stats-screen #algorithm-section,
+#stats-screen #achievement-section {
+  width: 100% !important;
+  max-width: 760px !important;
+  margin: 0 auto 12px !important;
+  padding: 12px 14px !important;
+  border-radius: 16px !important;
+  border: 1.2px solid rgba(0,230,118,.75) !important;
+  background: linear-gradient(180deg, rgba(18,31,38,.94), rgba(7,15,17,.98)) !important;
+  box-shadow: 0 0 12px rgba(0,230,118,.09) !important;
+}
+#stats-screen #stats-content {
+  width: 100% !important;
+  max-width: 760px !important;
+  margin: 0 auto 12px !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 9px !important;
+}
+#stats-screen #stats-content .stat-card {
+  min-height: 100px !important;
+  padding: 10px 7px !important;
+  text-align: center !important;
+  border-radius: 15px !important;
+  margin: 0 !important;
+}
+#stats-screen .stat-card h3,
+#stats-screen .stat-card h4,
+#stats-screen #algorithm-section h2,
+#stats-screen #achievement-section h2,
+#stats-screen #coach-card h3 {
+  font-size: clamp(16px, 4.1vw, 22px) !important;
+  line-height: 1.12 !important;
+  margin: 0 0 7px !important;
+}
+#stats-screen #stats-content .stat-card > div {
+  font-size: clamp(22px, 5.8vw, 32px) !important;
+  font-weight: 900 !important;
+}
+#stats-screen .stat-card p,
+#daily-list,
+#coach-detail,
+#achievement-list {
+  font-size: clamp(15px, 4vw, 20px) !important;
+  line-height: 1.25 !important;
+}
+
+/* Statistiky algoritmu - jen dve volby OLL/PLL */
+.algorithm-type-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+.algorithm-type-card,
+.back-to-stats {
+  border: 1.2px solid rgba(0,230,118,.82) !important;
+  background: linear-gradient(180deg, rgba(18,31,38,.94), rgba(7,15,17,.98)) !important;
+  color: #fff !important;
+  border-radius: 16px !important;
+  min-height: 72px !important;
+  padding: 10px !important;
+  font-weight: 900 !important;
+}
+.algorithm-type-card span {
+  display: block !important;
+  font-size: clamp(28px, 8vw, 42px) !important;
+  color: var(--green) !important;
+}
+.algorithm-type-card small {
+  display: block !important;
+  margin-top: 4px !important;
+  color: rgba(255,255,255,.72) !important;
+  font-size: clamp(12px, 3.5vw, 16px) !important;
+}
+#algorithm-stats-screen #algorithm-stats {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+#algorithm-stats-screen .alg-stat-row {
+  min-height: 116px !important;
+  padding: 12px !important;
+  border-radius: 16px !important;
+  border: 1.2px solid rgba(0,230,118,.75) !important;
+  background: linear-gradient(180deg, rgba(18,31,38,.94), rgba(7,15,17,.98)) !important;
+}
+#algorithm-stats-screen .alg-stat-row h3 {
+  font-size: 24px !important;
+  margin: 0 0 6px !important;
+}
+#algorithm-stats-screen .alg-stat-row div,
+#algorithm-stats-screen .alg-stat-row p {
+  font-size: 16px !important;
+  line-height: 1.25 !important;
+  margin: 3px 0 !important;
+}
+.empty-alg-stats {
+  text-align: center !important;
+  font-size: 18px !important;
+  color: rgba(255,255,255,.75) !important;
+}

@@ -279,15 +279,18 @@ function escapeHtml(value) {
 }
 
 function renderCubePlaceholder(algName) {
-  const cells = Array.from({ length: 9 }, (_, index) => {
-    const isCorner = index === 0 || index === 2 || index === 6 || index === 8;
-    return `<span class="cube-cell${isCorner ? " is-corner" : ""}"></span>`;
-  }).join("");
-
   return `
-    <div class="alg-picture" data-alg="${escapeHtml(algName)}" aria-label="Náhled algoritmu">
+    <div class="alg-picture" data-alg="${escapeHtml(algName)}" aria-label="Náhled orientace kostky">
       <div class="alg-cube-placeholder">
-        ${cells}
+        <span class="cube-cell is-corner"></span>
+        <span class="cube-cell"></span>
+        <span class="cube-cell is-corner"></span>
+        <span class="cube-cell"></span>
+        <span class="cube-cell"></span>
+        <span class="cube-cell"></span>
+        <span class="cube-cell is-corner"></span>
+        <span class="cube-cell"></span>
+        <span class="cube-cell is-corner"></span>
       </div>
     </div>`;
 }
@@ -336,7 +339,8 @@ function renderAlgorithmCard(algName, displaySteps, empty = false) {
   const orientationFront = "Green";
   
   return `
-    <div class="alg-card-head">
+    <div class="alg-card-head${empty ? " alg-card-empty" : ""}">
+      ${empty ? `<span class="alg-empty-marker"></span>` : ""}
       <div class="alg-title${empty ? " alg-title-empty" : ""}">${safeName}</div>
       ${empty ? "" : `
         <div class="alg-orientation-hint">
