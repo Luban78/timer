@@ -13,19 +13,19 @@ body {
   max-width: none !important;
   
   display: grid !important;
-  grid-template-columns: minmax(520px, 760px) minmax(360px, 1fr) !important;
-  gap: 18px !important;
+  grid-template-columns: minmax(520px, 760px) minmax(360px, 520px) !important;
+  gap: 24px !important;
   
-  padding: 14px 18px !important;
+  padding: 20px 24px !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
+  align-items: start !important;
 }
-
 /* Levá část = timer */
 #app {
   width: 100% !important;
   max-width: none !important;
-  height: calc(100dvh - 28px) !important;
+  height: calc(100dvh - 40px) !important;
   
   overflow-y: auto !important;
   overflow-x: hidden !important;
@@ -43,7 +43,8 @@ body {
   transform: none !important;
   
   width: 100% !important;
-  height: calc(100dvh - 28px) !important;
+  max-width: none !important;
+  height: calc(100dvh - 40px) !important;
   max-height: none !important;
   
   display: block !important;
@@ -59,6 +60,18 @@ body {
   box-sizing: border-box !important;
 }
 
+#history-list,
+.history-list {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+
+#history-panel .history-item,
+#history-panel li,
+#history-panel .solve-row {
+  width: 100% !important;
+}
 /* Na PC nechceme vysouvací šipku historie */
 #history-toggle,
 .history-toggle,
@@ -110,7 +123,7 @@ body.ao-pinned #ao-panel {
   transform: none !important;
 }
 
-/* Trochu zmenšit horní tlačítka na PC */
+/*  Trochu zmenšitphorní tlačítka na PC */
 #connectBtn,
 #normalCubeBtn,
 #connect-button,
