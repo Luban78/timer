@@ -10,7 +10,11 @@
   --yellow:#ffd54f;
   --red:#ff1744;
   --text:#ffffff;
-  --muted:#a5adb3;
+  -webkit-margin-top: #a5adb3;
+  -moz-margin-top: #a5adb3;
+  -ms-margin-top: #a5adb3;
+  -o-margin-top: #a5adb3;
+  margin-top: #a5adb3;
 }
 
 *{box-sizing:border-box;}

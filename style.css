@@ -1548,9 +1548,10 @@ body.trainer-ready #training-mode {
 .ao-panel {
   left: auto !important;
   right: 0 !important;
-  top: clamp(250px, 31dvh, 330px) !important;
+  
+  top: clamp(155px, 24dvh, 210px) !important;
   width: 172px !important;
-  transform: translateX(calc(100% - 18px)) !important;
+  transform: translateX(calc(100% - 0px)) !important;
   z-index: 1300 !important;
 }
 
