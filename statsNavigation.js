@@ -1,158 +1,68 @@
 /* ==================================================
    MG3i TRAINER – NAVIGACE STATISTIK
-   Samostatné obrazovky bez prodlužování app.js
+   Jednoduchá verze bez MutationObserverů
    ================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
   const statsScreen = document.getElementById("stats-screen");
-  const algorithmStatsScreen =
-  document.getElementById("algorithm-stats-screen");
-  
-  /* Pokrok a úkoly */
-  const openProgressBtn =
-    document.getElementById("openProgressStats");
-  
-  const progressView =
-    document.getElementById("stats-progress-view");
-  
-  const backFromProgressBtn =
-    document.getElementById("backFromProgressStats");
-  
-  /* Algoritmy */
-  const openAlgorithmsBtn =
-    document.getElementById("openAlgorithmOverview");
-  
-  const algorithmsView =
-    document.getElementById("stats-algorithms-view");
-  
-  const backFromAlgorithmsBtn =
-    document.getElementById("backFromAlgorithmsStats");
-  
+
   if (!statsScreen) {
-    console.warn(
-      "statsNavigation: #stats-screen nebyl nalezen"
-    );
+    console.warn("statsNavigation: #stats-screen nebyl nalezen");
     return;
   }
-  
-  /**
-   * Otevře vybranou podstránku Statistik.
-   */
+
+  const openProgressBtn = document.getElementById("openProgressStats");
+  const progressView = document.getElementById("stats-progress-view");
+  const backFromProgressBtn = document.getElementById("backFromProgressStats");
+
+  const openAlgorithmsBtn = document.getElementById("openAlgorithmOverview");
+  const algorithmsView = document.getElementById("stats-algorithms-view");
+  const backFromAlgorithmsBtn = document.getElementById("backFromAlgorithmsStats");
+
+  function hideAllStatsSubviews() {
+    statsScreen.querySelectorAll(".stats-subview").forEach((subview) => {
+      subview.hidden = true;
+    });
+  }
+
+  function resetStatsScroll() {
+    statsScreen.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }
+
   function openStatsSubview(view) {
     if (!view) return;
-    
-    statsScreen
-      .querySelectorAll(".stats-subview")
-      .forEach((subview) => {
-        subview.hidden = true;
-      });
-    
+
+    hideAllStatsSubviews();
     statsScreen.classList.add("stats-subview-open");
+    document.body.classList.add("stats-subview-active");
     view.hidden = false;
-    
-    statsScreen.scrollTop = 0;
-    
-    window.scrollTo({
-      top: 0,
-      behavior: "instant"
-    });
+    resetStatsScroll();
   }
-  
-  /**
-   * Zavře podstránku a vrátí hlavní dashboard.
-   */
+
   function closeStatsSubview() {
-    statsScreen
-      .querySelectorAll(".stats-subview")
-      .forEach((subview) => {
-        subview.hidden = true;
-      });
-    
+    hideAllStatsSubviews();
     statsScreen.classList.remove("stats-subview-open");
-    statsScreen.scrollTop = 0;
-    
-    window.scrollTo({
-      top: 0,
-      behavior: "instant"
-    });
+    document.body.classList.remove("stats-subview-active");
+    resetStatsScroll();
   }
-  
-  /* Pokrok a úkoly */
+
   openProgressBtn?.addEventListener("click", () => {
     openStatsSubview(progressView);
   });
-  
-  backFromProgressBtn?.addEventListener("click", () => {
-    closeStatsSubview();
-  });
-  
-  /* Algoritmy */
+
+  backFromProgressBtn?.addEventListener("click", closeStatsSubview);
+
   openAlgorithmsBtn?.addEventListener("click", () => {
     openStatsSubview(algorithmsView);
   });
-  
-  backFromAlgorithmsBtn?.addEventListener("click", () => {
-    closeStatsSubview();
+
+  backFromAlgorithmsBtn?.addEventListener("click", closeStatsSubview);
+
+  /* Při odchodu přes hlavní menu se Statistiky vrátí na dashboard. */
+  ["nav-timer", "nav-stats", "nav-settings"].forEach((buttonId) => {
+    document.getElementById(buttonId)?.addEventListener("click", closeStatsSubview);
   });
-  
-  /*
-   * Po odchodu ze Statistik podstránku zavřeme.
-   * Při návratu se zobrazí hlavní dashboard.
-   */
-  const statsVisibilityObserver = new MutationObserver(() => {
-    if (statsScreen.style.display === "none") {
-      closeStatsSubview();
-    }
-  });
-  
-  statsVisibilityObserver.observe(statsScreen, {
-    attributes: true,
-    attributeFilter: ["style"]
-  });
-  /* ==================================================
-   HORNÍ LIŠTA NA OBRAZOVKÁCH STATISTIK
-   ================================================== */
 
-function isElementVisible(element) {
-  if (!element) return false;
-
-  return window.getComputedStyle(element).display !== "none";
-}
-
-function updateStatsTopStrip() {
-  const mainStatsVisible = isElementVisible(statsScreen);
-  const algorithmDetailVisible =
-    isElementVisible(algorithmStatsScreen);
-
-  /* Jsme na některé obrazovce Statistik */
-  document.body.classList.toggle(
-    "stats-section-active",
-    mainStatsVisible || algorithmDetailVisible
-  );
-
-  /* Jsme přímo v detailu OLL nebo PLL */
-  document.body.classList.toggle(
-    "stats-algorithm-detail-open",
-    algorithmDetailVisible
-  );
-}
-
-const topStripObserver = new MutationObserver(() => {
-  updateStatsTopStrip();
-});
-
-topStripObserver.observe(statsScreen, {
-  attributes: true,
-  attributeFilter: ["style", "class"]
-});
-
-if (algorithmStatsScreen) {
-  topStripObserver.observe(algorithmStatsScreen, {
-    attributes: true,
-    attributeFilter: ["style", "class"]
-  });
-}
-
-updateStatsTopStrip();
   console.log("statsNavigation.js načten");
 });

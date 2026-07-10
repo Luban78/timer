@@ -676,56 +676,267 @@
 }
 
 /* ==================================================
-   HORNÍ LIŠTA – OBRAZOVKY STATISTIK
+   OLL / PLL – MALÁ ŠIPKA ZPĚT
    ================================================== */
 
-/*
- * Na hlavních Statistikách a jejich podstránkách
- * schováme duplicitní LEVEL a XP.
- */
-body.stats-section-active
-#screen-top-strip
-.top-strip-center,
-body.stats-section-active
-#screen-top-strip
-.xp-item {
+#algorithm-stats-screen .algorithm-back-icon {
+  display: grid !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+
+  margin: 8px 0 12px 16px !important;
+  padding: 0 !important;
+  place-items: center !important;
+
+  border: 1.5px solid rgba(24, 239, 125, 0.78) !important;
+  border-radius: 13px !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 34, 38, 0.96),
+      rgba(4, 17, 21, 0.98)
+    ) !important;
+
+  color: #18ef7d !important;
+  font-size: 0 !important;
+
+  box-shadow:
+    0 0 9px rgba(24, 239, 125, 0.15),
+    inset 0 0 14px rgba(24, 239, 125, 0.04);
+}
+
+#algorithm-stats-screen .algorithm-back-icon svg {
+  display: block;
+  width: 27px;
+  height: 27px;
+
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+#algorithm-stats-screen .algorithm-back-icon:active {
+  transform: scale(0.95);
+}
+
+/* ==================================================
+   STATISTIKY – FINÁLNÍ BEZPEČNÉ DOLADĚNÍ
+   Bez sledování stylů a bez zásahů do app.js
+   ================================================== */
+
+/* Na hlavním dashboardu Statistik stačí MENU. */
+body.screen-stats #screen-top-strip .top-strip-center,
+body.screen-stats #screen-top-strip .xp-item {
   display: none !important;
 }
 
-/* Z horní lišty vznikne kompaktní tlačítko MENU */
-body.stats-section-active
-#screen-top-strip {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-
+body.screen-stats #screen-top-strip {
+  grid-template-columns: 1fr !important;
   width: 190px !important;
-  max-width: calc(100% - 32px) !important;
-
+  max-width: calc(100% - 24px) !important;
   margin-right: auto !important;
-  margin-left: 16px !important;
 }
 
-/* Odstranění původního dělení lišty */
-body.stats-section-active
-#screen-top-strip
-.top-menu-item {
+body.screen-stats #screen-top-strip .top-menu-item {
   width: 100% !important;
   border-right: 0 !important;
 }
 
-/* MENU vyplní celý zmenšený panel */
-body.stats-section-active
-#screen-top-strip
-#screen-top-menu-btn {
-  width: 100% !important;
+body.screen-stats #screen-top-menu-btn {
   justify-content: flex-start !important;
+  padding-left: 12px !important;
 }
 
-/*
- * V detailu Statistik OLL/PLL panel nepotřebujeme.
- * Je tam vlastní tlačítko zpět.
- */
-body.stats-algorithm-detail-open
-#screen-top-strip {
+/* Na vnitřních obrazovkách Pokrok a Algoritmy zůstanou jen tři čárky. */
+body.screen-stats.stats-subview-active #screen-top-strip {
+  width: 66px !important;
+  min-width: 66px !important;
+  max-width: 66px !important;
+}
+
+body.screen-stats.stats-subview-active #screen-top-menu-btn {
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+body.screen-stats.stats-subview-active #screen-top-menu-btn span:not(.strip-icon) {
   display: none !important;
+}
+
+/* OLL/PLL mají vlastní šipku, globální horní lišta se nepoužívá. */
+body.screen-algstats #screen-top-strip {
+  display: none !important;
+}
+
+@media (max-width: 899px) {
+  /* Hlavní Statistiky a vnitřní rozcestníky nehybně bez scrollu celé stránky. */
+  body.screen-stats {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+    overscroll-behavior: none;
+  }
+
+  body.screen-stats #stats-screen {
+    min-height: 0 !important;
+    height: calc(100dvh - 60px) !important;
+    max-height: calc(100dvh - 60px) !important;
+    padding: 0 16px 8px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  /* OLL/PLL: pevná hlavička, scrolluje pouze seznam karet. */
+  body.screen-algstats {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+    overscroll-behavior: none;
+  }
+
+  body.screen-algstats #algorithm-stats-screen {
+    display: grid !important;
+    grid-template-columns: 48px minmax(0, 1fr) 48px !important;
+    grid-template-rows: 54px minmax(0, 1fr) !important;
+    column-gap: 8px !important;
+
+    width: 100% !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    max-height: 100dvh !important;
+
+    margin: 0 !important;
+    padding: 10px 16px 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  body.screen-algstats #algorithm-stats-screen > * {
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  body.screen-algstats #algorithmStatsTitle {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    font-size: clamp(23px, 6.4vw, 29px) !important;
+    font-weight: 700 !important;
+    line-height: 1.05 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+
+  body.screen-algstats #backToStatsBtn.algorithm-back-icon {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+
+    width: 42px !important;
+    min-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body.screen-algstats #algorithm-stats {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-content: start !important;
+    gap: 8px !important;
+
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 4px 0 18px !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+
+  body.screen-algstats #algorithm-stats::-webkit-scrollbar {
+    display: none;
+  }
+
+  body.screen-algstats #algorithm-stats .alg-stat-row {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 10px 9px !important;
+    border-radius: 14px !important;
+  }
+
+  body.screen-algstats #algorithm-stats .alg-stat-row h3 {
+    margin: 0 0 6px !important;
+    font-size: clamp(18px, 5vw, 21px) !important;
+    font-weight: 700 !important;
+    line-height: 1.08 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  body.screen-algstats #algorithm-stats .alg-stat-row div,
+  body.screen-algstats #algorithm-stats .alg-stat-row p {
+    margin: 2px 0 !important;
+    font-size: clamp(13px, 3.7vw, 15px) !important;
+    line-height: 1.22 !important;
+  }
+
+  body.screen-algstats #algorithm-stats .empty-alg-stats {
+    grid-column: 1 / -1 !important;
+    margin: 22px 0 0 !important;
+    font-size: 17px !important;
+    text-align: center !important;
+  }
+}
+
+
+/* V detailu OLL/PLL nesmí překrývat šipku staré plovoucí MENU. */
+body.screen-algstats #globalMenuBtn,
+body.screen-algstats .global-menu-fab {
+  display: none !important;
+}
+/* ==================================================
+   OLL / PLL – TEXT MUSÍ ZŮSTAT UVNITŘ KARTY
+   ================================================== */
+
+body.screen-algstats #algorithm-stats .alg-stat-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto auto auto auto !important;
+  align-content: start !important;
+
+  width: 100% !important;
+  height: auto !important;
+  min-height: 150px !important;
+
+  padding: 10px 9px 13px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+body.screen-algstats #algorithm-stats .alg-stat-row h3,
+body.screen-algstats #algorithm-stats .alg-stat-row div,
+body.screen-algstats #algorithm-stats .alg-stat-row p {
+  position: static !important;
+  transform: none !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }

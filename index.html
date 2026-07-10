@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="desktopStyle.css?v=profi-fix-1" media="(min-width: 900px)">
   
   <link rel="stylesheet" href="settingsFix.css?v=1">
-  <link rel="stylesheet" href="statsFix.css?v=1">
+  <link rel="stylesheet" href="statsFix.css?v=30">
   
   
   
@@ -541,7 +541,16 @@
 <!-- ===== STATISTIKY ALGORITMŮ SCREEN ===== -->
 <div id="algorithm-stats-screen" style="display:none;">
   <h2 id="algorithmStatsTitle">Statistiky PLL</h2>
-  <button id="backToStatsBtn" class="back-to-stats" type="button">Zpět na statistiky</button>
+  <button
+  id="backToStatsBtn"
+  class="back-to-stats algorithm-back-icon"
+  type="button"
+  aria-label="Zpět"
+>
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M15 18 9 12l6-6"></path>
+  </svg>
+</button>
   <div id="algorithm-stats"></div>
 </div>
 
@@ -687,7 +696,7 @@
   </div>
 </div>
 <script type="module" src="./app.js?v=10006"></script>
-<script src="statsNavigation.js?v=2"></script>
+<script src="statsNavigation.js?v=30"></script>
 
 </body>
 </html>
