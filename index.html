@@ -9,11 +9,18 @@
   <meta name="apple-mobile-web-app-title" content="MG Trainer">
 
   <link rel="manifest" href="manifest.json">
+  
   <link rel="stylesheet" href="style.css?v=profi-fix-1">
   
   <link rel="stylesheet" href="desktopStyle.css?v=profi-fix-1" media="(min-width: 900px)">
   
   <link rel="stylesheet" href="settingsFix.css?v=1">
+  <link rel="stylesheet" href="statsFix.css?v=1">
+  
+  
+  
+  
+  
 
   <title>MG3i Trainer v0.55</title>
 </head>
@@ -268,77 +275,227 @@
 
 <!-- ===== STATISTIKY SCREEN ===== -->
 <div id="stats-screen" style="display:none;">
-  <div class="stat-card" id="xp-card">
-    <h3>🏆 Level <span id="player-level">1</span></h3>
-    <div class="xp-bar">
-      <div id="xp-fill"></div>
+  
+  <h2 class="stats-page-title">Statistiky</h2>
+  
+  <!-- LEVEL + XP -->
+  <section class="stats-level-card" id="xp-card">
+    <span class="stats-level-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M8 21h8"></path>
+        <path d="M12 17v4"></path>
+        <path d="M7 4h10v4a5 5 0 0 1-10 0V4Z"></path>
+        <path d="M7 6H4v2a4 4 0 0 0 4 4"></path>
+        <path d="M17 6h3v2a4 4 0 0 1-4 4"></path>
+      </svg>
+    </span>
+    
+    <div class="stats-level-content">
+      <div class="stats-level-row">
+        <strong>Level <span id="player-level">1</span></strong>
+        <span id="xp-text">0 / 100 XP</span>
+      </div>
+      
+      <div class="xp-bar">
+        <div id="xp-fill"></div>
+      </div>
     </div>
-    <div id="xp-text">0 / 100 XP</div>
-  </div>
-
-  <div class="stat-card daily-card">
-    <h4>🎯 Dnešní úkoly</h4>
-    <div id="daily-list"></div>
-  </div>
-
-  <h2>📊 Statistiky</h2>
-
+  </section>
+  
+  <!-- HLAVNÍ STATISTIKY -->
   <div id="stats-content" class="stats-grid-screen">
-    <div class="stat-card">
-      <h3>🏆 Best Time</h3>
-      <div id="stats-best">-</div>
-    </div>
+    
+    <article class="stats-main-card">
+      <span class="stats-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M8 21h8"></path>
+          <path d="M12 17v4"></path>
+          <path d="M7 4h10v4a5 5 0 0 1-10 0V4Z"></path>
+          <path d="M7 6H4v2a4 4 0 0 0 4 4"></path>
+          <path d="M17 6h3v2a4 4 0 0 1-4 4"></path>
+        </svg>
+      </span>
+      <h3>Best Time</h3>
+      <div id="stats-best" class="stats-main-value">-</div>
+    </article>
+    
+    <article class="stats-main-card">
+      <span class="stats-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="m13 2-9 12h7l-1 8 9-12h-7l1-8Z"></path>
+        </svg>
+      </span>
+      <h3>Best TPS</h3>
+      <div id="stats-best-tps" class="stats-main-value">-</div>
+    </article>
+    
+    <article class="stats-main-card">
+      <span class="stats-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"></path>
+          <path d="m4 7.5 8 4.5 8-4.5"></path>
+          <path d="M12 12v9"></path>
+        </svg>
+      </span>
+      <h3>Solve celkem</h3>
+      <div id="stats-solves" class="stats-main-value">-</div>
+    </article>
+    
+    <article class="stats-main-card">
+      <span class="stats-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 18V9"></path>
+          <path d="M10 18V5"></path>
+          <path d="M16 18v-7"></path>
+          <path d="M22 18V3"></path>
+        </svg>
+      </span>
+      <h3>Průměr TPS</h3>
+      <div id="stats-avg-tps" class="stats-main-value">-</div>
+    </article>
+    
+    <article class="stats-main-card">
+      <span class="stats-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M12 7v5l3 2"></path>
+        </svg>
+      </span>
+      <h3>Celkový čas</h3>
+      <div id="stats-total-time" class="stats-main-value">-</div>
+    </article>
+    
+    <article class="stats-main-card">
+      <span class="stats-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="13" r="8"></circle>
+          <path d="M12 9v5"></path>
+          <path d="M9 2h6"></path>
+          <path d="M12 2v3"></path>
+        </svg>
+      </span>
+      <h3>Nejdelší solve</h3>
+      <div id="stats-worst" class="stats-main-value">-</div>
+    </article>
+    
+  </div>
+  
+  <!-- NAVIGACE DO PODROBNÝCH STATISTIK -->
+  <div class="stats-nav-grid">
+    
+    <button id="openProgressStats" class="stats-nav-card" type="button">
+      <span class="stats-nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M5 20V10"></path>
+          <path d="M12 20V4"></path>
+          <path d="M19 20v-7"></path>
+        </svg>
+      </span>
+      <span>Pokrok a úkoly</span>
+    </button>
+    
+    <button id="openAlgorithmOverview" class="stats-nav-card" type="button">
+      <span class="stats-nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+        </svg>
+      </span>
+      <span>Algoritmy</span>
+    </button>
+    
+    <button id="openAchievementsStats" class="stats-nav-card" type="button">
+      <span class="stats-nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="m12 3 2.6 5.3 5.9.9-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.2 5.9-.9L12 3Z"></path>
+        </svg>
+      </span>
+      <span>Odznaky</span>
+    </button>
+    
+    <button id="openHistoryStats" class="stats-nav-card" type="button">
+      <span class="stats-nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 19V9"></path>
+          <path d="M10 19V5"></path>
+          <path d="M16 19v-7"></path>
+          <path d="M22 19V3"></path>
+        </svg>
+      </span>
+      <span>Historie</span>
+    </button>
+    
+  </div>
+  
+<!-- ===== POKROK A ÚKOLY – VNITŘNÍ OBRAZOVKA ===== -->
+<div id="stats-progress-view" class="stats-subview" hidden>
 
-    <div class="stat-card">
-      <h3>⚡ Best TPS</h3>
-      <div id="stats-best-tps">-</div>
-    </div>
+  <div class="stats-subview-header">
+    <button
+      id="backFromProgressStats"
+      class="stats-subview-back"
+      type="button"
+      aria-label="Zpět na hlavní statistiky"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M15 18 9 12l6-6"></path>
+      </svg>
+    </button>
 
-    <div class="stat-card">
-      <h3>🎲 Solve celkem</h3>
-      <div id="stats-solves">-</div>
-    </div>
-
-    <div class="stat-card">
-      <h3>📈 Průměr TPS</h3>
-      <div id="stats-avg-tps">-</div>
-    </div>
-
-    <div class="stat-card">
-      <h3>⏱ Celkový čas</h3>
-      <div id="stats-total-time">-</div>
-    </div>
-
-    <div class="stat-card">
-      <h3>🔥 Nejdelší solve</h3>
-      <div id="stats-worst">-</div>
-    </div>
+    <h2>Pokrok a úkoly</h2>
   </div>
 
-  <div class="stat-card" id="coach-card">
-    <h3>🎯 Doporučení trenéra</h3>
-    <div id="coach-alg">-</div>
+  <section class="stats-progress-card daily-card">
+    <div class="stats-progress-heading">
+      <span class="stats-progress-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8"></circle>
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v3"></path>
+          <path d="M22 12h-3"></path>
+        </svg>
+      </span>
+
+      <h3>Dnešní úkoly</h3>
+    </div>
+
+    <div id="daily-list"></div>
+  </section>
+
+  <section class="stats-progress-card" id="coach-card">
+    <div class="stats-progress-heading">
+      <span class="stats-progress-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 3 4 7v5c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7l-8-4Z"></path>
+          <path d="m9 12 2 2 4-4"></path>
+        </svg>
+      </span>
+
+      <h3>Doporučení trenéra</h3>
+    </div>
+
+    <strong id="coach-alg">-</strong>
     <p id="coach-detail">Zatím málo dat.</p>
-  </div>
+  </section>
 
-  <div id="algorithm-section" class="algorithm-section-overview">
-    <h2>Statistiky algoritmů</h2>
-    <div class="algorithm-type-grid">
-      <button id="openOllStats" class="algorithm-type-card" type="button">
-        <span>OLL</span>
-        <small>Statistiky OLL algoritmů</small>
-      </button>
-      <button id="openPllStats" class="algorithm-type-card" type="button">
-        <span>PLL</span>
-        <small>Statistiky PLL algoritmů</small>
-      </button>
-    </div>
+</div>
+
+<!-- ===== DATA PRO DALŠÍ BUDOUCÍ OBRAZOVKY ===== -->
+<div class="stats-hidden-data" aria-hidden="true">
+
+  <div id="algorithm-section">
+    <button id="openOllStats" type="button">OLL</button>
+    <button id="openPllStats" type="button">PLL</button>
   </div>
 
   <div id="achievement-section">
-    <h2>🏅 Odznaky</h2>
     <div id="achievement-list"></div>
   </div>
+
+</div>
+  
 </div>
 
 <!-- ===== STATISTIKY ALGORITMŮ SCREEN ===== -->
@@ -490,6 +647,7 @@
   </div>
 </div>
 <script type="module" src="./app.js?v=10006"></script>
+<script src="statsNavigation.js?v=1"></script>
 
 </body>
 </html>

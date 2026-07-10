@@ -2388,5 +2388,6 @@ if (editAlgVariantBtn) {
       prepareNext();
       renderAlgorithmPreview(selectedAlg);
     });
-  });
+  });   
 }
+/* KONEC APP.JS */

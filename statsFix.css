@@ -1,0 +1,340 @@
+/* ==================================================
+   MG3i TRAINER – STATISTIKY
+   Tento soubor upravuje pouze obrazovku Statistiky.
+   ================================================== */
+   
+   /* ==================================================
+   MG3i TRAINER – HLAVNÍ OBRAZOVKA STATISTIK
+   Ovlivňuje pouze prvky uvnitř #stats-screen.
+   ================================================== */
+
+#stats-screen {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 8px 16px 18px;
+  color: #f4f7f8;
+}
+
+#stats-screen *,
+#stats-screen *::before,
+#stats-screen *::after {
+  box-sizing: border-box;
+}
+
+/* ---------- Nadpis ---------- */
+
+#stats-screen .stats-page-title {
+  margin: 4px 0 12px;
+  padding: 0;
+  text-align: center;
+  font-size: clamp(25px, 7vw, 38px);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0;
+  color: #f5f7f8;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.12);
+}
+
+/* ---------- Společný neon vzhled ---------- */
+
+#stats-screen .stats-level-card,
+#stats-screen .stats-main-card,
+#stats-screen .stats-nav-card {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 34, 38, 0.96),
+      rgba(4, 17, 21, 0.98)
+    );
+  border: 1.5px solid rgba(24, 239, 125, 0.78);
+  box-shadow:
+    0 0 9px rgba(24, 239, 125, 0.14),
+    inset 0 0 18px rgba(24, 239, 125, 0.035);
+}
+
+/* ---------- Level + XP ---------- */
+
+#stats-screen .stats-level-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 78px;
+  margin: 0 0 12px;
+  padding: 11px 14px;
+  border-radius: 19px;
+}
+
+#stats-screen .stats-level-icon {
+  display: grid;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  color: #18ef7d;
+  border: 1px solid rgba(24, 239, 125, 0.52);
+  border-radius: 13px;
+  background: rgba(4, 18, 21, 0.78);
+  box-shadow:
+    0 0 10px rgba(24, 239, 125, 0.14),
+    inset 0 0 10px rgba(24, 239, 125, 0.04);
+}
+
+#stats-screen .stats-level-icon svg {
+  width: 29px;
+  height: 29px;
+}
+
+#stats-screen .stats-level-content {
+  min-width: 0;
+  flex: 1;
+}
+
+#stats-screen .stats-level-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+
+#stats-screen .stats-level-row strong {
+  font-size: clamp(17px, 4.8vw, 22px);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+#stats-screen #player-level {
+  color: #18ef7d;
+}
+
+#stats-screen #xp-text {
+  overflow: hidden;
+  font-size: clamp(13px, 3.7vw, 17px);
+  color: rgba(238, 244, 245, 0.78);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#stats-screen .xp-bar {
+  width: 100%;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(124, 143, 148, 0.24);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+#stats-screen #xp-fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #04d96c, #20f58b);
+  box-shadow: 0 0 9px rgba(24, 239, 125, 0.7);
+  transition: width 0.3s ease;
+}
+
+/* ---------- Šest hlavních statistik ---------- */
+
+#stats-screen .stats-grid-screen {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+#stats-screen .stats-main-card {
+  display: flex;
+  min-width: 0;
+  min-height: 116px;
+  margin: 0;
+  padding: 10px 5px 9px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  border-radius: 17px;
+  text-align: center;
+}
+
+#stats-screen .stats-card-icon {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  margin-bottom: 3px;
+  place-items: center;
+  color: #18ef7d;
+}
+
+#stats-screen .stats-card-icon svg {
+  width: 25px;
+  height: 25px;
+}
+
+#stats-screen .stats-main-card h3 {
+  display: flex;
+  min-height: 31px;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(11px, 3.15vw, 15px);
+  font-weight: 650;
+  line-height: 1.12;
+  color: rgba(244, 247, 248, 0.9);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+#stats-screen .stats-main-value {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 6px;
+  overflow: hidden;
+  font-size: clamp(20px, 6vw, 30px);
+  font-weight: 750;
+  line-height: 1;
+  color: #ffffff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.12);
+}
+
+/* ---------- Čtyři navigační karty ---------- */
+
+#stats-screen .stats-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin: 0;
+}
+
+#stats-screen .stats-nav-card {
+  display: flex;
+  min-width: 0;
+  min-height: 67px;
+  margin: 0;
+  padding: 9px 11px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  border-radius: 17px;
+  color: #eef6f3;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#stats-screen .stats-nav-card:active {
+  transform: scale(0.98);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(14, 49, 43, 0.98),
+      rgba(5, 23, 24, 1)
+    );
+}
+
+#stats-screen .stats-nav-icon {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  color: #18ef7d;
+  border: 1px solid rgba(24, 239, 125, 0.34);
+  border-radius: 11px;
+  background: rgba(3, 20, 21, 0.72);
+}
+
+#stats-screen .stats-nav-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+#stats-screen .stats-nav-card > span:last-child {
+  min-width: 0;
+  font-size: clamp(14px, 4vw, 18px);
+  font-weight: 650;
+  line-height: 1.15;
+  text-align: left;
+}
+
+/* ---------- SVG neon styl ---------- */
+
+#stats-screen svg {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+/* ---------- Staré bloky zatím skryté ---------- */
+
+#stats-screen .stats-hidden-data {
+  display: none !important;
+}
+
+/* ---------- Velmi malé displeje ---------- */
+
+@media (max-width: 370px) {
+  #stats-screen {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  #stats-screen .stats-grid-screen {
+    gap: 6px;
+  }
+
+  #stats-screen .stats-main-card {
+    min-height: 108px;
+    padding-right: 3px;
+    padding-left: 3px;
+  }
+
+  #stats-screen .stats-nav-grid {
+    gap: 7px;
+  }
+
+  #stats-screen .stats-nav-card {
+    min-height: 61px;
+    padding: 7px 8px;
+    gap: 7px;
+  }
+
+  #stats-screen .stats-nav-icon {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* ---------- Desktop ---------- */
+
+@media (min-width: 900px) {
+  #stats-screen {
+    padding-top: 12px;
+  }
+
+  #stats-screen .stats-page-title {
+    margin-bottom: 16px;
+    font-size: 36px;
+  }
+
+  #stats-screen .stats-grid-screen {
+    gap: 12px;
+  }
+
+  #stats-screen .stats-main-card {
+    min-height: 130px;
+  }
+
+  #stats-screen .stats-nav-card {
+    min-height: 74px;
+  }
+}
