@@ -482,20 +482,60 @@
 
 </div>
 
+<!-- ===== ALGORITMY – VNITŘNÍ OBRAZOVKA ===== -->
+<div id="stats-algorithms-view" class="stats-subview" hidden>
+
+  <div class="stats-subview-header">
+    <button
+      id="backFromAlgorithmsStats"
+      class="stats-subview-back"
+      type="button"
+      aria-label="Zpět na hlavní statistiky"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M15 18 9 12l6-6"></path>
+      </svg>
+    </button>
+
+    <h2>Algoritmy</h2>
+  </div>
+
+  <div id="algorithm-section" class="stats-algorithm-menu">
+
+    <button
+      id="openOllStats"
+      class="stats-algorithm-card"
+      type="button"
+    >
+      <span class="stats-algorithm-title">OLL</span>
+      <span class="stats-algorithm-text">
+        Statistiky OLL algoritmů
+      </span>
+    </button>
+
+    <button
+      id="openPllStats"
+      class="stats-algorithm-card"
+      type="button"
+    >
+      <span class="stats-algorithm-title">PLL</span>
+      <span class="stats-algorithm-text">
+        Statistiky PLL algoritmů
+      </span>
+    </button>
+
+  </div>
+
+</div>
+
 <!-- ===== DATA PRO DALŠÍ BUDOUCÍ OBRAZOVKY ===== -->
 <div class="stats-hidden-data" aria-hidden="true">
-
-  <div id="algorithm-section">
-    <button id="openOllStats" type="button">OLL</button>
-    <button id="openPllStats" type="button">PLL</button>
-  </div>
 
   <div id="achievement-section">
     <div id="achievement-list"></div>
   </div>
 
 </div>
-  
 </div>
 
 <!-- ===== STATISTIKY ALGORITMŮ SCREEN ===== -->
@@ -647,7 +687,7 @@
   </div>
 </div>
 <script type="module" src="./app.js?v=10006"></script>
-<script src="statsNavigation.js?v=1"></script>
+<script src="statsNavigation.js?v=2"></script>
 
 </body>
 </html>

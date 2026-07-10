@@ -338,3 +338,394 @@
     min-height: 74px;
   }
 }
+/* ==================================================
+   POKROK A ÚKOLY – VNITŘNÍ OBRAZOVKA
+   ================================================== */
+
+#stats-screen .stats-subview[hidden] {
+  display: none !important;
+}
+
+#stats-screen .stats-subview {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Při otevřené podstránce skryjeme hlavní dashboard */
+#stats-screen.stats-subview-open > .stats-page-title,
+#stats-screen.stats-subview-open > .stats-level-card,
+#stats-screen.stats-subview-open > .stats-grid-screen,
+#stats-screen.stats-subview-open > .stats-nav-grid {
+  display: none !important;
+}
+
+/* ---------- Horní řádek ---------- */
+
+#stats-screen .stats-subview-header {
+  display: grid;
+  grid-template-columns: 46px 1fr 46px;
+  align-items: center;
+  min-height: 58px;
+  margin: 0 0 14px;
+}
+
+#stats-screen .stats-subview-header h2 {
+  grid-column: 2;
+  margin: 0;
+  padding: 0;
+  color: #f5f7f8;
+  font-size: clamp(23px, 6.2vw, 34px);
+  font-weight: 650;
+  line-height: 1.1;
+  text-align: center;
+}
+
+#stats-screen .stats-subview-back {
+  display: grid;
+  grid-column: 1;
+  width: 43px;
+  height: 43px;
+  margin: 0;
+  padding: 0;
+  place-items: center;
+  border: 1.5px solid rgba(24, 239, 125, 0.72);
+  border-radius: 13px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 34, 38, 0.96),
+      rgba(4, 17, 21, 0.98)
+    );
+  color: #18ef7d;
+  box-shadow:
+    0 0 9px rgba(24, 239, 125, 0.13),
+    inset 0 0 14px rgba(24, 239, 125, 0.035);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#stats-screen .stats-subview-back:active {
+  transform: scale(0.95);
+}
+
+#stats-screen .stats-subview-back svg {
+  width: 27px;
+  height: 27px;
+}
+
+/* ---------- Karty ---------- */
+
+#stats-screen .stats-progress-card {
+  width: 100%;
+  margin: 0 0 13px;
+  padding: 16px;
+  border: 1.5px solid rgba(24, 239, 125, 0.76);
+  border-radius: 19px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 34, 38, 0.96),
+      rgba(4, 17, 21, 0.98)
+    );
+  color: #f2f7f5;
+  box-shadow:
+    0 0 9px rgba(24, 239, 125, 0.13),
+    inset 0 0 18px rgba(24, 239, 125, 0.035);
+}
+
+#stats-screen .stats-progress-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 14px;
+}
+
+#stats-screen .stats-progress-heading h3 {
+  margin: 0;
+  padding: 0;
+  color: #f5f7f8;
+  font-size: clamp(18px, 5vw, 23px);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+#stats-screen .stats-progress-icon {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(24, 239, 125, 0.4);
+  border-radius: 12px;
+  background: rgba(3, 20, 21, 0.72);
+  color: #18ef7d;
+}
+
+#stats-screen .stats-progress-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* ---------- Denní úkoly ---------- */
+
+#stats-screen #daily-list {
+  display: grid;
+  gap: 9px;
+}
+
+#stats-screen #daily-list > * {
+  margin: 0;
+}
+
+#stats-screen #daily-list > div,
+#stats-screen #daily-list > label,
+#stats-screen #daily-list > p {
+  min-height: 43px;
+  padding: 9px 11px;
+  border: 1px solid rgba(24, 239, 125, 0.22);
+  border-radius: 11px;
+  background: rgba(3, 19, 21, 0.58);
+  color: rgba(244, 247, 248, 0.91);
+  font-size: clamp(15px, 4.2vw, 18px);
+  line-height: 1.25;
+}
+
+/* ---------- Doporučení trenéra ---------- */
+
+#stats-screen #coach-card #coach-alg {
+  display: block;
+  margin: 2px 0 8px;
+  color: #18ef7d;
+  font-size: clamp(19px, 5.2vw, 25px);
+  font-weight: 750;
+}
+
+#stats-screen #coach-card #coach-detail {
+  margin: 0;
+  color: rgba(238, 244, 245, 0.82);
+  font-size: clamp(15px, 4.2vw, 18px);
+  line-height: 1.45;
+}
+
+/* ---------- Malé displeje ---------- */
+
+@media (max-width: 370px) {
+  #stats-screen .stats-subview-header {
+    grid-template-columns: 42px 1fr 42px;
+    margin-bottom: 10px;
+  }
+
+  #stats-screen .stats-subview-back {
+    width: 39px;
+    height: 39px;
+  }
+
+  #stats-screen .stats-progress-card {
+    padding: 13px;
+  }
+}
+/* ==================================================
+   HOTFIX – otevřená podstránka Statistik
+   Skrytí dashboardu a oprava velikosti nadpisu
+   ================================================== */
+
+/* Spolehlivě schovej celý hlavní dashboard */
+#stats-screen.stats-subview-open>.stats-page-title,
+#stats-screen.stats-subview-open>#xp-card,
+#stats-screen.stats-subview-open>#stats-content,
+#stats-screen.stats-subview-open>.stats-nav-grid {
+  display: none !important;
+}
+
+/* Kompaktní horní řádek podstránky */
+#stats-screen.stats-subview-open .stats-subview-header {
+  display: grid !important;
+  grid-template-columns: 44px minmax(0, 1fr) 44px !important;
+  align-items: center !important;
+  min-height: 48px !important;
+  margin: 0 0 10px !important;
+  padding: 0 !important;
+}
+
+/* Oprava příliš velkého nadpisu ze starého style.css */
+#stats-screen.stats-subview-open .stats-subview-header>h2 {
+  grid-column: 2 !important;
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  
+  font-size: clamp(22px, 6vw, 29px) !important;
+  font-weight: 650 !important;
+  line-height: 1.1 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+/* Menší tlačítko zpět */
+#stats-screen.stats-subview-open .stats-subview-back {
+  grid-column: 1 !important;
+  width: 42px !important;
+  height: 42px !important;
+}
+
+/* Kompaktnější karty, aby se obrazovka lépe vešla */
+#stats-screen.stats-subview-open .stats-progress-card {
+  margin-bottom: 10px !important;
+  padding: 13px 14px !important;
+}
+
+#stats-screen.stats-subview-open .stats-progress-heading {
+  margin-bottom: 10px !important;
+}
+
+#stats-screen.stats-subview-open #daily-list {
+  gap: 7px !important;
+}
+
+#stats-screen.stats-subview-open #daily-list>div,
+#stats-screen.stats-subview-open #daily-list>label,
+#stats-screen.stats-subview-open #daily-list>p {
+  min-height: 39px !important;
+  padding: 7px 9px !important;
+}
+/* ==================================================
+   ALGORITMY – VNITŘNÍ OBRAZOVKA
+   ================================================== */
+
+#stats-screen .stats-algorithm-menu {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+#stats-screen .stats-algorithm-card {
+  display: flex;
+  min-width: 0;
+  min-height: 190px;
+  margin: 0;
+  padding: 18px 12px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  border: 1.5px solid rgba(24, 239, 125, 0.78);
+  border-radius: 22px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 34, 38, 0.96),
+      rgba(4, 17, 21, 0.98)
+    );
+
+  color: #f3f8f6;
+  font: inherit;
+  text-align: center;
+
+  box-shadow:
+    0 0 10px rgba(24, 239, 125, 0.14),
+    inset 0 0 20px rgba(24, 239, 125, 0.04);
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#stats-screen .stats-algorithm-card:active {
+  transform: scale(0.98);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(14, 49, 43, 0.98),
+      rgba(5, 23, 24, 1)
+    );
+}
+
+#stats-screen .stats-algorithm-title {
+  color: #18ef7d;
+  font-size: clamp(38px, 11vw, 58px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 0 10px rgba(24, 239, 125, 0.65),
+    0 0 20px rgba(24, 239, 125, 0.25);
+}
+
+#stats-screen .stats-algorithm-text {
+  max-width: 150px;
+  color: rgba(240, 246, 244, 0.82);
+  font-size: clamp(14px, 4vw, 18px);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+@media (max-width: 370px) {
+  #stats-screen .stats-algorithm-menu {
+    gap: 8px;
+  }
+
+  #stats-screen .stats-algorithm-card {
+    min-height: 165px;
+    padding: 14px 8px;
+  }
+}
+
+/* ==================================================
+   HORNÍ LIŠTA – OBRAZOVKY STATISTIK
+   ================================================== */
+
+/*
+ * Na hlavních Statistikách a jejich podstránkách
+ * schováme duplicitní LEVEL a XP.
+ */
+body.stats-section-active
+#screen-top-strip
+.top-strip-center,
+body.stats-section-active
+#screen-top-strip
+.xp-item {
+  display: none !important;
+}
+
+/* Z horní lišty vznikne kompaktní tlačítko MENU */
+body.stats-section-active
+#screen-top-strip {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+
+  width: 190px !important;
+  max-width: calc(100% - 32px) !important;
+
+  margin-right: auto !important;
+  margin-left: 16px !important;
+}
+
+/* Odstranění původního dělení lišty */
+body.stats-section-active
+#screen-top-strip
+.top-menu-item {
+  width: 100% !important;
+  border-right: 0 !important;
+}
+
+/* MENU vyplní celý zmenšený panel */
+body.stats-section-active
+#screen-top-strip
+#screen-top-menu-btn {
+  width: 100% !important;
+  justify-content: flex-start !important;
+}
+
+/*
+ * V detailu Statistik OLL/PLL panel nepotřebujeme.
+ * Je tam vlastní tlačítko zpět.
+ */
+body.stats-algorithm-detail-open
+#screen-top-strip {
+  display: none !important;
+}
