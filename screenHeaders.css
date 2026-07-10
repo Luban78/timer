@@ -235,3 +235,13 @@ body.screen-settings #settings-screen .screen-local-header button svg {
   fill: none !important;
   stroke: currentColor !important;
 }
+/* ==================================================
+   TIMER – ROZBALOVACÍ MENU POD PRAVÝM TLAČÍTKEM
+   ================================================== */
+
+body.screen-timer #screen-menu-dropdown {
+  left: auto !important;
+  right: 10px !important;
+  width: 210px !important;
+  transform-origin: top right !important;
+}
