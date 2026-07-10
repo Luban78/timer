@@ -1,9 +1,7 @@
 import { connectGanCube } from "https://esm.sh/gan-web-bluetooth";
 
 export async function connectCube({ onMove, onFacelets }) {
-  const cube = await connectGanCube(
-  async () => "AB:12:34:5C:56:2D"
-);
+  const cube = await connectGanCube();
 
   function requestFacelets() {
     try {

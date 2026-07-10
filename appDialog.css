@@ -1,0 +1,148 @@
+/* =========================================================
+   CUBE TRAINER – JEDNOTNÉ MODÁLY
+   ========================================================= */
+
+.app-dialog-overlay[hidden] {
+  display: none !important;
+}
+
+.app-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.76);
+  opacity: 0;
+  transition: opacity 160ms ease;
+  box-sizing: border-box;
+}
+
+.app-dialog-overlay.is-open {
+  opacity: 1;
+}
+
+.app-dialog-box {
+  width: min(520px, 100%);
+  padding: clamp(20px, 4vw, 32px);
+  border: 1.5px solid rgba(24, 239, 125, 0.76);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(24, 239, 125, 0.10), transparent 44%),
+    linear-gradient(145deg, rgba(15, 35, 40, 0.99), rgba(4, 15, 18, 0.99));
+  color: #f5f7f8;
+  box-shadow:
+    0 26px 80px rgba(0, 0, 0, 0.62),
+    0 0 24px rgba(24, 239, 125, 0.14),
+    inset 0 0 24px rgba(255, 255, 255, 0.02);
+  transform: translateY(12px) scale(0.98);
+  transition: transform 160ms ease;
+  box-sizing: border-box;
+}
+
+.app-dialog-overlay.is-open .app-dialog-box {
+  transform: translateY(0) scale(1);
+}
+
+.app-dialog-head {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 14px;
+}
+
+.app-dialog-icon {
+  display: grid;
+  flex: 0 0 50px;
+  width: 50px;
+  height: 50px;
+  place-items: center;
+  border: 1px solid rgba(24, 239, 125, 0.66);
+  border-radius: 15px;
+  color: #18ef7d;
+  background: rgba(3, 21, 22, 0.84);
+  font-size: 25px;
+  font-weight: 900;
+  box-shadow: 0 0 15px rgba(24, 239, 125, 0.15);
+}
+
+.app-dialog-box[data-type="danger"] {
+  border-color: rgba(255, 58, 91, 0.82);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 58, 91, 0.12), transparent 45%),
+    linear-gradient(145deg, rgba(43, 12, 21, 0.99), rgba(17, 5, 10, 0.99));
+}
+
+.app-dialog-box[data-type="danger"] .app-dialog-icon,
+.app-dialog-box[data-type="warning"] .app-dialog-icon {
+  color: #ffde59;
+  border-color: rgba(255, 222, 89, 0.72);
+  box-shadow: 0 0 15px rgba(255, 222, 89, 0.14);
+}
+
+.app-dialog-title {
+  margin: 0;
+  color: #f7faf9;
+  font-size: clamp(25px, 5vw, 38px);
+  line-height: 1.06;
+  font-weight: 850;
+}
+
+.app-dialog-message {
+  min-height: 24px;
+  margin: 0 0 22px;
+  color: rgba(235, 242, 240, 0.82);
+  font-size: clamp(16px, 3.6vw, 20px);
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
+.app-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 11px;
+}
+
+.app-dialog-actions button {
+  min-width: 112px;
+  min-height: 46px;
+  margin: 0;
+  padding: 9px 18px;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.app-dialog-cancel {
+  border: 1px solid rgba(216, 229, 225, 0.24);
+  color: rgba(238, 244, 242, 0.82);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.app-dialog-confirm {
+  border: 1px solid rgba(24, 239, 125, 0.82);
+  color: #00140b;
+  background: #18ef7d;
+  box-shadow: 0 0 14px rgba(24, 239, 125, 0.20);
+}
+
+.app-dialog-box[data-type="danger"] .app-dialog-confirm {
+  border-color: #ff4566;
+  color: #fff;
+  background: #d91f45;
+  box-shadow: 0 0 14px rgba(255, 69, 102, 0.22);
+}
+
+@media (max-width: 520px) {
+  .app-dialog-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-dialog-actions button:only-child {
+    grid-column: 1 / -1;
+  }
+}

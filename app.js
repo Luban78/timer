@@ -123,8 +123,10 @@ const canvas = document.getElementById("graph");
 const ctx = canvas.getContext("2d");
 
 const statBest = document.getElementById("stat-best");
+const statAo3 = document.getElementById("stat-ao3");
 const statAo5 = document.getElementById("stat-ao5");
 const statAo12 = document.getElementById("stat-ao12");
+const statAo100 = document.getElementById("stat-ao100");
 const statCount = document.getElementById("stat-count");
 
 const clearHistoryBtn = document.getElementById("clear-history-btn");
@@ -210,6 +212,30 @@ const algorithmStatsTitle = document.getElementById("algorithmStatsTitle");
 const openOllStats = document.getElementById("openOllStats");
 const openPllStats = document.getElementById("openPllStats");
 const backToStatsBtn = document.getElementById("backToStatsBtn");
+
+function showNotice(title, message, type = "success", icon = "✓") {
+  if (typeof window.showAppDialog === "function") {
+    return window.showAppDialog({ title, message, type, icon });
+  }
+
+  window.alert(message || title);
+  return Promise.resolve(true);
+}
+
+function askUser(title, message, type = "warning", confirmText = "Potvrdit") {
+  if (typeof window.confirmAppDialog === "function") {
+    return window.confirmAppDialog({
+      title,
+      message,
+      type,
+      icon: type === "danger" ? "!" : "?",
+      confirmText,
+      cancelText: "Zrušit"
+    });
+  }
+
+  return Promise.resolve(window.confirm(message || title));
+}
 
 
 /*alert(
@@ -921,7 +947,7 @@ function setupImportExport() {
       const imported = JSON.parse(importText.value);
 
       if (!Array.isArray(imported)) {
-        alert("Neplatný formát.");
+        showNotice("Import historie", "Neplatný formát souboru.", "danger", "!");
         return;
       }
 
@@ -931,10 +957,10 @@ function setupImportExport() {
       refreshAll();
       importModal.style.display = "none";
 
-      alert("Import dokončen.");
+      showNotice("Import dokončen", "Historie byla úspěšně načtena.", "success", "✓");
 
     } catch (e) {
-      alert("Import se nepodařil.");
+      showNotice("Import se nepodařil", "Zkontroluj obsah importovaného souboru.", "danger", "!");
     }
   };
 
@@ -954,7 +980,7 @@ function setupImportExport() {
       }, 1500);
 
     } catch (e) {
-      alert("Kopírování se nepodařilo.");
+      showNotice("Kopírování se nepodařilo", "Prohlížeč nepovolil zápis do schránky.", "danger", "!");
     }
   };
 
@@ -1187,6 +1213,7 @@ function setupGlobalControls() {
       if (e.target.closest("#level-modal")) return;
       if (e.target.closest("#achievement-modal")) return;
       if (e.target.closest("#record-modal")) return;
+      if (e.target.closest("#app-dialog-modal")) return;
     
     
     
@@ -1307,8 +1334,10 @@ function refreshAll() {
     savedSolves,
     statCount,
     statBest,
+    statAo3,
     statAo5,
     statAo12,
+    statAo100,
     calcAverage
   );
 
@@ -1325,8 +1354,13 @@ function refreshAll() {
   updateAchievementList(achievementList, playerProfile);
 }
 
-function resetProfile() {
-  const ok = confirm("Opravdu vymazat XP, level a achievementy?");
+async function resetProfile() {
+  const ok = await askUser(
+    "Reset profilu",
+    "Opravdu vymazat XP, level a všechny odznaky?",
+    "danger",
+    "Resetovat"
+  );
   if (!ok) return;
 
   playerProfile = {
@@ -1344,7 +1378,7 @@ function resetProfile() {
   updateAchievementList(achievementList, playerProfile);
   updateDailyTasks(dailyList);
 
-  alert("Profil resetován.");
+  showNotice("Profil resetován", "XP, level a odznaky byly vymazány.", "success", "✓");
 }
 
 function showAchievement(title) {
@@ -2233,8 +2267,13 @@ function saveSolve(time, moves, avg) {
   refreshAll();
 }
 
-function clearHistory() {
-  const ok = confirm("Opravdu vymazat všechny uložené časy?");
+async function clearHistory() {
+  const ok = await askUser(
+    "Vymazat historii",
+    "Opravdu vymazat všechny uložené časy? Tuto akci nelze vrátit.",
+    "danger",
+    "Vymazat"
+  );
   if (!ok) return;
 
   savedSolves = [];

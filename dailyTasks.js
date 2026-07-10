@@ -49,7 +49,16 @@ export function completeDailyTask(id, xp, dailyList, addXP){
   addXP(xp);
   updateDailyTasks(dailyList);
 
-  alert("🎯 Denní úkol splněn!\n\n+"+xp+" XP");
+  if (typeof window.showAppDialog === "function") {
+    window.showAppDialog({
+      title: "Denní úkol splněn!",
+      message: "+" + xp + " XP",
+      type: "success",
+      icon: "🎯"
+    });
+  } else {
+    alert("Denní úkol splněn! +" + xp + " XP");
+  }
 }
 
 export function checkDailyTasks(savedSolves, finalAvg, isPB, dailyList, addXP){

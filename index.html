@@ -12,12 +12,12 @@
   
   <link rel="stylesheet" href="style.css?v=profi-fix-1">
   
-  <link rel="stylesheet" href="desktopStyle.css?v=profi-fix-1" media="(min-width: 900px)">
-  
   <link rel="stylesheet" href="settingsFix.css?v=1">
   <link rel="stylesheet" href="statsFix.css?v=30">
-  <link rel="stylesheet" href="screenHeaders.css?v=2">
-  <link rel="stylesheet" href="desktopFix.css?v=1" media="(min-width: 900px)">
+  <link rel="stylesheet" href="screenHeaders.css?v=3">
+  <link rel="stylesheet" href="appDialog.css?v=1">
+  <link rel="stylesheet" href="algorithmImages.css?v=1">
+  <link rel="stylesheet" href="desktopFix.css?v=2" media="(min-width: 900px)">
 
   
   
@@ -873,6 +873,30 @@
 
 
 
+<!-- ===== JEDNOTNÝ APP MODAL ===== -->
+<div
+  id="app-dialog-modal"
+  class="app-dialog-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="app-dialog-title"
+  hidden
+>
+  <div class="app-dialog-box" data-type="success">
+    <div class="app-dialog-head">
+      <div id="app-dialog-icon" class="app-dialog-icon" aria-hidden="true">✓</div>
+      <h2 id="app-dialog-title" class="app-dialog-title">Cube Trainer</h2>
+    </div>
+
+    <p id="app-dialog-message" class="app-dialog-message"></p>
+
+    <div class="app-dialog-actions">
+      <button id="app-dialog-cancel" class="app-dialog-cancel" type="button" hidden>Zrušit</button>
+      <button id="app-dialog-confirm" class="app-dialog-confirm" type="button">OK</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== LEVEL MODAL ===== -->
 <div id="level-modal" class="detail-modal">
   <div class="detail-box level-box">
@@ -911,7 +935,8 @@
     </div>
   </div>
 </div>
-<script type="module" src="./app.js?v=10006"></script>
+<script src="appDialog.js?v=1"></script>
+<script type="module" src="./app.js?v=10007"></script>
 <script src="statsNavigation.js?v=31"></script>
 <script src="statsHistory.js?v=2"></script>
 <script src="screenHeaders.js?v=1"></script>

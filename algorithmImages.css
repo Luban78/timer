@@ -1,0 +1,17 @@
+/* =========================================================
+   CUBE TRAINER – OBRÁZKY ALGORITMŮ
+   Funguje na mobilu i desktopu.
+   ========================================================= */
+
+#selectedAlg .alg-picture-image::before,
+#selectedAlg .alg-picture-image::after {
+  display: none !important;
+}
+
+#selectedAlg .alg-picture-image img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  border-radius: 10px !important;
+}

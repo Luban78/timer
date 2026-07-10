@@ -11,7 +11,16 @@ export function openVariantPicker(name, onSave) {
   const variants = pllAlgVariants[name];
   
   if (!variants || variants.length === 0) {
-    alert("Pro tento algoritmus zatím nejsou varianty.");
+    if (typeof window.showAppDialog === "function") {
+      window.showAppDialog({
+        title: "Varianty algoritmu",
+        message: "Pro tento algoritmus zatím nejsou uložené žádné varianty.",
+        type: "warning",
+        icon: "i"
+      });
+    } else {
+      alert("Pro tento algoritmus zatím nejsou varianty.");
+    }
     return;
   }
   

@@ -278,7 +278,24 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
+/*
+ * Obrázky algoritmů se přidávají pouze sem.
+ * Soubor vlož do složky alg-images a doplň název algoritmu.
+ */
+const ALGORITHM_IMAGE_MAP = {
+  "F-perm": "alg-images/f-perm.png"
+};
+
 function renderCubePlaceholder(algName) {
+  const imageSrc = ALGORITHM_IMAGE_MAP[algName];
+
+  if (imageSrc) {
+    return `
+      <div class="alg-picture alg-picture-image" data-alg="${escapeHtml(algName)}" aria-label="Náhled algoritmu ${escapeHtml(algName)}">
+        <img src="${escapeHtml(imageSrc)}" alt="Náhled ${escapeHtml(algName)}">
+      </div>`;
+  }
+
   return `
     <div class="alg-picture" data-alg="${escapeHtml(algName)}" aria-label="Náhled orientace kostky">
       <div class="alg-cube-placeholder">
@@ -315,10 +332,20 @@ function renderMove(move, index) {
 
 function renderMoveRows(displaySteps) {
   const rows = [];
+  const isDesktop = window.matchMedia("(min-width: 900px)").matches;
 
-  for (let i = 0; i < displaySteps.length; i += 6) {
+  /*
+   * Mobil zůstává po šesti tazích na řádek.
+   * Desktop rozdělí celý algoritmus do dvou širokých řádků,
+   * aby nebyla notace schovaná pod kartou.
+   */
+  const movesPerRow = isDesktop
+    ? Math.max(1, Math.ceil(displaySteps.length / 2))
+    : 6;
+
+  for (let i = 0; i < displaySteps.length; i += movesPerRow) {
     const row = displaySteps
-      .slice(i, i + 6)
+      .slice(i, i + movesPerRow)
       .map((move, offset) => renderMove(move, i + offset))
       .join("");
 
