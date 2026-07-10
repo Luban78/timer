@@ -940,3 +940,215 @@ body.screen-algstats #algorithm-stats .alg-stat-row p {
   width: 100% !important;
   box-sizing: border-box !important;
 }
+/* ==================================================
+   ODZNAKY – VNITŘNÍ OBRAZOVKA
+   ================================================== */
+
+#stats-screen #stats-achievements-view #achievement-section {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 13px !important;
+
+  border: 1.5px solid rgba(24, 239, 125, 0.76) !important;
+  border-radius: 19px !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 34, 38, 0.96),
+      rgba(4, 17, 21, 0.98)
+    ) !important;
+
+  box-shadow:
+    0 0 9px rgba(24, 239, 125, 0.13),
+    inset 0 0 18px rgba(24, 239, 125, 0.035);
+}
+
+/* Šest odznaků ve dvou sloupcích */
+#stats-screen #stats-achievements-view #achievement-list {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 9px !important;
+
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Jednotlivý odznak */
+#stats-screen #stats-achievements-view .achievement-item {
+  display: grid !important;
+  grid-template-columns: 38px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 9px !important;
+
+  min-width: 0 !important;
+  min-height: 73px !important;
+  margin: 0 !important;
+  padding: 9px !important;
+
+  border: 1px solid rgba(24, 239, 125, 0.35) !important;
+  border-radius: 13px !important;
+
+  background: rgba(3, 19, 21, 0.72) !important;
+  box-sizing: border-box !important;
+}
+
+/* Původní emoji skryjeme a vytvoříme čistou CSS ikonu */
+#stats-screen
+#stats-achievements-view
+.achievement-item
+> span:first-child {
+  position: relative !important;
+
+  display: grid !important;
+  width: 38px !important;
+  height: 38px !important;
+  place-items: center !important;
+
+  border: 1px solid currentColor !important;
+  border-radius: 11px !important;
+
+  background: rgba(3, 20, 21, 0.8) !important;
+  font-size: 0 !important;
+}
+
+/* Text názvu odznaku */
+#stats-screen
+#stats-achievements-view
+.achievement-item
+> span:last-child {
+  min-width: 0 !important;
+
+  font-size: clamp(13px, 3.8vw, 17px) !important;
+  font-weight: 650 !important;
+  line-height: 1.18 !important;
+
+  overflow-wrap: anywhere !important;
+}
+
+/* Odemčený odznak */
+#stats-screen
+#stats-achievements-view
+.achievement-item.unlocked {
+  color: #f3f8f6 !important;
+  border-color: rgba(24, 239, 125, 0.72) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(11, 46, 39, 0.9),
+      rgba(3, 20, 21, 0.95)
+    ) !important;
+
+  box-shadow:
+    0 0 8px rgba(24, 239, 125, 0.12),
+    inset 0 0 12px rgba(24, 239, 125, 0.035);
+}
+
+#stats-screen
+#stats-achievements-view
+.achievement-item.unlocked
+> span:first-child {
+  color: #18ef7d !important;
+}
+
+/* Zelená fajfka bez emoji */
+#stats-screen
+#stats-achievements-view
+.achievement-item.unlocked
+> span:first-child::after {
+  content: "" !important;
+  position: absolute !important;
+
+  width: 17px !important;
+  height: 9px !important;
+
+  border-left: 3px solid currentColor !important;
+  border-bottom: 3px solid currentColor !important;
+
+  transform: translateY(-2px) rotate(-45deg) !important;
+
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+/* Zamčený odznak */
+#stats-screen
+#stats-achievements-view
+.achievement-item.locked {
+  color: rgba(220, 229, 226, 0.58) !important;
+  border-color: rgba(129, 151, 146, 0.22) !important;
+  background: rgba(4, 15, 18, 0.68) !important;
+}
+
+#stats-screen
+#stats-achievements-view
+.achievement-item.locked
+> span:first-child {
+  color: rgba(162, 183, 178, 0.55) !important;
+  border-color: rgba(162, 183, 178, 0.3) !important;
+}
+
+/* Tělo zámku */
+#stats-screen
+#stats-achievements-view
+.achievement-item.locked
+> span:first-child::after {
+  content: "" !important;
+  position: absolute !important;
+
+  top: 17px !important;
+  left: 50% !important;
+
+  width: 18px !important;
+  height: 14px !important;
+
+  border: 2px solid currentColor !important;
+  border-radius: 4px !important;
+
+  transform: translateX(-50%) !important;
+}
+
+/* Oblouk zámku */
+#stats-screen
+#stats-achievements-view
+.achievement-item.locked
+> span:first-child::before {
+  content: "" !important;
+  position: absolute !important;
+
+  top: 7px !important;
+  left: 50% !important;
+
+  width: 12px !important;
+  height: 12px !important;
+
+  border: 2px solid currentColor !important;
+  border-bottom: 0 !important;
+  border-radius: 8px 8px 0 0 !important;
+
+  transform: translateX(-50%) !important;
+}
+
+/* Velmi úzké telefony */
+@media (max-width: 370px) {
+  #stats-screen #stats-achievements-view #achievement-list {
+    gap: 7px !important;
+  }
+
+  #stats-screen #stats-achievements-view .achievement-item {
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    min-height: 67px !important;
+    padding: 7px !important;
+    gap: 7px !important;
+  }
+
+  #stats-screen
+  #stats-achievements-view
+  .achievement-item
+  > span:first-child {
+    width: 34px !important;
+    height: 34px !important;
+  }
+}

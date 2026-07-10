@@ -529,15 +529,63 @@
 </div>
 
 <!-- ===== DATA PRO DALŠÍ BUDOUCÍ OBRAZOVKY ===== -->
-<div class="stats-hidden-data" aria-hidden="true">
+<!-- ===== ODZNAKY – VNITŘNÍ OBRAZOVKA ===== -->
+<!-- ===== ODZNAKY – VNITŘNÍ OBRAZOVKA ===== -->
+<div id="stats-achievements-view" class="stats-subview" hidden>
 
-  <div id="achievement-section">
-    <div id="achievement-list"></div>
+  <div class="stats-subview-header">
+    <button
+      id="backFromAchievementsStats"
+      class="stats-subview-back"
+      type="button"
+      aria-label="Zpět na hlavní statistiky"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M15 18 9 12l6-6"></path>
+      </svg>
+    </button>
+
+    <h2>Odznaky</h2>
   </div>
 
-</div>
+  <section
+    id="achievement-section"
+    class="stats-achievements-card"
+  >
+    <div id="achievement-list"></div>
+  </section>
+
 </div>
 
+<!-- ===== HISTORIE – VNITŘNÍ OBRAZOVKA ===== -->
+<div id="stats-history-view" class="stats-subview" hidden>
+
+  <div class="stats-subview-header">
+    <button
+      id="backFromHistoryStats"
+      class="stats-subview-back"
+      type="button"
+      aria-label="Zpět na hlavní statistiky"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M15 18 9 12l6-6"></path>
+      </svg>
+    </button>
+
+    <h2>Historie</h2>
+  </div>
+
+  <section class="stats-history-card">
+    <div id="stats-history-list">
+      <p class="stats-history-empty">
+        Historie se načte po otevření.
+      </p>
+    </div>
+  </section>
+
+</div>
+
+</div>
 <!-- ===== STATISTIKY ALGORITMŮ SCREEN ===== -->
 <div id="algorithm-stats-screen" style="display:none;">
   <h2 id="algorithmStatsTitle">Statistiky PLL</h2>
@@ -696,7 +744,7 @@
   </div>
 </div>
 <script type="module" src="./app.js?v=10006"></script>
-<script src="statsNavigation.js?v=30"></script>
+<script src="statsNavigation.js?v=31"></script>
 
 </body>
 </html>
