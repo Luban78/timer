@@ -1,0 +1,333 @@
+/* =========================================================
+   CUBE TRAINER – DESKTOP FINAL OVERRIDE
+   Loaded only for screens >= 900 px.
+   Mobile styles remain untouched.
+   ========================================================= */
+
+:root {
+  --desktop-page-max: 1180px;
+  --desktop-gap: 18px;
+  --desktop-panel: linear-gradient(145deg, rgba(11,31,35,.98), rgba(3,14,17,.99));
+}
+
+html, body {
+  min-width: 900px !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  background: #020706 !important;
+}
+
+/* Timer layout: AO left, trainer center, history right */
+body.screen-timer #main-layout {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(700px, 1fr) 330px !important;
+  gap: var(--desktop-gap) !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 18px 18px 18px 252px !important;
+  box-sizing: border-box !important;
+}
+
+body.screen-timer #app {
+  grid-column: 1 !important;
+  width: 100% !important;
+  height: calc(100vh - 36px) !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+body.screen-timer #history {
+  grid-column: 2 !important;
+  position: static !important;
+  width: 100% !important;
+  height: calc(100vh - 36px) !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(24,239,125,.72) !important;
+  border-radius: 22px !important;
+  background: var(--desktop-panel) !important;
+}
+
+body.screen-timer #history-list {
+  height: 100% !important;
+  overflow-y: auto !important;
+  padding: 12px !important;
+  box-sizing: border-box !important;
+}
+
+/* AO panel is a fixed desktop rail */
+body.screen-timer #ao-panel {
+  position: fixed !important;
+  left: 18px !important;
+  top: 18px !important;
+  bottom: 18px !important;
+  width: 216px !important;
+  height: auto !important;
+  transform: none !important;
+  z-index: 40 !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  border: 1px solid rgba(24,239,125,.72) !important;
+  border-radius: 22px !important;
+  background: var(--desktop-panel) !important;
+  overflow: hidden !important;
+}
+
+body.screen-timer #ao-panel .ao-toggle,
+body.screen-timer #ao-panel .ao-pin { display:none !important; }
+body.screen-timer #ao-panel #stats-box {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 18px !important;
+  box-sizing: border-box !important;
+}
+
+/* Real timer top bar: LEVEL | XP | MENU */
+body.screen-timer #top-strip {
+  display: grid !important;
+  grid-template-columns: minmax(180px,.8fr) minmax(360px,1.6fr) minmax(170px,.75fr) !important;
+  width: 100% !important;
+  height: 54px !important;
+  min-height: 54px !important;
+  margin: 0 0 14px !important;
+  border: 1px solid rgba(105,145,158,.45) !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  background: var(--desktop-panel) !important;
+}
+body.screen-timer #top-strip > .top-strip-center { grid-column:1 !important; grid-row:1 !important; }
+body.screen-timer #top-strip > .xp-item { grid-column:2 !important; grid-row:1 !important; }
+body.screen-timer #top-strip > #top-menu-wrap { grid-column:3 !important; grid-row:1 !important; display:flex !important; }
+body.screen-timer #top-strip .top-strip-item {
+  min-width:0 !important;
+  height:54px !important;
+  border-right:1px solid rgba(255,255,255,.10) !important;
+  font-size:18px !important;
+}
+body.screen-timer #top-strip > #top-menu-wrap { border-right:0 !important; }
+body.screen-timer #top-menu-btn {
+  display:flex !important;
+  width:100% !important;
+  height:100% !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:10px !important;
+  padding:0 14px !important;
+  font-size:18px !important;
+  font-weight:800 !important;
+}
+
+body.screen-timer #globalMenuBtn { display:none !important; }
+
+/* Dropdown follows the desktop menu button */
+@media (min-width: 900px) {
+  body.screen-timer #screen-menu-dropdown {
+    position: fixed !important;
+    top: 82px !important;
+    right: 348px !important;
+    left: auto !important;
+    width: 260px !important;
+    z-index: 10000 !important;
+    transform-origin: top right !important;
+  }
+}
+
+/* Keep only modern dropdown controls; restore WCA selector */
+body.screen-timer #compact-controls {
+  display:grid !important;
+  grid-template-columns:minmax(240px,1fr) minmax(240px,1fr) !important;
+  gap:16px !important;
+  width:100% !important;
+  margin:0 0 14px !important;
+  position:relative !important;
+  inset:auto !important;
+}
+body.screen-timer #compact-controls .compact-dropdown,
+body.screen-timer #compact-controls .compact-main-btn { width:100% !important; }
+body.screen-timer #compact-controls .compact-main-btn {
+  min-height:52px !important;
+  font-size:19px !important;
+  border-radius:15px !important;
+}
+body.screen-timer #modeButtons,
+body.screen-timer #training-mode { display:none !important; }
+
+/* Connection buttons become compact utility buttons */
+body.screen-timer #btn,
+body.screen-timer #normalCubeBtn {
+  width:100% !important;
+  min-height:46px !important;
+  height:46px !important;
+  margin:0 0 10px !important;
+  font-size:20px !important;
+  border-radius:14px !important;
+}
+body.screen-timer #status { margin:0 0 10px !important; }
+
+body.screen-timer #selectedAlg {
+  height: clamp(250px, 34vh, 390px) !important;
+  min-height:250px !important;
+  max-height:390px !important;
+  padding:22px 28px !important;
+  border-radius:24px !important;
+}
+body.screen-timer #state-msg { font-size:26px !important; margin:12px 0 !important; }
+body.screen-timer #tps { min-height:112px !important; font-size:76px !important; }
+body.screen-timer .stats-grid {
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:0 !important;
+  min-height:84px !important;
+}
+body.screen-timer .stats-grid .stat-box { display:none !important; }
+body.screen-timer .stats-grid .stat-box:nth-child(1),
+body.screen-timer .stats-grid .stat-box:nth-child(2),
+body.screen-timer .stats-grid .stat-box:nth-child(3) { display:flex !important; }
+
+/* Shared desktop screens */
+body.screen-stats #stats-screen,
+body.screen-settings #settings-screen,
+body.screen-algstats #algorithm-stats-screen {
+  position:fixed !important;
+  inset:0 !important;
+  width:100vw !important;
+  height:100vh !important;
+  max-width:none !important;
+  margin:0 !important;
+  padding:24px 36px !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+  background:#020706 !important;
+}
+
+body.screen-stats #stats-screen > *,
+body.screen-settings #settings-screen > * {
+  max-width:var(--desktop-page-max) !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+
+.screen-local-header,
+#stats-screen .stats-subview-header.screen-local-header {
+  width:min(100%, var(--desktop-page-max)) !important;
+  max-width:var(--desktop-page-max) !important;
+  grid-template-columns:56px minmax(0,1fr) 56px !important;
+  min-height:64px !important;
+  margin:0 auto 18px !important;
+}
+.screen-local-header > .screen-local-title,
+.screen-local-header > h2,
+.screen-local-header > h3,
+#algorithmStatsTitle {
+  font-size:clamp(34px,3vw,52px) !important;
+}
+.screen-local-back,
+.screen-local-menu,
+#stats-screen .stats-subview-back,
+#algorithm-stats-screen .algorithm-back-icon {
+  width:52px !important;
+  min-width:52px !important;
+  height:52px !important;
+  min-height:52px !important;
+  border-radius:15px !important;
+}
+
+/* Main stats uses available desktop width */
+body.screen-stats #stats-screen:not(.stats-subview-open) #xp-card { width:100% !important; }
+body.screen-stats #stats-screen:not(.stats-subview-open) .stats-grid-screen {
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:16px !important;
+  width:100% !important;
+}
+body.screen-stats #stats-screen:not(.stats-subview-open) .stats-main-card {
+  min-height:170px !important;
+}
+body.screen-stats #stats-screen:not(.stats-subview-open) .stats-nav-grid {
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:14px !important;
+  width:100% !important;
+}
+
+/* Subviews centered */
+body.screen-stats #stats-screen.stats-subview-open .stats-subview:not([hidden]) {
+  display:block !important;
+  width:min(100%, 1100px) !important;
+  max-width:1100px !important;
+  height:calc(100vh - 48px) !important;
+  margin:0 auto !important;
+  overflow:hidden !important;
+}
+body.screen-stats #stats-screen.stats-subview-open .stats-algorithm-menu {
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:22px !important;
+}
+body.screen-stats #stats-screen.stats-subview-open .stats-algorithm-card { min-height:280px !important; }
+
+/* Settings centered, wider and two columns on large screens */
+body.screen-settings #settings-screen {
+  top:0 !important;
+  padding:24px 36px !important;
+}
+body.screen-settings #settings-screen .settings-local-header { max-width:1000px !important; }
+body.screen-settings #settings-screen > button.settings-row {
+  max-width:1000px !important;
+  min-height:72px !important;
+  height:72px !important;
+  margin:12px auto !important;
+  font-size:19px !important;
+}
+body.screen-settings #settingsTitle { color:#f5f7f8 !important; }
+
+/* Algorithm stats desktop */
+body.screen-algstats #algorithm-stats-screen {
+  display:grid !important;
+  grid-template-columns:56px minmax(0,1fr) 56px !important;
+  grid-template-rows:64px minmax(0,1fr) !important;
+  column-gap:12px !important;
+  max-width:none !important;
+}
+body.screen-algstats #algorithmStatsTitle {
+  grid-column:2 !important;
+  grid-row:1 !important;
+  margin:0 !important;
+  align-self:center !important;
+  text-align:center !important;
+  color:#f5f7f8 !important;
+}
+body.screen-algstats #backToStatsBtn { grid-column:1 !important; grid-row:1 !important; }
+body.screen-algstats .algorithm-stats-menu { grid-column:3 !important; grid-row:1 !important; }
+body.screen-algstats #algorithm-stats {
+  grid-column:1 / -1 !important;
+  grid-row:2 !important;
+  width:min(100%, 1280px) !important;
+  margin:0 auto !important;
+  padding:16px 4px 30px !important;
+  overflow-y:auto !important;
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:14px !important;
+}
+body.screen-algstats #algorithm-stats .alg-stat-row { min-height:150px !important; }
+
+/* Non-timer menu opens from the right header button */
+body:not(.screen-timer) #screen-menu-dropdown {
+  position:fixed !important;
+  top:82px !important;
+  right:36px !important;
+  left:auto !important;
+  width:260px !important;
+  z-index:10000 !important;
+}
+
+@media (min-width: 1500px) {
+  body.screen-timer #main-layout { padding-left:272px !important; grid-template-columns:minmax(820px,1fr) 360px !important; }
+  body.screen-timer #ao-panel { width:236px !important; }
+  body.screen-timer #screen-menu-dropdown { right:378px !important; }
+}

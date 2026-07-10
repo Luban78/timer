@@ -1,11 +1,11 @@
 {
-  "name": "MG3i Trainer",
-  "short_name": "MG Trainer",
+  "name": "Cube Trainer",
+  "short_name": "Cube Trainer",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
-  "background_color": "#121212",
-  "theme_color": "#121212",
+  "background_color": "#020706",
+  "theme_color": "#00e676",
   "icons": [
     {
       "src": "icon-192.png",
