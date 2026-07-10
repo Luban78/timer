@@ -115,7 +115,7 @@ body #settings-screen button.settings-row > .settings-icon .neon-icon {
 
 body #settings-screen button.settings-row > .settings-label,
 body #settings-screen button.settings-row > span:last-child {
-  font-size: 20px !important;
+  font-size: 17px !important;
   line-height: 1.05 !important;
 }
 /* =========================================================
@@ -151,7 +151,7 @@ body.screen-settings #settingsTitle {
 
   text-align: center !important;
 
-  font-size: 20px !important;
+  font-size: 25px !important;
   line-height: 1.05 !important;
   font-weight: 800 !important;
 
@@ -172,9 +172,49 @@ body.screen-settings #settings-screen button.settings-row {
   margin-top: 8px !important;
   margin-bottom: 8px !important;
 }
+
 body.screen-settings #main-layout,
 body.screen-settings #app,
 body.screen-settings #app-screen {
   overflow: hidden !important;
+  max-height: 100dvh !important;
+}
+/* =========================================================
+   SETTINGS - definitivně bez scrollování stránky
+   ========================================================= */
+
+body.screen-settings {
+  overflow: hidden !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+}
+
+/* obrazovka Nastavení jako pevný panel pod horní lištou */
+body.screen-settings #settings-screen {
+  position: fixed !important;
+  
+  top: 74px !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  
+  width: 100vw !important;
+  height: auto !important;
+  max-height: none !important;
+  
+  overflow: hidden !important;
+  
+  padding: 12px 20px 0 20px !important;
+  box-sizing: border-box !important;
+  
+  z-index: 50 !important;
+}
+
+/* pojistka proti scrollu uvnitř rodičů */
+body.screen-settings #main-layout,
+body.screen-settings #app,
+body.screen-settings #app-screen {
+  overflow: hidden !important;
+  height: 100dvh !important;
   max-height: 100dvh !important;
 }
