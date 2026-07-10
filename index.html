@@ -16,6 +16,7 @@
   
   <link rel="stylesheet" href="settingsFix.css?v=1">
   <link rel="stylesheet" href="statsFix.css?v=30">
+  <link rel="stylesheet" href="screenHeaders.css?v=2">
   
   
   
@@ -276,7 +277,32 @@
 <!-- ===== STATISTIKY SCREEN ===== -->
 <div id="stats-screen" style="display:none;">
   
-  <h2 class="stats-page-title">Statistiky</h2>
+  <div class="screen-local-header stats-main-header">
+    <button
+      id="backFromStatsScreen"
+      class="screen-local-back"
+      type="button"
+      aria-label="Zpět na Timer"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M15 18 9 12l6-6"></path>
+      </svg>
+    </button>
+
+    <h2 class="stats-page-title screen-local-title">Statistiky</h2>
+
+    <button
+      class="screen-local-menu"
+      type="button"
+      aria-label="Otevřít menu"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16"></path>
+        <path d="M4 12h16"></path>
+        <path d="M4 17h16"></path>
+      </svg>
+    </button>
+  </div>
   
   <!-- LEVEL + XP -->
   <section class="stats-level-card" id="xp-card">
@@ -432,7 +458,7 @@
 <!-- ===== POKROK A ÚKOLY – VNITŘNÍ OBRAZOVKA ===== -->
 <div id="stats-progress-view" class="stats-subview" hidden>
 
-  <div class="stats-subview-header">
+  <div class="stats-subview-header screen-local-header">
     <button
       id="backFromProgressStats"
       class="stats-subview-back"
@@ -445,7 +471,19 @@
     </button>
 
     <h2>Pokrok a úkoly</h2>
-  </div>
+  
+
+    <button
+      class="screen-local-menu"
+      type="button"
+      aria-label="Otevřít menu"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16"></path>
+        <path d="M4 12h16"></path>
+        <path d="M4 17h16"></path>
+      </svg>
+    </button></div>
 
   <section class="stats-progress-card daily-card">
     <div class="stats-progress-heading">
@@ -485,7 +523,7 @@
 <!-- ===== ALGORITMY – VNITŘNÍ OBRAZOVKA ===== -->
 <div id="stats-algorithms-view" class="stats-subview" hidden>
 
-  <div class="stats-subview-header">
+  <div class="stats-subview-header screen-local-header">
     <button
       id="backFromAlgorithmsStats"
       class="stats-subview-back"
@@ -498,7 +536,19 @@
     </button>
 
     <h2>Algoritmy</h2>
-  </div>
+  
+
+    <button
+      class="screen-local-menu"
+      type="button"
+      aria-label="Otevřít menu"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16"></path>
+        <path d="M4 12h16"></path>
+        <path d="M4 17h16"></path>
+      </svg>
+    </button></div>
 
   <div id="algorithm-section" class="stats-algorithm-menu">
 
@@ -533,7 +583,7 @@
 <!-- ===== ODZNAKY – VNITŘNÍ OBRAZOVKA ===== -->
 <div id="stats-achievements-view" class="stats-subview" hidden>
 
-  <div class="stats-subview-header">
+  <div class="stats-subview-header screen-local-header">
     <button
       id="backFromAchievementsStats"
       class="stats-subview-back"
@@ -546,7 +596,19 @@
     </button>
 
     <h2>Odznaky</h2>
-  </div>
+  
+
+    <button
+      class="screen-local-menu"
+      type="button"
+      aria-label="Otevřít menu"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16"></path>
+        <path d="M4 12h16"></path>
+        <path d="M4 17h16"></path>
+      </svg>
+    </button></div>
 
   <section
     id="achievement-section"
@@ -560,7 +622,7 @@
 <!-- ===== HISTORIE – VNITŘNÍ OBRAZOVKA ===== -->
 <div id="stats-history-view" class="stats-subview" hidden>
 
-  <div class="stats-subview-header">
+  <div class="stats-subview-header screen-local-header">
     <button
       id="backFromHistoryStats"
       class="stats-subview-back"
@@ -573,15 +635,82 @@
     </button>
 
     <h2>Historie</h2>
+    <button
+  id="historyHeaderMenuBtn"
+  class="stats-subview-menu screen-local-menu"
+  type="button"
+  aria-label="Otevřít menu"
+>
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M4 7h16"></path>
+    <path d="M4 12h16"></path>
+    <path d="M4 17h16"></path>
+  </svg>
+</button>
   </div>
 
-  <section class="stats-history-card">
-    <div id="stats-history-list">
-      <p class="stats-history-empty">
-        Historie se načte po otevření.
-      </p>
-    </div>
-  </section>
+  <div
+  id="stats-history-filters"
+  class="stats-history-filters"
+  aria-label="Filtr historie"
+>
+  <button
+    class="stats-history-filter active"
+    type="button"
+    data-history-filter="all"
+  >
+    Vše
+  </button>
+
+  <button
+    class="stats-history-filter"
+    type="button"
+    data-history-filter="wca"
+  >
+    WCA
+  </button>
+
+  <button
+    class="stats-history-filter"
+    type="button"
+    data-history-filter="oll"
+  >
+    OLL
+  </button>
+
+  <button
+    class="stats-history-filter"
+    type="button"
+    data-history-filter="pll"
+  >
+    PLL
+  </button>
+</div>
+<div id="stats-history-summary" class="stats-history-summary">
+
+  <div class="stats-history-summary-item">
+    <span>Počet solve</span>
+    <strong id="history-summary-count">-</strong>
+  </div>
+
+  <div class="stats-history-summary-item">
+    <span>Best</span>
+    <strong id="history-summary-best">-</strong>
+  </div>
+
+  <div class="stats-history-summary-item">
+    <span>Průměr</span>
+    <strong id="history-summary-average">-</strong>
+  </div>
+
+</div>
+<section class="stats-history-card">
+  <div id="stats-history-list">
+    <p class="stats-history-empty">
+      Historie se načte po otevření.
+    </p>
+  </div>
+</section>
 
 </div>
 
@@ -591,7 +720,7 @@
   <h2 id="algorithmStatsTitle">Statistiky PLL</h2>
   <button
   id="backToStatsBtn"
-  class="back-to-stats algorithm-back-icon"
+  class="back-to-stats algorithm-back-icon screen-local-back"
   type="button"
   aria-label="Zpět"
 >
@@ -599,6 +728,17 @@
     <path d="M15 18 9 12l6-6"></path>
   </svg>
 </button>
+  <button
+    class="screen-local-menu algorithm-stats-menu"
+    type="button"
+    aria-label="Otevřít menu"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 7h16"></path>
+      <path d="M4 12h16"></path>
+      <path d="M4 17h16"></path>
+    </svg>
+  </button>
   <div id="algorithm-stats"></div>
 </div>
 
@@ -609,7 +749,32 @@
 
 <!-- ===== NASTAVENÍ SCREEN ===== -->
 <div id="settings-screen" style="display:none; padding:20px;">
-  <h3 id="settingsTitle">Nastavení</h3>
+  <div class="screen-local-header settings-local-header">
+    <button
+      id="backFromSettingsScreen"
+      class="screen-local-back"
+      type="button"
+      aria-label="Zpět na Timer"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M15 18 9 12l6-6"></path>
+      </svg>
+    </button>
+
+    <h3 id="settingsTitle" class="screen-local-title">Nastavení</h3>
+
+    <button
+      class="screen-local-menu"
+      type="button"
+      aria-label="Otevřít menu"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16"></path>
+        <path d="M4 12h16"></path>
+        <path d="M4 17h16"></path>
+      </svg>
+    </button>
+  </div>
   
   
   
@@ -745,6 +910,8 @@
 </div>
 <script type="module" src="./app.js?v=10006"></script>
 <script src="statsNavigation.js?v=31"></script>
+<script src="statsHistory.js?v=2"></script>
+<script src="screenHeaders.js?v=1"></script>
 
 </body>
 </html>

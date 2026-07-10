@@ -115,6 +115,7 @@ document.addEventListener("DOMContentLoaded", function() {
     openStatsSubview(algorithmsView);
   });
   
+  
   addClick(
     backFromAlgorithmsBtn,
     closeStatsSubview

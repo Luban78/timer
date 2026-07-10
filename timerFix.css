@@ -1,0 +1,34 @@
+/* ==================================================
+   MG3i TRAINER – TIMER SCREEN FIXES
+   Mobile: keep LEVEL and XP on the left/centre and
+   place the main MENU button consistently on the right.
+   ================================================== */
+
+@media (max-width: 899px) {
+  body.screen-timer #top-strip {
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.35fr) minmax(0, 0.9fr) !important;
+  }
+
+  body.screen-timer #top-strip .top-strip-center {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.11) !important;
+  }
+
+  body.screen-timer #top-strip .xp-item {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.11) !important;
+  }
+
+  body.screen-timer #top-menu-wrap {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    border-right: 0 !important;
+  }
+
+  body.screen-timer #top-menu-btn {
+    justify-content: center !important;
+    padding: 0 6px !important;
+  }
+}

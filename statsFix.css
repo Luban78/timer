@@ -1152,3 +1152,361 @@ body.screen-algstats #algorithm-stats .alg-stat-row p {
     height: 34px !important;
   }
 }
+/* ==================================================
+   HISTORIE – VNITŘNÍ OBRAZOVKA
+   Scrolluje pouze seznam záznamů
+   ================================================== */
+
+#stats-screen #stats-history-view {
+  width: 100%;
+  height: calc(100dvh - 125px);
+  min-height: 0;
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* Karta se seznamem */
+#stats-screen #stats-history-view .stats-history-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+
+  margin: 0;
+  padding: 10px;
+
+  overflow: hidden;
+
+  border: 1.5px solid rgba(24, 239, 125, 0.76);
+  border-radius: 19px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 34, 38, 0.96),
+      rgba(4, 17, 21, 0.98)
+    );
+
+  box-shadow:
+    0 0 9px rgba(24, 239, 125, 0.13),
+    inset 0 0 18px rgba(24, 239, 125, 0.035);
+
+  box-sizing: border-box;
+}
+
+/* Scrolluje jen tento seznam */
+#stats-screen #stats-history-view #stats-history-list {
+  display: grid;
+  gap: 8px;
+
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+
+  margin: 0;
+  padding: 0 2px 12px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  scrollbar-width: none;
+}
+
+#stats-screen
+#stats-history-view
+#stats-history-list::-webkit-scrollbar {
+  display: none;
+}
+
+/* Jeden záznam */
+#stats-screen #stats-history-view .stats-history-row {
+  display: grid;
+  grid-template-columns: 35px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+
+  min-width: 0;
+  min-height: 69px;
+
+  margin: 0;
+  padding: 9px 10px;
+
+  border: 1px solid rgba(24, 239, 125, 0.32);
+  border-radius: 13px;
+
+  background: rgba(3, 19, 21, 0.72);
+  box-sizing: border-box;
+}
+
+/* Pořadové číslo */
+#stats-screen #stats-history-view .stats-history-number {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+
+  border: 1px solid rgba(24, 239, 125, 0.42);
+  border-radius: 10px;
+
+  color: #18ef7d;
+  font-size: 14px;
+  font-weight: 750;
+
+  background: rgba(3, 20, 21, 0.8);
+}
+
+/* Algoritmus a datum */
+#stats-screen #stats-history-view .stats-history-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+#stats-screen #stats-history-view .stats-history-algorithm {
+  overflow: hidden;
+
+  color: #f3f8f6;
+  font-size: clamp(15px, 4vw, 18px);
+  font-weight: 700;
+  line-height: 1.15;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#stats-screen #stats-history-view .stats-history-date {
+  overflow: hidden;
+
+  color: rgba(220, 230, 227, 0.62);
+  font-size: clamp(11px, 3vw, 13px);
+  line-height: 1.15;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Čas, HTM a TPS */
+#stats-screen #stats-history-view .stats-history-result {
+  display: flex;
+  min-width: 82px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+}
+
+#stats-screen #stats-history-view .stats-history-result strong {
+  color: #18ef7d;
+  font-size: clamp(17px, 4.7vw, 21px);
+  font-weight: 750;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+#stats-screen #stats-history-view .stats-history-result span {
+  color: rgba(226, 234, 232, 0.7);
+  font-size: clamp(10px, 2.8vw, 12px);
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+/* Prázdná historie */
+#stats-screen #stats-history-view .stats-history-empty {
+  margin: 20px 8px;
+  color: rgba(225, 233, 231, 0.7);
+  font-size: 16px;
+  text-align: center;
+}
+
+/* Velmi úzký telefon */
+@media (max-width: 370px) {
+  #stats-screen #stats-history-view .stats-history-row {
+    grid-template-columns: 31px minmax(0, 1fr) auto;
+    gap: 6px;
+    padding: 8px 7px;
+  }
+
+  #stats-screen #stats-history-view .stats-history-number {
+    width: 29px;
+    height: 29px;
+  }
+}
+
+/* ==================================================
+   HISTORIE – FILTRY VŠE / WCA / OLL / PLL
+   ================================================== */
+
+#stats-screen #stats-history-view .stats-history-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+
+  width: 100%;
+  margin: 0 0 9px;
+}
+
+#stats-screen #stats-history-view .stats-history-filter {
+  min-width: 0;
+  height: 42px;
+  margin: 0;
+  padding: 0 5px;
+
+  border: 1px solid rgba(24, 239, 125, 0.34);
+  border-radius: 12px;
+
+  background: rgba(3, 19, 21, 0.72);
+  color: rgba(226, 235, 232, 0.72);
+
+  font: inherit;
+  font-size: clamp(13px, 3.7vw, 16px);
+  font-weight: 700;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#stats-screen #stats-history-view .stats-history-filter.active {
+  border-color: rgba(24, 239, 125, 0.9);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(14, 58, 45, 0.98),
+      rgba(4, 25, 24, 0.98)
+    );
+
+  color: #18ef7d;
+
+  box-shadow:
+    0 0 9px rgba(24, 239, 125, 0.18),
+    inset 0 0 12px rgba(24, 239, 125, 0.05);
+}
+
+#stats-screen #stats-history-view .stats-history-filter:active {
+  transform: scale(0.96);
+}
+/* ==================================================
+   HISTORIE – SOUHRN AKTIVNÍHO FILTRU
+   ================================================== */
+
+#stats-screen #stats-history-view .stats-history-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+
+  width: 100%;
+  margin: 0 0 9px;
+}
+
+#stats-screen
+#stats-history-view
+.stats-history-summary-item {
+  display: flex;
+  min-width: 0;
+  min-height: 62px;
+  padding: 8px 5px;
+
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  border: 1px solid rgba(24, 239, 125, 0.32);
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(10, 32, 35, 0.95),
+      rgba(3, 17, 20, 0.98)
+    );
+
+  box-shadow:
+    inset 0 0 12px rgba(24, 239, 125, 0.025);
+
+  text-align: center;
+  box-sizing: border-box;
+}
+
+#stats-screen
+#stats-history-view
+.stats-history-summary-item span {
+  overflow: hidden;
+
+  color: rgba(220, 230, 227, 0.65);
+  font-size: clamp(10px, 2.8vw, 12px);
+  font-weight: 600;
+  line-height: 1.1;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#stats-screen
+#stats-history-view
+.stats-history-summary-item strong {
+  overflow: hidden;
+  width: 100%;
+
+  color: #18ef7d;
+  font-size: clamp(17px, 4.8vw, 22px);
+  font-weight: 750;
+  line-height: 1;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  text-shadow: 0 0 7px rgba(24, 239, 125, 0.28);
+}
+/* ==================================================
+   HISTORIE – MENU V HLAVIČCE
+   ================================================== */
+
+#stats-screen
+#stats-history-view
+.stats-subview-menu {
+  display: grid;
+  grid-column: 3;
+
+  width: 42px;
+  height: 42px;
+  margin: 0;
+  padding: 0;
+
+  place-items: center;
+
+  border: 1.5px solid rgba(24, 239, 125, 0.75);
+  border-radius: 13px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 34, 38, 0.96),
+      rgba(4, 17, 21, 0.98)
+    );
+
+  color: #18ef7d;
+
+  box-shadow:
+    0 0 9px rgba(24, 239, 125, 0.15),
+    inset 0 0 14px rgba(24, 239, 125, 0.04);
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#stats-screen
+#stats-history-view
+.stats-subview-menu svg {
+  width: 25px;
+  height: 25px;
+}
+
+#stats-screen
+#stats-history-view
+.stats-subview-menu:active {
+  transform: scale(0.95);
+}
