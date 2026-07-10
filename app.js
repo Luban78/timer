@@ -325,7 +325,10 @@ function applyColorPreset() {
   setTrainerFrontColor(preset.front);
 
   if (colorPresetBtn) {
-    colorPresetBtn.textContent = preset.label;
+    const colorPresetText = colorPresetBtn.querySelector("span:last-child");
+if (colorPresetText) {
+  colorPresetText.textContent = preset.label;
+}
   }
 
   document.querySelectorAll(".alg-orientation-hint").forEach(el => {
@@ -460,7 +463,12 @@ function updateScreenTopBar() {
 function updateSettingsCubeModeButton() {
   if (!settingsCubeModeBtn) return;
 
-  settingsCubeModeBtn.textContent = cubeMode === "normal" ? "Connect the cube" : "Normal cube";
+  const settingsCubeModeText = document.getElementById("settingsCubeModeText");
+
+if (settingsCubeModeText) {
+  settingsCubeModeText.textContent =
+    cubeMode === "normal" ? "Connect the cube" : "Normal cube";
+}
   settingsCubeModeBtn.dataset.targetCubeMode = cubeMode === "normal" ? "smart" : "normal";
 }
 

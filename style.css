@@ -3040,3 +3040,311 @@ body.screen-algstats #algorithm-stats-screen {
   font-size: 18px !important;
   color: rgba(255,255,255,.75) !important;
 }
+/* =========================================================
+   NEON SVG IKONY
+   ========================================================= */
+
+.neon-icon {
+  width: 34px;
+  height: 34px;
+  
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  
+  flex: 0 0 auto;
+  
+  filter: drop-shadow(0 0 7px currentColor);
+}
+
+.settings-row {
+  display: grid !important;
+  grid-template-columns: 46px 1fr !important;
+  align-items: center !important;
+  gap: 14px !important;
+  
+  text-align: left !important;
+  justify-content: initial !important;
+  
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  
+  color: #ffffff !important;
+}
+
+.settings-row .settings-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  
+  color: #00e676 !important;
+}
+
+.settings-row.danger .settings-icon {
+  color: #ff4d6d !important;
+}
+
+.settings-row.danger {
+  color: #ff8fa3 !important;
+}
+
+.settings-row::after,
+.settings-row .chevron,
+.settings-row .row-arrow {
+  display: none !important;
+  content: none !important;
+}
+
+/* =========================================================
+   NADPIS NASTAVENÍ - pevná velikost SVG, aby se neroztáhlo
+   ========================================================= */
+
+#settings-screen .settings-title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  
+  gap: 14px !important;
+  
+  width: 100% !important;
+  max-width: 100% !important;
+  
+  margin: 10px 0 24px 0 !important;
+  padding: 0 !important;
+  
+  color: #f4f7fb !important;
+  font-size: 46px !important;
+  font-weight: 900 !important;
+  line-height: 1.05 !important;
+  
+  overflow: visible !important;
+}
+
+#settings-screen .settings-title-icon {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  max-width: 56px !important;
+  
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  
+  flex: 0 0 56px !important;
+}
+
+#settings-screen .neon-title-icon {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  max-width: 56px !important;
+  
+  fill: none !important;
+  stroke: #9fd7ff !important;
+  stroke-width: 1.8 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  
+  filter: drop-shadow(0 0 7px rgba(120, 220, 255, .55)) !important;
+}
+
+/* menší mobil */
+@media (max-width: 420px) {
+  #settings-screen .settings-title {
+    font-size: 40px !important;
+    gap: 12px !important;
+  }
+  
+  #settings-screen .settings-title-icon,
+  #settings-screen .neon-title-icon {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+    flex-basis: 48px !important;
+  }
+}
+/* =========================================================
+   SETTINGS ROW FIX - zarovnání ikon, menší text, bez šipek
+   ========================================================= */
+
+#settings-screen .settings-row {
+  display: grid !important;
+  grid-template-columns: 58px minmax(0, 1fr) !important;
+  align-items: center !important;
+  column-gap: 14px !important;
+
+  min-height: 86px !important;
+  height: 86px !important;
+
+  padding: 0 18px 0 18px !important;
+  box-sizing: border-box !important;
+
+  text-align: left !important;
+}
+
+/* všechny ikony do jedné pevné levé pozice */
+#settings-screen .settings-icon {
+  width: 5px !important;
+  height: 58px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  justify-self: start !important;
+}
+
+/* velikost samotné SVG ikony */
+#settings-screen .settings-icon .neon-icon {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+/* text tlačítka */
+#settings-screen .settings-label {
+  display: block !important;
+
+  min-width: 0 !important;
+  max-width: 100% !important;
+
+  font-size: 25px !important;
+  line-height: 1.12 !important;
+  font-weight: 750 !important;
+
+  text-align: left !important;
+  justify-self: start !important;
+
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* červená tlačítka */
+#settings-screen .settings-row.danger .settings-label {
+  color: #ff8fa3 !important;
+}
+
+/* pryč všechny šipky vpravo */
+#settings-screen .settings-row::after,
+#settings-screen .settings-row .chevron,
+#settings-screen .settings-row .row-arrow,
+#settings-screen .settings-row .settings-chevron,
+#settings-screen .settings-action {
+  display: none !important;
+  content: none !important;
+}
+
+/* když bude mobil úzký, text ještě trochu zmenšit */
+@media (max-width: 420px) {
+  #settings-screen .settings-row {
+    grid-template-columns: 52px minmax(0, 1fr) !important;
+    column-gap: 12px !important;
+
+    min-height: 82px !important;
+    height: 82px !important;
+
+    padding-left: 16px !important;
+    padding-right: 14px !important;
+  }
+
+  #settings-screen .settings-icon {
+    width: 52px !important;
+    height: 52px !important;
+  }
+
+  #settings-screen .settings-icon .neon-icon {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  #settings-screen .settings-label {
+    font-size: 22px !important;
+  }
+}
+
+/* =========================================================
+   SETTINGS ROW FIX 3 - ikony natvrdo vlevo
+   ========================================================= */
+
+#settings-screen .settings-row {
+  position: relative !important;
+  
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  
+  min-height: 78px !important;
+  height: auto !important;
+  
+  padding: 0 16px 0 72px !important;
+  
+  text-align: left !important;
+  box-sizing: border-box !important;
+}
+
+/* ikona je pevně vlevo, už ji nic nevycentruje */
+#settings-screen .settings-row>.settings-icon {
+  position: absolute !important;
+  
+  left: 22px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  
+  width: 34px !important;
+  height: 34px !important;
+  
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* samotné SVG */
+#settings-screen .settings-row>.settings-icon .neon-icon {
+  width: 30px !important;
+  height: 30px !important;
+  
+  margin: 0 !important;
+}
+
+/* text začne vždy za ikonou */
+#settings-screen .settings-row>.settings-label,
+#settings-screen .settings-row>span:last-child {
+  display: block !important;
+  
+  width: 100% !important;
+  max-width: 100% !important;
+  
+  margin: 0 !important;
+  padding: 0 !important;
+  
+  text-align: center !important;
+  
+  font-size: 18px !important;
+  line-height: 1.15 !important;
+  font-weight: 750 !important;
+  
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+/* šipky a pravé akce pryč */
+#settings-screen .settings-row::after,
+#settings-screen .settings-action,
+#settings-screen .settings-chevron,
+#settings-screen .chevron,
+#settings-screen .row-arrow {
+  display: none !important;
+  content: none !important;
+}
+
+
+
+/* =========================================================
+   

@@ -1,0 +1,180 @@
+/* =========================================================
+   SETTINGS FIX - poslední přepis jen pro obrazovku Nastavení
+   ========================================================= */
+
+#settings-screen button.settings-row {
+  position: relative !important;
+  
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  
+  width: 100% !important;
+  
+  min-height: 70px !important;
+  height: 70px !important;
+  max-height: 70px !important;
+  
+  padding: 0 18px 0 70px !important;
+  margin: 10px 0 !important;
+  
+  box-sizing: border-box !important;
+  
+  text-align: center !important;
+}
+
+/* ikona pevně vlevo */
+#settings-screen button.settings-row>.settings-icon {
+  position: absolute !important;
+  
+  left: 18px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  
+  width: 34px !important;
+  height: 34px !important;
+  
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* samotná SVG ikona */
+#settings-screen button.settings-row>.settings-icon .neon-icon {
+  width: 30px !important;
+  height: 30px !important;
+}
+
+/* text */
+#settings-screen button.settings-row>.settings-label,
+#settings-screen button.settings-row>span:last-child {
+  display: block !important;
+  
+  width: 100% !important;
+  max-width: 100% !important;
+  
+  margin: 0 !important;
+  padding: 0 !important;
+  
+  font-size: 18px !important;
+  line-height: 1.1 !important;
+  font-weight: 750 !important;
+  
+  text-align: center !important;
+  
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+/* pryč šipky */
+#settings-screen button.settings-row::after,
+#settings-screen button.settings-row .settings-action,
+#settings-screen button.settings-row .settings-chevron,
+#settings-screen button.settings-row .chevron,
+#settings-screen button.settings-row .row-arrow {
+  display: none !important;
+  content: none !important;
+}
+
+/* červená tlačítka */
+#settings-screen button.settings-row.danger>.settings-label,
+#settings-screen button.settings-row.danger>span:last-child {
+  color: #ff8fa3 !important;
+}
+/* TESTOVANÁ FINÁLNÍ VERZE */
+body #settings-screen button.settings-row {
+  min-height: 62px !important;
+  height: 62px !important;
+  max-height: 62px !important;
+
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 62px !important;
+  padding-right: 14px !important;
+
+  margin-top: 8px !important;
+  margin-bottom: 8px !important;
+
+  box-sizing: border-box !important;
+}
+
+body #settings-screen button.settings-row > .settings-icon {
+  left: 16px !important;
+  width: 30px !important;
+  height: 30px !important;
+}
+
+body #settings-screen button.settings-row > .settings-icon .neon-icon {
+  width: 26px !important;
+  height: 26px !important;
+}
+
+body #settings-screen button.settings-row > .settings-label,
+body #settings-screen button.settings-row > span:last-child {
+  font-size: 20px !important;
+  line-height: 1.05 !important;
+}
+/* =========================================================
+   SETTINGS - nadpis na střed + bez scrollování
+   ========================================================= */
+
+/* vypnout scroll jen na obrazovce Nastavení */
+body.screen-settings,
+body.screen-settings html {
+  overflow: hidden !important;
+}
+
+/* samotná obrazovka nastavení */
+body.screen-settings #settings-screen {
+  height: calc(100dvh - 78px) !important;
+  max-height: calc(100dvh - 78px) !important;
+
+  overflow: hidden !important;
+
+  padding: 10px 20px 0 20px !important;
+  box-sizing: border-box !important;
+}
+
+/* tvůj nadpis h3 */
+body.screen-settings #settings-screen h3,
+body.screen-settings #settingsTitle {
+  display: block !important;
+
+  width: 100% !important;
+
+  margin: 10px 0 22px 0 !important;
+  padding: 0 !important;
+
+  text-align: center !important;
+
+  font-size: 20px !important;
+  line-height: 1.05 !important;
+  font-weight: 800 !important;
+
+  color: rgba(72, 124, 193, 1) !important;
+
+  text-shadow:
+    0 0 10px rgba(0, 230, 118, 0.25),
+    0 0 20px rgba(0, 230, 118, 0.12) !important;
+}
+
+/* pokud tam ještě zůstalo p "Správa dat aplikace" a nechceš ho */
+body.screen-settings #settings-screen p {
+  display: none !important;
+}
+
+/* kompaktnější mezery mezi buttony */
+body.screen-settings #settings-screen button.settings-row {
+  margin-top: 8px !important;
+  margin-bottom: 8px !important;
+}
+body.screen-settings #main-layout,
+body.screen-settings #app,
+body.screen-settings #app-screen {
+  overflow: hidden !important;
+  max-height: 100dvh !important;
+}

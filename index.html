@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="style.css?v=profi-fix-1">
   
   <link rel="stylesheet" href="desktopStyle.css?v=profi-fix-1" media="(min-width: 900px)">
+  
+  <link rel="stylesheet" href="settingsFix.css?v=1">
 
   <title>MG3i Trainer v0.55</title>
 </head>
@@ -346,21 +348,108 @@
   <div id="algorithm-stats"></div>
 </div>
 
+
+
+
+
+
 <!-- ===== NASTAVENÍ SCREEN ===== -->
 <div id="settings-screen" style="display:none; padding:20px;">
-  <h2>⚙️ Nastavení</h2>
-  <p>Správa dat aplikace</p>
+  <h3 id="settingsTitle">Nastavení</h3>
+  
+  
+  
+ <!-- 
+ <p>Správa dat aplikace</p>
+ 
   <button id="settingsCubeModeBtn" type="button">
     Normal cube
   </button>
-  <button id="colorPresetBtn" type="button">
-  Top Yellow | Front Green
+  -->
+  <button id="settingsCubeModeBtn" class="settings-row" type="button">
+  <span class="settings-icon">
+    <svg class="neon-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3 4 7v10l8 4 8-4V7l-8-4Z"></path>
+      <path d="M4 7l8 4 8-4"></path>
+      <path d="M12 11v10"></path>
+    </svg>
+  </span>
+  <span id="settingsCubeModeText" class="settings-label">Normal cube</span>
 </button>
-  <button id="settings-export-btn">Export historie</button>
-  <button id="settings-import-btn">Import historie</button>
-  <button id="settings-clear-btn" class="danger">Vymazat historii</button>
-  <button id="settings-reset-profile-btn" class="danger">Reset profilu / achievementů</button>
+  
+
+
+
+<button id="colorPresetBtn" class="settings-row" type="button">
+  <span class="settings-icon">
+    <svg class="neon-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+      <path d="M4 9h16"></path>
+      <path d="M4 15h16"></path>
+      <path d="M9 4v16"></path>
+      <path d="M15 4v16"></path>
+    </svg>
+  </span>
+  <span class="settings-label">Top Yellow | Front Green</span>
+</button>
+
+
+
+ <button id="settings-export-btn" class="settings-row" type="button">
+  <span class="settings-icon">
+    <svg class="neon-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 4v12"></path>
+      <path d="M7 9l5-5 5 5"></path>
+      <path d="M5 20h14"></path>
+    </svg>
+  </span>
+  <span class="settings-label">Export historie</span>
+</button>
+  
+  
+<button id="settings-import-btn" class="settings-row" type="button">
+  <span class="settings-icon">
+    <svg class="neon-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 4v12"></path>
+      <path d="M7 11l5 5 5-5"></path>
+      <path d="M5 20h14"></path>
+    </svg>
+  </span>
+  <span class="settings-label">Import historie</span>
+</button>
+  
+  
+<button id="settings-clear-btn" class="settings-row danger" type="button">
+  <span class="settings-icon">
+    <svg class="neon-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 7h16"></path>
+      <path d="M10 11v6"></path>
+      <path d="M14 11v6"></path>
+      <path d="M6 7l1 14h10l1-14"></path>
+      <path d="M9 7V4h6v3"></path>
+    </svg>
+  </span>
+  <span class="settings-label">Vymazat historii</span>
+</button>
+  
+  
+<button id="settings-reset-profile-btn" class="settings-row danger" type="button">
+  <span class="settings-icon">
+    <svg class="neon-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 4v6h6"></path>
+      <path d="M20 20v-6h-6"></path>
+      <path d="M6.5 17.5A8 8 0 0 0 20 14"></path>
+      <path d="M17.5 6.5A8 8 0 0 0 4 10"></path>
+    </svg>
+  </span>
+    <span class="settings-label">Reset profilu</span>
+</button>
+  
 </div>
+
+
+
+
 
 <!-- ===== LEVEL MODAL ===== -->
 <div id="level-modal" class="detail-modal">
