@@ -608,3 +608,28 @@ body.ct-vd-picking {
     font-size: 30px !important;
   }
 }
+#visual-debug-grid::before,
+#visual-debug-grid::after {
+  content: "";
+  position: fixed;
+  z-index: 2147482001;
+  pointer-events: none;
+  background: rgba(255, 230, 45, 0.95);
+  box-shadow: 0 0 8px rgba(255, 230, 45, 0.55);
+}
+
+#visual-debug-grid::before {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  transform: translateX(-1.5px);
+}
+
+#visual-debug-grid::after {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-1.5px);
+}

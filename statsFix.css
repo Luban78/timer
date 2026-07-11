@@ -1510,3 +1510,64 @@ body.screen-algstats #algorithm-stats .alg-stat-row p {
 .stats-subview-menu:active {
   transform: scale(0.95);
 }
+/* ==================================================
+   TABLET – STATISTIKY
+   ================================================== */
+
+@media (min-width: 900px) and (max-width: 1199px) {
+
+  body.screen-stats {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100dvh !important;
+  }
+
+  body.screen-stats #stats-screen {
+    display: block !important;
+    width: min(94vw, 920px) !important;
+    max-width: 920px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 auto !important;
+    padding: 18px 18px 80px !important;
+    overflow: visible !important;
+  }
+
+  body.screen-stats .stats-level-card {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 105px !important;
+    margin-bottom: 18px !important;
+  }
+
+  body.screen-stats .stats-grid-screen {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    width: 100% !important;
+  }
+
+  body.screen-stats .stats-grid-screen > .stat-card {
+    width: auto !important;
+    height: 170px !important;
+    min-height: 170px !important;
+    padding: 16px !important;
+  }
+
+  body.screen-stats .stats-overview-actions,
+  body.screen-stats .stats-navigation-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    width: 100% !important;
+    margin-top: 18px !important;
+  }
+
+  body.screen-stats .stats-overview-actions button,
+  body.screen-stats .stats-navigation-grid button {
+    width: 100% !important;
+    min-height: 86px !important;
+    background: rgba(7, 25, 29, 0.94) !important;
+    color: #f4f7f8 !important;
+  }
+}
