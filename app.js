@@ -79,12 +79,20 @@ import {
 import { getAlgorithmStats } from "./algorithmStats.js";
 import { drawDetailGraph } from "./detailGraph.js";
 import { openPLLMenu, openOLLMenu } from "./algMenu.js";
+import {
+  generateWcaScramble,
+  beginWcaScramble,
+  processWcaScrambleMove,
+  paintWcaScramble,
+  isSolvedFacelets,
+  normalizeWcaFacelets
+} from "./wcaTrainer.js";
 import { resetStatsUI, clearCanvas, showRecord } from "./ui.js";
 import { initAudio, beep, playErrorSound } from "./sound.js";
 import { drawGraph, resizeGraphCanvas } from "./graph.js";
 import { renderHistory } from "./history.js";
 import { loadSolves, saveSolves, loadProfile, saveProfile } from "./storage.js";
-import { connectCube } from "./cubeConnection.js?v=13";
+import { connectCube } from "./cubeConnection.js?v=14";
 import { pllAlgs, ollAlgs, getActivePllAlg, getActiveOllAlg } from "./algorithms.js";
 
 /*
@@ -288,6 +296,12 @@ let lastBeep = 0;
 
 let currentMoves = [];
 let currentAlgorithmName = "Nevybráno";
+let wcaScrambleReady = false;
+let wcaSolvedFacelets = "";
+let wcaSolvedConfirmations = 0;
+let wcaLivePattern = null;
+let wcaLiveScramble = "";
+let wcaNextScrambleTimer = null;
 
 let savedSolves = loadSolves();
 let playerProfile = loadProfile();
@@ -556,13 +570,134 @@ function updateCompactControlsState() {
   }
 }
 
+
+function setWcaStopFallbackEnabled(enabled) {
+  if (!tpsDiv) return;
+
+  const active = Boolean(enabled);
+  tpsDiv.classList.toggle("wca-click-stop", active);
+
+  if (active) {
+    tpsDiv.setAttribute("role", "button");
+    tpsDiv.setAttribute("tabindex", "0");
+    tpsDiv.setAttribute("aria-label", "Záložní zastavení WCA času");
+    tpsDiv.title = "Klepnutím zastavíš WCA čas";
+  } else {
+    tpsDiv.removeAttribute("role");
+    tpsDiv.removeAttribute("tabindex");
+    tpsDiv.removeAttribute("aria-label");
+    tpsDiv.removeAttribute("title");
+  }
+}
+
+function prepareWcaLivePattern(scramble) {
+  wcaLiveScramble = String(scramble || "").trim();
+  wcaLivePattern = null;
+
+  const build = () => {
+    if (!wcaLiveScramble || wcaLiveScramble !== String(scramble || "").trim()) return;
+
+    try {
+      const solved = createSolvedPattern();
+      wcaLivePattern = solved
+        ? applyAlgorithm(solved, wcaLiveScramble)
+        : null;
+    } catch (error) {
+      wcaLivePattern = null;
+      console.warn("WCA lokální stav se nepodařilo připravit:", error);
+    }
+  };
+
+  build();
+
+  if (!wcaLivePattern) {
+    initCubeEngine()
+      .then(build)
+      .catch(error => console.warn("WCA engine není připraven:", error));
+  }
+}
+
+function scheduleNextWcaScramble(delay = 1100) {
+  clearTimeout(wcaNextScrambleTimer);
+  wcaNextScrambleTimer = setTimeout(() => {
+    wcaNextScrambleTimer = null;
+
+    if (puzzleMode === "wca" && !isSolving) {
+      prepareWcaScramble();
+    }
+  }, delay);
+}
+
+function finishWcaSolve(manual = false, stopTime = performance.now()) {
+  if (puzzleMode !== "wca" || !isSolving) return false;
+
+  finishSolve(stopTime, manual);
+  scheduleNextWcaScramble(manual ? 1400 : 950);
+  return true;
+}
+
+function applyWcaLiveMove(move, now) {
+  if (!wcaLivePattern || puzzleMode !== "wca" || !isSolving) return false;
+
+  try {
+    wcaLivePattern = applyAlgorithm(wcaLivePattern, move);
+
+    if (isPatternSolved(wcaLivePattern)) {
+      return finishWcaSolve(false, now);
+    }
+  } catch (error) {
+    console.warn("WCA lokální solved check selhal:", error);
+    wcaLivePattern = null;
+  }
+
+  return false;
+}
+
+function prepareWcaScramble() {
+  clearTimeout(wcaNextScrambleTimer);
+  wcaNextScrambleTimer = null;
+  setWcaStopFallbackEnabled(false);
+
+  const currentFacelets = normalizeWcaFacelets(getCurrentFacelets());
+  if (isSolvedFacelets(currentFacelets)) {
+    wcaSolvedFacelets = currentFacelets;
+  }
+  wcaSolvedConfirmations = 0;
+
+  const scramble = generateWcaScramble(20);
+
+  currentAlgorithmName = "WCA 3x3";
+  selectedAlg.dataset.algName = "WCA 3x3";
+  selectedAlg.dataset.algText = scramble;
+  selectedAlg.innerText = "Scramble: " + scramble;
+  beginWcaScramble(scramble);
+  prepareWcaLivePattern(scramble);
+
+  /* WCA standard orientation: White top, Green front. */
+  setTrainerTop("white");
+  setTrainerFrontColor("green");
+
+  const editBtn = document.getElementById("editAlgVariantBtn");
+  if (editBtn) editBtn.classList.add("hidden");
+
+  wcaScrambleReady = cubeMode === "normal";
+  setTrainerPaused(false);
+  prepareNext();
+  renderAlgorithmPreview(selectedAlg);
+  resetTrainer(selectedAlg);
+
+  stateMsg.innerText = isConnected
+    ? (wcaScrambleReady ? "PŘIPRAVEN" : "SCRAMBLE")
+    : "CONNECT THE CUBE";
+}
+
 function setPuzzleMode(mode) {
   puzzleMode = mode;
   localStorage.setItem("puzzleMode", puzzleMode);
 
   if (puzzleMode === "wca") {
-    // WCA režim bude později používat jen Next Scramble.
     closeCompactMenus();
+    prepareWcaScramble();
   }
 
   updateCompactControlsState();
@@ -577,6 +712,10 @@ function setTrainingMode(mode) {
 
 function setupCompactControls() {
   updateCompactControlsState();
+
+  if (puzzleMode === "wca") {
+    prepareWcaScramble();
+  }
 
   if (puzzleModeBtn) {
     puzzleModeBtn.onclick = e => {
@@ -593,7 +732,7 @@ function setupCompactControls() {
       e.stopPropagation();
 
       if (puzzleMode === "wca") {
-        // Generátor scramblu doplníme později. Zatím se jen zavře menu.
+        prepareWcaScramble();
         closeCompactMenus();
         return;
       }
@@ -1014,8 +1153,41 @@ function setupCubeButtons() {
         onFacelets: event => {
           faceletCount++;
 
-          setCurrentFacelets(event.facelets);
-          setCurrentCubeState(event.state);
+          if (event.facelets) setCurrentFacelets(event.facelets);
+          if (event.state) setCurrentCubeState(event.state);
+
+          /* WCA Smart Cube: po návratu do složeného stavu automaticky zastav čas.
+             Vyžadujeme dvě po sobě jdoucí potvrzení, aby starý/stale FACELETS
+             packet nezastavil timer omylem hned po prvním tahu. */
+          if (puzzleMode === "wca" && isSolving) {
+            const normalizedFacelets = normalizeWcaFacelets(event.facelets);
+            const solvedByColors = isSolvedFacelets(normalizedFacelets);
+            const solvedByBaseline = Boolean(
+              wcaSolvedFacelets && normalizedFacelets === wcaSolvedFacelets
+            );
+
+            let solvedByState = false;
+            if (event.state) {
+              try {
+                solvedByState = isPatternSolved(
+                  createPatternFromGanState(event.state)
+                );
+              } catch (error) {
+                console.warn("WCA solved state check selhal:", error);
+              }
+            }
+
+            if (solvedByColors || solvedByBaseline || solvedByState) {
+              wcaSolvedConfirmations += 1;
+
+              if (wcaSolvedConfirmations >= 2) {
+                wcaSolvedConfirmations = 0;
+                finishWcaSolve(false, performance.now());
+              }
+            } else {
+              wcaSolvedConfirmations = 0;
+            }
+          }
 
           // Automatická BASE jen pro MAP/testování. Trenér jede přes RAW MOVE.
           if (!moveBaseState && event.state) {
@@ -1214,6 +1386,34 @@ if (moveDebugEnabled) {
 
 
 function setupGlobalControls() {
+  if (tpsDiv) {
+    tpsDiv.addEventListener("pointerdown", e => {
+      if (
+        activeScreen === "timer" &&
+        cubeMode === "smart" &&
+        puzzleMode === "wca" &&
+        isSolving
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        manualStop();
+      }
+    }, { passive: false });
+
+    tpsDiv.addEventListener("keydown", e => {
+      if (
+        (e.key === "Enter" || e.key === " ") &&
+        activeScreen === "timer" &&
+        puzzleMode === "wca" &&
+        isSolving
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        manualStop();
+      }
+    });
+  }
+
   document.addEventListener("pointerdown", e => {
       if (activeScreen !== "timer") return;
       
@@ -1502,6 +1702,14 @@ function makeDoubleMove(move) {
 function getCurrentAlgorithmText() {
   if (currentAlgorithmName && pllAlgs[currentAlgorithmName]) {
     return getActivePllAlg(currentAlgorithmName);
+  }
+
+  if (currentAlgorithmName && ollAlgs[currentAlgorithmName]) {
+    return getActiveOllAlg(currentAlgorithmName);
+  }
+
+  if (puzzleMode === "wca") {
+    return selectedAlg?.dataset?.algText || "";
   }
 
   const text = selectedAlg ? (selectedAlg.innerText || "") : "";
@@ -1971,6 +2179,7 @@ function runStartSolve(now) {
 
   clearInterval(uiTimer);
   uiTimer = setInterval(updateUI, 100);
+  setWcaStopFallbackEnabled(puzzleMode === "wca");
 }
 
 
@@ -1980,8 +2189,57 @@ function commitMove(move, now) {
   move = normalizeMove(move);
   if (!move) return;
 
+  /* WCA Smart Cube – tolerantní kontrola zamíchání.
+     Dvojtahy nemají časový limit. Při chybě čekáme na její vrácení. */
+  if (puzzleMode === "wca" && cubeMode === "smart" && !wcaScrambleReady) {
+    const scrambleState = processWcaScrambleMove(move);
+
+    notation.innerText = "Scramble:\n" + (selectedAlg.dataset.algText || "");
+    paintWcaScramble(selectedAlg, scrambleState);
+
+    if (scrambleState.status === "finished") {
+      wcaScrambleReady = true;
+      stateMsg.innerText = "PŘIPRAVEN";
+      stateMsg.dataset.wcaState = "ready";
+      tpsDiv.innerText = "0.0";
+      beep(659, .09);
+      return;
+    }
+
+    if (scrambleState.status === "wrong") {
+      stateMsg.innerText = "CHYBA – VRAŤ TAH";
+      stateMsg.dataset.wcaState = "wrong";
+      playErrorSound();
+      return;
+    }
+
+    if (scrambleState.status === "corrected") {
+      stateMsg.innerText = "OPRAVENO";
+      stateMsg.dataset.wcaState = "corrected";
+      beep(523, .05);
+      setTimeout(() => {
+        if (!wcaScrambleReady && stateMsg.dataset.wcaState === "corrected") {
+          stateMsg.innerText = "SCRAMBLE";
+          stateMsg.dataset.wcaState = "scramble";
+        }
+      }, 450);
+      return;
+    }
+
+    if (scrambleState.status === "partial") {
+      stateMsg.innerText = "DOKONČI " + (scrambleState.expected || "DVOJTAH");
+      stateMsg.dataset.wcaState = "partial";
+      return;
+    }
+
+    stateMsg.innerText = "SCRAMBLE";
+    stateMsg.dataset.wcaState = "scramble";
+    return;
+  }
+
   if (!isSolving) {
     saveStartFacelets();
+    if (puzzleMode === "wca") wcaSolvedConfirmations = 0;
     runStartSolve(now);
   } else {
     const pause = (now - lastMoveTime) / 1000;
@@ -2006,6 +2264,16 @@ function commitMove(move, now) {
   if (seq.length > 24) seq.shift();
 
   notation.innerText = "Notace:\n" + seq.join(" ");
+
+  /* WCA nemá předepsanou sekvenci řešení – pouze měří solve.
+     Současně vedeme lokální stav kostky. Ten zastaví čas i tehdy,
+     když prohlížeč po posledním tahu nedoručí FACELETS packet. */
+  if (puzzleMode === "wca") {
+    moveTimes.push(now);
+    applyWcaLiveMove(move, now);
+    return;
+  }
+
 const expectedBeforeMove = getExpectedMove();
   const trainerResult = checkMove(move, selectedAlg);
 showMoveDebug({
@@ -2121,6 +2389,7 @@ timeVal.innerText = currentTPS.toFixed(1);
 
 function manualStop() {
   const stopTime = performance.now();
+  const wasWcaSolve = puzzleMode === "wca" && isSolving;
 
   if (pendingMove) {
     clearTimeout(pendingTimer);
@@ -2128,7 +2397,13 @@ function manualStop() {
     pendingMove = null;
   }
 
-  finishSolve(stopTime, true);
+  if (isSolving) {
+    finishSolve(stopTime, true);
+  }
+
+  if (wasWcaSolve) {
+    scheduleNextWcaScramble(1400);
+  }
 }
 
 function getNormalMoveCount() {
@@ -2166,6 +2441,7 @@ function finishSolve(stopTime, manual) {
 
   if (finalTime < 0.5) {
     isSolving = false;
+    setWcaStopFallbackEnabled(false);
     clearInterval(uiTimer);
     clearTimeout(stopTimer);
     prepareNext();
@@ -2173,6 +2449,7 @@ function finishSolve(stopTime, manual) {
   }
 
   isSolving = false;
+  setWcaStopFallbackEnabled(false);
 
   clearInterval(uiTimer);
   clearTimeout(stopTimer);
@@ -2253,6 +2530,7 @@ function failSolve() {
   if (!isSolving) return;
 
   isSolving = false;
+  setWcaStopFallbackEnabled(false);
 
   clearInterval(uiTimer);
   clearTimeout(stopTimer);

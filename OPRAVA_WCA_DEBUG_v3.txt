@@ -1,0 +1,19 @@
+Cube Trainer – WCA/Visual Debug oprava v3
+
+Opraveno:
+1. Visual Debug je po každém spuštění skutečně skrytý (panel i zelené tlačítko).
+2. Panel lze táhnout prstem/myší za celé horní záhlaví kromě tlačítek.
+   Pozice se zapisuje jako inline !important, takže ji už nepřepisuje původní CSS.
+3. WCA karta vždy ukazuje Top: White / Front: Green.
+4. WCA Smart Cube automatické zastavení:
+   - robustní normalizace FACELETS (string, pole, čárky),
+   - kontrola i přes GAN state/KPattern,
+   - dvě potvrzení solved stavu proti stale packetu,
+   - více FACELETS dotazů po posledním tahu.
+
+Test doporučení:
+- po startu nesmí být vidět debug tlačítko ani panel,
+- 4x rychle kliknout na WCA 3x3 a panel odemknout,
+- táhnout za zelenou horní lištu panelu,
+- WCA karta má White/Green,
+- po složení kostky musí timer zastavit a po 0,9 s připravit další scramble.

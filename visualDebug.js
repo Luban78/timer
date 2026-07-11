@@ -24,6 +24,8 @@
     picking: false,
     hoverTarget: null,
     panelOpen: false,
+    unlocked: false,
+    unlockClicks: [],
     grid: false,
     outlines: false,
     activeTab: "layout",
@@ -430,6 +432,78 @@
     event.stopImmediatePropagation();
   }
 
+
+  function elementOptionLabel(element, selector) {
+    const text = String(element.getAttribute("aria-label") || element.textContent || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 42);
+    return text ? `${selector} — ${text}` : selector;
+  }
+
+  function refreshElementList() {
+    if (!refs.elementList) return;
+
+    const previous = refs.elementList.value;
+    const seen = new Set();
+    const items = [];
+    const candidates = document.querySelectorAll(
+      "body *:not(script):not(style):not(link):not(meta):not(option)"
+    );
+
+    candidates.forEach(element => {
+      if (!(element instanceof HTMLElement) || isInternal(element)) return;
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      if (style.display === "none" || style.visibility === "hidden") return;
+      if (rect.width < 2 || rect.height < 2) return;
+
+      const selector = uniqueSelector(element);
+      if (!selector || seen.has(selector)) return;
+      seen.add(selector);
+      items.push({ selector, label: elementOptionLabel(element, selector) });
+    });
+
+    items.sort((a, b) => a.label.localeCompare(b.label, "cs"));
+    refs.elementList.innerHTML = '<option value="">— vyber prvek na obrazovce —</option>';
+
+    items.forEach(item => {
+      const option = document.createElement("option");
+      option.value = item.selector;
+      option.textContent = item.label;
+      refs.elementList.appendChild(option);
+    });
+
+    if (items.some(item => item.selector === previous)) refs.elementList.value = previous;
+  }
+
+  function selectFromElementList() {
+    const selector = refs.elementList?.value;
+    if (!selector) return;
+    refs.selector.value = selector;
+    resolveSelector();
+  }
+
+  function unlockFromWcaClicks() {
+    const button = document.getElementById("puzzleModeBtn");
+    if (!button) return;
+
+    button.addEventListener("click", () => {
+      const now = performance.now();
+      state.unlockClicks = state.unlockClicks.filter(time => now - time < 2200);
+      state.unlockClicks.push(now);
+
+      if (state.unlockClicks.length >= 4) {
+        state.unlockClicks = [];
+        state.unlocked = true;
+        setDebugUiVisible(true, true);
+        refreshElementList();
+        updateRuleInfo();
+        toast("Visual Debug odemčen");
+      }
+    }, true);
+  }
+
   function syncControls() {
     propertyConfig.forEach(config => {
       const range = refs.controls.get(config.key)?.range;
@@ -580,10 +654,15 @@
   }
 
   function togglePanel(force) {
-    state.panelOpen = typeof force === "boolean" ? force : !state.panelOpen;
-    refs.panel.hidden = !state.panelOpen;
-    refs.fab.setAttribute("aria-expanded", String(state.panelOpen));
+    if (!state.unlocked && force !== false) {
+      state.unlocked = true;
+    }
+
+    const nextOpen = typeof force === "boolean" ? force : !state.panelOpen;
+    setDebugUiVisible(nextOpen, state.unlocked);
+
     if (state.panelOpen) {
+      refreshElementList();
       updateRuleInfo();
       if (state.selected) updateHighlight();
     } else {
@@ -615,10 +694,10 @@
     refs.profile.value = state.profile;
     activateTab(state.activeTab);
     if (data.left) {
-      refs.panel.style.left = data.left;
-      refs.panel.style.top = data.top || "12px";
-      refs.panel.style.right = "auto";
-      refs.panel.style.bottom = "auto";
+      setPanelPosition(
+        Number.parseFloat(data.left) || 0,
+        Number.parseFloat(data.top) || 12
+      );
     }
     state.minimized = Boolean(data.minimized);
     refs.panel.classList.toggle("ct-vd-minimized", state.minimized);
@@ -631,7 +710,8 @@
       : 0.92;
     applyPanelOpacity(state.panelOpacity, false);
 
-    togglePanel(Boolean(data.open));
+    /* Debug je tajný: po každém načtení zůstane zavřený a bez FAB. */
+    setDebugUiVisible(false, false);
   }
 
   function applyPanelOpacity(value, persist = true) {
@@ -642,22 +722,49 @@
     if (persist) savePanelState();
   }
 
+  function setPanelPosition(left, top) {
+    refs.panel.style.setProperty("left", `${Math.round(left)}px`, "important");
+    refs.panel.style.setProperty("top", `${Math.round(top)}px`, "important");
+    refs.panel.style.setProperty("right", "auto", "important");
+    refs.panel.style.setProperty("bottom", "auto", "important");
+  }
+
+  function setDebugUiVisible(open, unlocked = state.unlocked) {
+    state.panelOpen = Boolean(open);
+    state.unlocked = Boolean(unlocked);
+
+    if (state.unlocked) {
+      refs.fab.hidden = false;
+      refs.fab.style.removeProperty("display");
+    } else {
+      refs.fab.hidden = true;
+      refs.fab.style.setProperty("display", "none", "important");
+    }
+
+    if (state.panelOpen && state.unlocked) {
+      refs.panel.hidden = false;
+      refs.panel.style.removeProperty("display");
+    } else {
+      refs.panel.hidden = true;
+      refs.panel.style.setProperty("display", "none", "important");
+    }
+
+    refs.fab.setAttribute("aria-expanded", String(state.panelOpen));
+  }
+
   function centerPanel() {
     const rect = refs.panel.getBoundingClientRect();
     const left = Math.max(0, Math.round((window.innerWidth - rect.width) / 2));
     const top = Math.max(0, Math.round((window.innerHeight - Math.min(rect.height, window.innerHeight)) / 2));
-    refs.panel.style.left = `${left}px`;
-    refs.panel.style.top = `${top}px`;
-    refs.panel.style.right = "auto";
-    refs.panel.style.bottom = "auto";
+    setPanelPosition(left, top);
     savePanelState();
   }
 
   function resetPanelPosition() {
-    refs.panel.style.left = "auto";
-    refs.panel.style.top = "12px";
-    refs.panel.style.right = "12px";
-    refs.panel.style.bottom = "auto";
+    refs.panel.style.setProperty("left", "auto", "important");
+    refs.panel.style.setProperty("top", "12px", "important");
+    refs.panel.style.setProperty("right", "12px", "important");
+    refs.panel.style.setProperty("bottom", "auto", "important");
     savePanelState();
   }
 
@@ -676,6 +783,7 @@
   }
 
   function startDrag(event) {
+    if (state.drag) return;
     if (event.button != null && event.button !== 0) return;
     if (event.target.closest("button, input, select, textarea, label, a")) return;
 
@@ -719,10 +827,7 @@
       maxTop
     );
 
-    refs.panel.style.left = `${left}px`;
-    refs.panel.style.top = `${top}px`;
-    refs.panel.style.right = "auto";
-    refs.panel.style.bottom = "auto";
+    setPanelPosition(left, top);
     event.preventDefault();
     event.stopPropagation();
   }
@@ -775,12 +880,14 @@
     fab.title = "Visual Debug Panel (Ctrl+Shift+D)";
     fab.setAttribute("aria-label", "Otevřít Visual Debug Panel");
     fab.textContent = "🛠";
+    fab.hidden = true;
 
     const panel = document.createElement("aside");
     panel.id = "ct-vd-panel";
     panel.hidden = true;
     panel.innerHTML = `
       <div class="ct-vd-head">
+        <div class="ct-vd-drag-handle" id="ct-vd-drag-handle" title="Táhni prstem nebo myší">⠿</div>
         <div class="ct-vd-title">
           <strong>Visual Debug</strong>
           <small id="ct-vd-target-name">Žádný prvek</small>
@@ -917,6 +1024,7 @@
       fab,
       panel,
       head: panel.querySelector(".ct-vd-head"),
+      dragHandle: panel.querySelector("#ct-vd-drag-handle"),
       close: panel.querySelector("#ct-vd-close"),
       minimize: panel.querySelector("#ct-vd-minimize"),
       panelOpacity: panel.querySelector("#ct-vd-panel-opacity"),
@@ -928,6 +1036,8 @@
       selector: panel.querySelector("#ct-vd-selector"),
       resolve: panel.querySelector("#ct-vd-resolve"),
       pickBtn: panel.querySelector("#ct-vd-pick"),
+      elementList: panel.querySelector("#ct-vd-element-list"),
+      elementsRefresh: panel.querySelector("#ct-vd-elements-refresh"),
       profile: panel.querySelector("#ct-vd-profile"),
       tabs: [...panel.querySelectorAll(".ct-vd-tab")],
       panes: [...panel.querySelectorAll(".ct-vd-pane")],
@@ -969,6 +1079,8 @@
     refs.resetPanelPosition.addEventListener("click", resetPanelPosition);
     refs.undo.addEventListener("click", undo);
     refs.pickBtn.addEventListener("click", () => setPicking(!state.picking));
+    refs.elementList?.addEventListener("change", selectFromElementList);
+    refs.elementsRefresh?.addEventListener("click", refreshElementList);
     refs.resolve.addEventListener("click", resolveSelector);
     refs.selector.addEventListener("keydown", event => { if (event.key === "Enter") resolveSelector(); });
 
@@ -1032,16 +1144,18 @@
       if (event.key === "Escape" && state.picking) setPicking(false);
     });
 
+    /* Panel lze táhnout za celé záhlaví kromě jeho tlačítek.
+       Pohyb sledujeme na window, takže tažení nepřestane po opuštění madla. */
     refs.head.addEventListener("pointerdown", startDrag, { passive: false });
-    window.addEventListener("pointermove", moveDrag, { passive: false });
-    window.addEventListener("pointerup", endDrag, { passive: false });
-    window.addEventListener("pointercancel", endDrag, { passive: false });
+    window.addEventListener("pointermove", moveDrag, { passive: false, capture: true });
+    window.addEventListener("pointerup", endDrag, { passive: false, capture: true });
+    window.addEventListener("pointercancel", endDrag, { passive: false, capture: true });
 
-    /* Fallback pro mobilní WebView/prohlížeče s problematickým Pointer Events. */
+    /* Dotykový fallback je záměrně aktivní i ve WebView s neúplnými Pointer Events. */
     refs.head.addEventListener("touchstart", startDrag, { passive: false });
-    window.addEventListener("touchmove", moveDrag, { passive: false });
-    window.addEventListener("touchend", endDrag, { passive: false });
-    window.addEventListener("touchcancel", endDrag, { passive: false });
+    window.addEventListener("touchmove", moveDrag, { passive: false, capture: true });
+    window.addEventListener("touchend", endDrag, { passive: false, capture: true });
+    window.addEventListener("touchcancel", endDrag, { passive: false, capture: true });
   }
 
   function init() {
@@ -1049,10 +1163,18 @@
     buildPanel();
     restorePanelState();
     updateRuleInfo();
+    unlockFromWcaClicks();
 
-    // Useful initial target.
-    const initial = document.querySelector("#algorithm-card-wrap") || document.querySelector("#app") || document.body;
-    selectElement(initial);
+    /* Po startu nesmí být vybraný ani orámovaný žádný prvek.
+       Výběr začne až po odemčení panelu a stisku „Vybrat prvek“. */
+    state.selected = null;
+    state.selector = "";
+    state.picking = false;
+    refs.selector.value = "";
+    refs.targetName.textContent = "Žádný prvek";
+    refs.highlight.hidden = true;
+    refs.measure.hidden = true;
+    document.body.classList.remove("ct-vd-picking");
 
     // Public helpers for console debugging.
     window.CubeTrainerVisualDebug = {

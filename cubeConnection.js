@@ -26,7 +26,11 @@ export async function connectCube({ onMove, onFacelets }) {
         onMove(event.move);
       }
 
-      setTimeout(requestFacelets, 150);
+      /* Více kontrolních dotazů: poslední tah solve může dorazit dřív,
+         než kostka stihne aktualizovat FACELETS stav. */
+      setTimeout(requestFacelets, 120);
+      setTimeout(requestFacelets, 320);
+      setTimeout(requestFacelets, 700);
       return;
     }
 

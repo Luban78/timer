@@ -360,8 +360,11 @@ function renderAlgorithmCard(algName, displaySteps, empty = false) {
   
   const presetKey = localStorage.getItem("trainerColorPreset") || "yellow_green";
   
-  const orientationTop =
-    presetKey === "white_green" ? "White" : "Yellow";
+  const isWca = String(algName || "").toLowerCase().startsWith("wca");
+
+  const orientationTop = isWca
+    ? "White"
+    : (presetKey === "white_green" ? "White" : "Yellow");
   
   const orientationFront = "Green";
   

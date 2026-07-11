@@ -63,10 +63,16 @@
   display: none !important;
 }
 
+/* Visual Debug je při startu opravdu skrytý i proti display !important. */
+#ct-vd-fab[hidden],
+#ct-vd-panel[hidden] {
+  display: none !important;
+}
+
 .ct-vd-head {
   flex: 0 0 auto !important;
   display: grid !important;
-  grid-template-columns: 1fr auto auto auto !important;
+  grid-template-columns: auto 1fr auto auto auto !important;
   align-items: center !important;
   gap: 8px !important;
   min-height: 54px !important;
@@ -553,4 +559,52 @@ body.ct-vd-picking #ct-vd-fab {
 
 body.ct-vd-picking {
   touch-action: pan-y !important;
+}
+
+/* =========================================================
+   VISUAL DEBUG v6 – spolehlivé dotykové přesouvání
+   ========================================================= */
+.ct-vd-drag-handle {
+  flex: 0 0 38px !important;
+  width: 38px !important;
+  height: 38px !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 1px solid rgba(24, 239, 125, 0.5) !important;
+  border-radius: 11px !important;
+  color: #18ef7d !important;
+  background: rgba(0, 0, 0, 0.28) !important;
+  font-size: 26px !important;
+  line-height: 1 !important;
+  cursor: grab !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  touch-action: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+#ct-vd-panel.ct-vd-dragging .ct-vd-drag-handle {
+  cursor: grabbing !important;
+  background: rgba(24, 239, 125, 0.18) !important;
+}
+
+.ct-vd-element-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 42px !important;
+  gap: 7px !important;
+  align-items: center !important;
+}
+
+#ct-vd-element-list {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+@media (max-width: 899px) {
+  .ct-vd-drag-handle {
+    flex-basis: 44px !important;
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 30px !important;
+  }
 }

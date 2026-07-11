@@ -1,0 +1,203 @@
+/* =========================================================
+   CUBE TRAINER – MOBILNÍ BOČNÍ PANELY
+   Historie vlevo, AO vpravo.
+   Na desktop nemá tento soubor žádný vliv.
+   ========================================================= */
+
+@media (max-width: 899px) {
+  body.screen-timer #history {
+    position: fixed !important;
+    top: clamp(155px, 23dvh, 205px) !important;
+    bottom: max(74px, calc(env(safe-area-inset-bottom) + 60px)) !important;
+    left: 0 !important;
+    right: auto !important;
+
+    width: min(82vw, 350px) !important;
+    max-width: none !important;
+    max-height: none !important;
+    height: auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    border: 1px solid rgba(0, 230, 118, .72) !important;
+    border-left: 0 !important;
+    border-radius: 0 20px 20px 0 !important;
+    background: rgba(7, 17, 20, .985) !important;
+    box-shadow: 12px 0 30px rgba(0,0,0,.48), 0 0 16px rgba(0,230,118,.11) !important;
+
+    overflow: visible !important;
+    z-index: 1450 !important;
+    pointer-events: none !important;
+
+    transform: translateX(-100%) !important;
+    transition: transform .22s ease !important;
+  }
+
+  body.history-open #history,
+  body.history-pinned #history {
+    transform: translateX(0) !important;
+  }
+
+  body.screen-timer #history .history-panel-controls {
+    position: absolute !important;
+    top: 50% !important;
+    right: -48px !important;
+    bottom: auto !important;
+    left: auto !important;
+
+    width: 48px !important;
+    height: 108px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    gap: 6px !important;
+
+    transform: translateY(-50%) !important;
+    pointer-events: none !important;
+    z-index: 4 !important;
+  }
+
+  body.screen-timer #history .history-toggle {
+    position: static !important;
+    width: 48px !important;
+    height: 68px !important;
+    margin: 0 !important;
+
+    border: 1px solid rgba(0,230,118,.76) !important;
+    border-left: 0 !important;
+    border-radius: 0 16px 16px 0 !important;
+    background: rgba(7,17,20,.985) !important;
+    box-shadow: 8px 0 18px rgba(0,0,0,.36), 0 0 12px rgba(0,230,118,.12) !important;
+
+    color: transparent !important;
+    font-size: 0 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+  }
+
+  body.screen-timer #history .history-toggle::before {
+    content: "›" !important;
+    display: block !important;
+    color: var(--green, #00e676) !important;
+    font-size: 42px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+  }
+
+  body.history-open #history .history-toggle::before,
+  body.history-pinned #history .history-toggle::before {
+    content: "‹" !important;
+  }
+
+  body.history-open #history .history-toggle,
+  body.history-pinned #history .history-toggle {
+    transform: none !important;
+  }
+
+  body.screen-timer #history .history-pin {
+    position: static !important;
+    display: none !important;
+    width: 42px !important;
+    height: 32px !important;
+    margin: 0 0 0 3px !important;
+    pointer-events: auto !important;
+  }
+
+  body.history-open #history .history-pin,
+  body.history-pinned #history .history-pin {
+    display: flex !important;
+  }
+
+  body.screen-timer #history-list {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    align-content: start !important;
+    gap: 7px !important;
+
+    width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+    padding: 10px !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+
+    border: 0 !important;
+    border-radius: 0 20px 20px 0 !important;
+    background: transparent !important;
+    pointer-events: auto !important;
+    box-sizing: border-box !important;
+
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  body.screen-timer #history-list::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  body.screen-timer #history-list .hist-row {
+    min-height: 66px !important;
+    border: 1px solid rgba(0,230,118,.24) !important;
+    border-radius: 12px !important;
+  }
+}
+
+/* =========================================================
+   WCA SCRAMBLE – stavová zpětná vazba
+   ========================================================= */
+body.screen-timer #state-msg[data-wca-state="wrong"] {
+  color: #ff4f68 !important;
+  text-shadow: 0 0 14px rgba(255, 79, 104, 0.55) !important;
+}
+
+body.screen-timer #state-msg[data-wca-state="corrected"],
+body.screen-timer #state-msg[data-wca-state="ready"] {
+  color: #18ef7d !important;
+  text-shadow: 0 0 14px rgba(24, 239, 125, 0.5) !important;
+}
+
+body.screen-timer #state-msg[data-wca-state="partial"] {
+  color: #ffe34f !important;
+}
+
+body.screen-timer #selectedAlg .wca-partial-move {
+  color: #ffe34f !important;
+  background: rgba(255, 227, 79, 0.18) !important;
+  box-shadow: 0 0 12px rgba(255, 227, 79, 0.3) !important;
+}
+
+/* =========================================================
+   WCA – ZÁLOŽNÍ ZASTAVENÍ KLEPNUTÍM NA VELKÝ ČAS
+   ========================================================= */
+body.screen-timer #tps.wca-click-stop {
+  position: relative !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+body.screen-timer #tps.wca-click-stop::after {
+  content: "KLEPNI PRO STOP";
+  position: absolute;
+  left: 50%;
+  bottom: 7px;
+  transform: translateX(-50%);
+  color: rgba(238, 248, 244, 0.62);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+body.screen-timer #tps.wca-click-stop:active {
+  box-shadow: inset 0 0 24px rgba(24, 239, 125, 0.16) !important;
+}
