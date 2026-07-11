@@ -78,14 +78,14 @@ import {
 
 import { getAlgorithmStats } from "./algorithmStats.js";
 import { drawDetailGraph } from "./detailGraph.js";
-import { openPLLMenu } from "./algMenu.js";
+import { openPLLMenu, openOLLMenu } from "./algMenu.js";
 import { resetStatsUI, clearCanvas, showRecord } from "./ui.js";
 import { initAudio, beep, playErrorSound } from "./sound.js";
 import { drawGraph, resizeGraphCanvas } from "./graph.js";
 import { renderHistory } from "./history.js";
 import { loadSolves, saveSolves, loadProfile, saveProfile } from "./storage.js";
 import { connectCube } from "./cubeConnection.js?v=13";
-import { pllAlgs, getActivePllAlg } from "./algorithms.js";
+import { pllAlgs, ollAlgs, getActivePllAlg, getActiveOllAlg } from "./algorithms.js";
 
 /*
 localStorage.removeItem("mg3i_move_maps");
@@ -616,7 +616,10 @@ function setupCompactControls() {
           pllBtn.click();
         }
 
-        // OLL menu doplníme, až přidáme OLL algoritmy.
+        if (mode === "oll" && ollBtn) {
+          ollBtn.click();
+        }
+
         closeCompactMenus();
       };
     });
@@ -1057,28 +1060,46 @@ function setupCubeButtons() {
 
 function setupAlgorithmButtons() {
   ollBtn.onclick = e => {
-  e.stopPropagation();
-  
-  moveDebugEnabled = !moveDebugEnabled;
-  
-  if (moveDebugEnabled) {
-    ollBtn.classList.add("debug-on");
-    
-    showMoveDebug({
-      expected: getExpectedMove(),
-      actual: "čekám na tah",
-      raw: window.__lastRawDebug || "-",
-      result: "DEBUG ON"
+    e.preventDefault();
+    e.stopPropagation();
+
+    openOLLMenu({
+      algList,
+      modal,
+      selectedAlg,
+      ollAlgs,
+      onSelect: name => {
+        currentAlgorithmName = name;
+
+        selectedAlg.dataset.algName = name;
+        selectedAlg.dataset.algText = getActiveOllAlg(name);
+        selectedAlg.innerText =
+          "Algoritmus: " + selectedAlg.dataset.algText;
+
+        prepareNext();
+        renderAlgorithmPreview(selectedAlg);
+        setTrainerPaused(false);
+
+        const editBtn = document.getElementById("editAlgVariantBtn");
+        if (editBtn) editBtn.classList.remove("hidden");
+
+        clearPendingMove();
+        clearSliceMoveBuffer();
+        clearGuidedOuterBuffer();
+        resetSliceCenter();
+
+        // Výchozí orientace OLL: žlutá nahoře, zelená vpředu.
+        setTrainerTop("yellow");
+        setTrainerFrontColor("green");
+
+        if (mDebug) {
+          mDebug.innerText = "OLL | FRONT: GREEN";
+        }
+
+        renderAlgorithmPreview(selectedAlg);
+      }
     });
-  } else {
-    ollBtn.classList.remove("debug-on");
-    
-    const box = document.getElementById("moveDebugBox");
-    if (box) {
-      box.style.display = "none";
-    }
-  }
-};
+  };
   
   pllBtn.onclick = e => {
     e.stopPropagation();
