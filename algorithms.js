@@ -31,65 +31,6 @@ export const pllAlgs={
 };
 
 export const pllAlgVariants = {
-    "Aa-perm": [
-    {
-      name: "Default",
-      alg: "x L2 D2 L' U' L D2 L' U L'"
-    },
-    {
-      name: "Alt 1",
-      alg: "y' x' L' U L' D2 L U' L' D2 L2"
-    },
-    {
-      name: "Alt 2",
-      alg: "y x R' U R' D2 R U' R' D2 R2"
-    },
-    {
-      name: "Alt 3",
-      alg: "y2 x' R2 D2 R' U' R D2 R' U R'"
-    }
-  ],
-  "Ab-perm": [
-    {
-      name: "Default",
-      alg: "x' L2 D2 L U L' D2 L U' L"
-    },
-    {
-      name: "Alt 1",
-      alg: "y x L U' L D2 L' U L D2 L2"
-    },
-    {
-      name: "Alt 2",
-      alg: "y2 x R2 D2 R U R' D2 R U' R"
-    },
-    {
-      name: "Alt 3",
-      alg: "y' x' R U' R D2 R' U R D2 R2"
-    }
-  ],
-  "F-perm": [
-    {
-      name: "Default",
-      alg: "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R"
-    },
-    {
-      name: "Alt with y",
-      alg: "y R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R"
-    }
-  ],
-  
-  
-
-  "Ja-perm": [
-    {
-      name: "Default",
-      alg: "y R' U L' U2 R U' R' U2 R L"
-    },
-    {
-      name: "Alt 1",
-      alg: "R' U L' U2 R U' R' U2 R L U"
-    }
-  ],
   "Jb-perm": [
     {
       name: "Default",
@@ -108,6 +49,18 @@ export const pllAlgVariants = {
       alg: "L' U R U' L U2 R' U R U2 R'"
     }
   ],
+
+  "Ja-perm": [
+    {
+      name: "Default",
+      alg: "y R' U L' U2 R U' R' U2 R L"
+    },
+    {
+      name: "Alt 1",
+      alg: "R' U L' U2 R U' R' U2 R L U"
+    }
+  ],
+
   "T-perm": [
     {
       name: "Default",
@@ -116,6 +69,17 @@ export const pllAlgVariants = {
     {
       name: "Alt 1",
       alg: "R U R' U' R' F R2 U' R' U' R U R' F'"
+    }
+  ],
+
+  "F-perm": [
+    {
+      name: "Default",
+      alg: "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R"
+    },
+    {
+      name: "Alt with y",
+      alg: "y R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R"
     }
   ]
 };
