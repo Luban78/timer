@@ -28,7 +28,10 @@
     outlines: false,
     activeTab: "layout",
     drag: null,
+    pickGesture: null,
+    suppressClickUntil: 0,
     minimized: false,
+    panelOpacity: 0.92,
     history: []
   };
 
@@ -91,6 +94,23 @@
   function uniqueSelector(element) {
     if (!element || element === document.documentElement) return ":root";
     if (element.id) return `#${cssEscape(element.id)}`;
+
+    /*
+     * Prefer a short, stable selector anchored to the nearest parent ID.
+     * Example: #selectedAlg .alg-title
+     * This is more readable and more reliable than nth-of-type selectors.
+     */
+    const stableClasses = [...element.classList]
+      .filter(name => !name.startsWith("active") && !name.startsWith("open") && !name.startsWith("hidden"))
+      .slice(0, 3);
+    const idParent = element.parentElement?.closest?.("[id]");
+
+    if (idParent && stableClasses.length) {
+      const anchored = `#${cssEscape(idParent.id)} ${stableClasses.map(name => `.${cssEscape(name)}`).join("")}`;
+      try {
+        if (document.querySelectorAll(anchored).length === 1) return anchored;
+      } catch (_) {}
+    }
 
     const parts = [];
     let current = element;
@@ -161,13 +181,27 @@
       .join("\n");
   }
 
+  function boostedSelector(selector) {
+    const value = String(selector || "").trim();
+    if (!value || value === ":root") return value;
+
+    /*
+     * Existing application CSS contains several highly-specific !important
+     * rules (for example #selectedAlg .alg-title). Two :is() wrappers add
+     * enough specificity for Visual Debug declarations to win reliably,
+     * while still matching exactly the originally selected element.
+     */
+    return `:is(#ct-vd-specificity-a, ${value}):is(#ct-vd-specificity-b, ${value})`;
+  }
+
   function profileCss(profile) {
     const rules = state.rules[profile] || {};
     return Object.entries(rules)
       .filter(([, declarations]) => declarations && Object.keys(declarations).length)
       .map(([selector, declarations]) => {
         const css = declarationsToCss(declarations);
-        return css ? `${selector} {\n${css}\n}` : "";
+        const runtimeSelector = boostedSelector(selector);
+        return css ? `${runtimeSelector} {\n${css}\n}` : "";
       })
       .filter(Boolean)
       .join("\n\n");
@@ -324,6 +358,17 @@
 
   function onPointerMove(event) {
     if (!state.picking) return;
+
+    /* Na dotykovém zařízení během scrollování nic nevybíráme. */
+    if (event.pointerType === "touch") {
+      if (state.pickGesture && event.pointerId === state.pickGesture.pointerId) {
+        const dx = event.clientX - state.pickGesture.x;
+        const dy = event.clientY - state.pickGesture.y;
+        if (Math.hypot(dx, dy) > 10) state.pickGesture.moved = true;
+      }
+      return;
+    }
+
     const target = event.target instanceof Element ? event.target : null;
     if (!target || isInternal(target)) return;
     state.hoverTarget = target;
@@ -331,15 +376,58 @@
     updateHighlight(target);
   }
 
-  function onPick(event) {
+  function startPickGesture(event) {
     if (!state.picking) return;
     const target = event.target instanceof Element ? event.target : null;
     if (!target || isInternal(target)) return;
+
+    state.pickGesture = {
+      pointerId: event.pointerId,
+      target,
+      x: event.clientX,
+      y: event.clientY,
+      moved: false,
+      startedAt: performance.now()
+    };
+  }
+
+  function finishPickGesture(event) {
+    if (!state.picking || !state.pickGesture) return;
+    if (event.pointerId !== state.pickGesture.pointerId) return;
+
+    const gesture = state.pickGesture;
+    state.pickGesture = null;
+
+    const dx = event.clientX - gesture.x;
+    const dy = event.clientY - gesture.y;
+    const moved = gesture.moved || Math.hypot(dx, dy) > 10;
+    const tooLong = performance.now() - gesture.startedAt > 900;
+
+    /* Scroll, tah nebo dlouhé podržení nikdy nesmí změnit vybraný prvek. */
+    if (moved || tooLong) return;
+
+    const target = document.elementFromPoint(event.clientX, event.clientY) || gesture.target;
+    if (!(target instanceof Element) || isInternal(target)) return;
+
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
+    state.suppressClickUntil = performance.now() + 500;
     selectElement(target);
     setPicking(false);
+  }
+
+  function cancelPickGesture(event) {
+    if (!state.pickGesture) return;
+    if (event?.pointerId != null && event.pointerId !== state.pickGesture.pointerId) return;
+    state.pickGesture = null;
+  }
+
+  function suppressPostPickClick(event) {
+    if (performance.now() > state.suppressClickUntil) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
   }
 
   function syncControls() {
@@ -514,7 +602,8 @@
       top: refs.panel.style.top || "",
       left: refs.panel.style.left || "",
       right: refs.panel.style.right || "",
-      minimized: state.minimized
+      minimized: state.minimized,
+      opacity: state.panelOpacity
     };
     localStorage.setItem(PANEL_KEY, JSON.stringify(data));
   }
@@ -535,7 +624,41 @@
     refs.panel.classList.toggle("ct-vd-minimized", state.minimized);
     refs.minimize?.setAttribute("aria-expanded", String(!state.minimized));
     refs.minimize && (refs.minimize.textContent = state.minimized ? "▢" : "—");
+
+    const storedOpacity = Number(data.opacity);
+    state.panelOpacity = Number.isFinite(storedOpacity)
+      ? clamp(storedOpacity, 0.35, 1)
+      : 0.92;
+    applyPanelOpacity(state.panelOpacity, false);
+
     togglePanel(Boolean(data.open));
+  }
+
+  function applyPanelOpacity(value, persist = true) {
+    state.panelOpacity = clamp(value, 0.35, 1);
+    refs.panel.style.setProperty("--ct-vd-panel-opacity", String(state.panelOpacity));
+    if (refs.panelOpacity) refs.panelOpacity.value = String(Math.round(state.panelOpacity * 100));
+    if (refs.panelOpacityValue) refs.panelOpacityValue.textContent = `${Math.round(state.panelOpacity * 100)} %`;
+    if (persist) savePanelState();
+  }
+
+  function centerPanel() {
+    const rect = refs.panel.getBoundingClientRect();
+    const left = Math.max(0, Math.round((window.innerWidth - rect.width) / 2));
+    const top = Math.max(0, Math.round((window.innerHeight - Math.min(rect.height, window.innerHeight)) / 2));
+    refs.panel.style.left = `${left}px`;
+    refs.panel.style.top = `${top}px`;
+    refs.panel.style.right = "auto";
+    refs.panel.style.bottom = "auto";
+    savePanelState();
+  }
+
+  function resetPanelPosition() {
+    refs.panel.style.left = "auto";
+    refs.panel.style.top = "12px";
+    refs.panel.style.right = "12px";
+    refs.panel.style.bottom = "auto";
+    savePanelState();
   }
 
   function activateTab(tab) {
@@ -545,26 +668,39 @@
     savePanelState();
   }
 
+  function dragPointFromEvent(event) {
+    const touch = event.touches?.[0] || event.changedTouches?.[0];
+    return touch
+      ? { x: touch.clientX, y: touch.clientY, id: "touch" }
+      : { x: event.clientX, y: event.clientY, id: event.pointerId ?? "mouse" };
+  }
+
   function startDrag(event) {
     if (event.button != null && event.button !== 0) return;
     if (event.target.closest("button, input, select, textarea, label, a")) return;
 
+    const point = dragPointFromEvent(event);
     const rect = refs.panel.getBoundingClientRect();
     state.drag = {
-      pointerId: event.pointerId,
-      x: event.clientX,
-      y: event.clientY,
+      pointerId: point.id,
+      x: point.x,
+      y: point.y,
       left: rect.left,
       top: rect.top
     };
 
     refs.panel.classList.add("ct-vd-dragging");
-    refs.head.setPointerCapture?.(event.pointerId);
+    if (event.pointerId != null) {
+      try { refs.head.setPointerCapture?.(event.pointerId); } catch (_) {}
+    }
     event.preventDefault();
+    event.stopPropagation();
   }
 
   function moveDrag(event) {
-    if (!state.drag || event.pointerId !== state.drag.pointerId) return;
+    if (!state.drag) return;
+    const point = dragPointFromEvent(event);
+    if (state.drag.pointerId !== point.id && state.drag.pointerId !== "touch") return;
 
     const panelWidth = refs.panel.offsetWidth;
     const panelHeight = refs.panel.offsetHeight;
@@ -573,12 +709,12 @@
     const maxTop = Math.max(0, window.innerHeight - keepVisible);
 
     const left = clamp(
-      state.drag.left + event.clientX - state.drag.x,
+      state.drag.left + point.x - state.drag.x,
       Math.min(0, 70 - panelWidth),
       maxLeft
     );
     const top = clamp(
-      state.drag.top + event.clientY - state.drag.y,
+      state.drag.top + point.y - state.drag.y,
       0,
       maxTop
     );
@@ -588,11 +724,13 @@
     refs.panel.style.right = "auto";
     refs.panel.style.bottom = "auto";
     event.preventDefault();
+    event.stopPropagation();
   }
 
   function endDrag(event) {
     if (!state.drag) return;
-    if (event?.pointerId != null && event.pointerId !== state.drag.pointerId) return;
+    const point = dragPointFromEvent(event || {});
+    if (event?.pointerId != null && state.drag.pointerId !== point.id) return;
     state.drag = null;
     refs.panel.classList.remove("ct-vd-dragging");
     savePanelState();
@@ -652,6 +790,19 @@
         <button class="ct-vd-icon-btn" id="ct-vd-close" type="button" title="Zavřít">×</button>
       </div>
       <div class="ct-vd-body">
+        <section class="ct-vd-section ct-vd-panel-tools">
+          <div class="ct-vd-section-title"><span>Panel</span><span>Táhni za zelenou hlavičku</span></div>
+          <div class="ct-vd-panel-opacity-row">
+            <label for="ct-vd-panel-opacity">Průhlednost</label>
+            <input id="ct-vd-panel-opacity" class="ct-vd-range" type="range" min="35" max="100" step="1" value="92">
+            <output id="ct-vd-panel-opacity-value">92 %</output>
+          </div>
+          <div class="ct-vd-actions" style="margin-top:8px !important">
+            <button id="ct-vd-center-panel" class="ct-vd-btn" type="button">Vycentrovat panel</button>
+            <button id="ct-vd-reset-panel-position" class="ct-vd-btn" type="button">Vrátit doprava</button>
+          </div>
+        </section>
+
         <section class="ct-vd-section">
           <div class="ct-vd-section-title"><span>Výběr prvku</span><span id="ct-vd-profile-badge"></span></div>
           <div class="ct-vd-target">
@@ -768,6 +919,10 @@
       head: panel.querySelector(".ct-vd-head"),
       close: panel.querySelector("#ct-vd-close"),
       minimize: panel.querySelector("#ct-vd-minimize"),
+      panelOpacity: panel.querySelector("#ct-vd-panel-opacity"),
+      panelOpacityValue: panel.querySelector("#ct-vd-panel-opacity-value"),
+      centerPanel: panel.querySelector("#ct-vd-center-panel"),
+      resetPanelPosition: panel.querySelector("#ct-vd-reset-panel-position"),
       undo: panel.querySelector("#ct-vd-undo"),
       targetName: panel.querySelector("#ct-vd-target-name"),
       selector: panel.querySelector("#ct-vd-selector"),
@@ -807,6 +962,11 @@
     refs.fab.addEventListener("click", () => togglePanel());
     refs.close.addEventListener("click", () => togglePanel(false));
     refs.minimize.addEventListener("click", toggleMinimize);
+    refs.panelOpacity.addEventListener("input", () => {
+      applyPanelOpacity(Number(refs.panelOpacity.value) / 100);
+    });
+    refs.centerPanel.addEventListener("click", centerPanel);
+    refs.resetPanelPosition.addEventListener("click", resetPanelPosition);
     refs.undo.addEventListener("click", undo);
     refs.pickBtn.addEventListener("click", () => setPicking(!state.picking));
     refs.resolve.addEventListener("click", resolveSelector);
@@ -850,10 +1010,20 @@
     refs.panel.querySelector("#ct-vd-reset-selected").addEventListener("click", resetSelected);
     refs.panel.querySelector("#ct-vd-reset-all").addEventListener("click", resetAll);
 
+    document.addEventListener("pointerdown", startPickGesture, true);
     document.addEventListener("pointermove", onPointerMove, true);
-    document.addEventListener("click", onPick, true);
+    document.addEventListener("pointerup", finishPickGesture, true);
+    document.addEventListener("pointercancel", cancelPickGesture, true);
+    document.addEventListener("click", suppressPostPickClick, true);
     window.addEventListener("scroll", () => state.panelOpen && updateHighlight(), true);
-    window.addEventListener("resize", () => { updateRuleInfo(); state.panelOpen && updateHighlight(); });
+    window.addEventListener("resize", () => {
+      updateRuleInfo();
+      if (state.panelOpen) {
+        updateHighlight();
+        const rect = refs.panel.getBoundingClientRect();
+        if (rect.left > window.innerWidth - 70 || rect.top > window.innerHeight - 54) resetPanelPosition();
+      }
+    });
     document.addEventListener("keydown", event => {
       if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "d") {
         event.preventDefault();
@@ -862,10 +1032,16 @@
       if (event.key === "Escape" && state.picking) setPicking(false);
     });
 
-    refs.head.addEventListener("pointerdown", startDrag);
-    window.addEventListener("pointermove", moveDrag);
-    window.addEventListener("pointerup", endDrag);
-    window.addEventListener("pointercancel", endDrag);
+    refs.head.addEventListener("pointerdown", startDrag, { passive: false });
+    window.addEventListener("pointermove", moveDrag, { passive: false });
+    window.addEventListener("pointerup", endDrag, { passive: false });
+    window.addEventListener("pointercancel", endDrag, { passive: false });
+
+    /* Fallback pro mobilní WebView/prohlížeče s problematickým Pointer Events. */
+    refs.head.addEventListener("touchstart", startDrag, { passive: false });
+    window.addEventListener("touchmove", moveDrag, { passive: false });
+    window.addEventListener("touchend", endDrag, { passive: false });
+    window.addEventListener("touchcancel", endDrag, { passive: false });
   }
 
   function init() {
@@ -887,6 +1063,9 @@
         resolveSelector();
       },
       exportCss: generateCss,
+      setPanelOpacity: value => applyPanelOpacity(Number(value)),
+      centerPanel,
+      resetPanelPosition,
       resetAll
     };
   }

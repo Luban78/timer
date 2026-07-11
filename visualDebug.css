@@ -465,3 +465,92 @@ body.ct-vd-picking #ct-vd-fab {
     background: rgba(3, 13, 17, 0.98) !important;
   }
 }
+
+/* =============================================================
+   VISUAL DEBUG V3 – DRAG & PANEL OPACITY
+   ============================================================= */
+
+#ct-vd-panel {
+  opacity: var(--ct-vd-panel-opacity, 0.92) !important;
+  transition: opacity 120ms ease, box-shadow 120ms ease !important;
+}
+
+#ct-vd-panel:hover,
+#ct-vd-panel:focus-within,
+#ct-vd-panel.ct-vd-dragging {
+  box-shadow:
+    0 18px 70px rgba(0, 0, 0, 0.72),
+    0 0 34px rgba(24, 239, 125, 0.26) !important;
+}
+
+.ct-vd-panel-tools .ct-vd-section-title > span:last-child {
+  color: rgba(232, 242, 239, 0.55) !important;
+  font-size: 9px !important;
+  font-weight: 650 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.ct-vd-panel-opacity-row {
+  display: grid !important;
+  grid-template-columns: 88px minmax(0, 1fr) 52px !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.ct-vd-panel-opacity-row > label {
+  color: rgba(230, 240, 237, 0.8) !important;
+  font-size: 11px !important;
+}
+
+.ct-vd-panel-opacity-row > output {
+  color: #18ef7d !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+}
+
+.ct-vd-head::after {
+  content: "⋮⋮" !important;
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 2px !important;
+  transform: translateX(-50%) rotate(90deg) !important;
+  color: rgba(24, 239, 125, 0.38) !important;
+  font-size: 13px !important;
+  letter-spacing: -4px !important;
+  pointer-events: none !important;
+}
+
+.ct-vd-head {
+  position: relative !important;
+}
+
+@media (max-width: 520px) {
+  .ct-vd-panel-opacity-row {
+    grid-template-columns: 78px minmax(0, 1fr) 48px !important;
+    gap: 6px !important;
+  }
+}
+
+/* =============================================================
+   Visual Debug v5 – bezpečný dotyk a přesouvání panelu
+   ============================================================= */
+.ct-vd-head {
+  touch-action: none !important;
+  -webkit-user-drag: none !important;
+}
+
+.ct-vd-body {
+  touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+#ct-vd-panel.ct-vd-dragging {
+  transition: none !important;
+}
+
+body.ct-vd-picking {
+  touch-action: pan-y !important;
+}
