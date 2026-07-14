@@ -633,3 +633,35 @@ body.ct-vd-picking {
   height: 3px;
   transform: translateY(-1.5px);
 }
+
+/* =========================================
+   VÝRAZNÝ STŘED DEBUG MŘÍŽKY
+   ========================================= */
+
+#ct-vd-grid::before,
+#ct-vd-grid::after {
+  content: "";
+  position: fixed;
+  pointer-events: none;
+  z-index: 2147483000;
+  background: rgba(255, 230, 45, 0.95);
+  box-shadow: 0 0 10px rgba(255, 230, 45, 0.7);
+}
+
+/* Svislý střed */
+#ct-vd-grid::before {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  transform: translateX(-50%);
+}
+
+/* Vodorovný střed */
+#ct-vd-grid::after {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-50%);
+}
