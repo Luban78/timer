@@ -1,9 +1,0 @@
-Cube Trainer – WCA / Visual Debug v4
-
-- Po startu není vybraný ani orámovaný žádný debug prvek.
-- Odstraněn dlouhý rozbalovací seznam stovek elementů.
-- Tlačítko minimalizace Visual Debug zůstává v hlavičce (— / ▢).
-- WCA používá lokální cubie-state kontrolu po každém tahu jako hlavní zálohu automatického zastavení.
-- FACELETS solved kontrola zůstává jako druhá nezávislá cesta.
-- Během WCA solve lze klepnout na velký čas a solve ručně zastavit.
-- Po zastavení se automaticky připraví další scramble.

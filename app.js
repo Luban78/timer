@@ -525,8 +525,14 @@ function switchToNormalCubeMode() {
   updateSettingsCubeModeButton();
 
   if (status) status.innerText = "Normal Cube režim";
+
+showTrainerDashboard();
+
+if (puzzleMode === "wca") {
+  prepareWcaScramble();
+} else {
   if (stateMsg) stateMsg.innerText = "PŘIPRAVEN";
-  showTrainerDashboard();
+}
 }
 
 
@@ -713,10 +719,10 @@ function setTrainingMode(mode) {
 function setupCompactControls() {
   updateCompactControlsState();
 
-  if (puzzleMode === "wca") {
+  /*if (puzzleMode === "wca") {
     prepareWcaScramble();
   }
-
+*/
   if (puzzleModeBtn) {
     puzzleModeBtn.onclick = e => {
       e.preventDefault();
@@ -1215,8 +1221,13 @@ function setupCubeButtons() {
 
       status.innerText = "Připojeno, začni otočením kostky";
       showTrainerDashboard();
-      updateSettingsCubeModeButton();
-      stateMsg.innerText = "PŘIPRAVEN";
+updateSettingsCubeModeButton();
+
+if (puzzleMode === "wca") {
+  prepareWcaScramble();
+} else {
+  stateMsg.innerText = "PŘIPRAVEN";
+}
 
       beep(523, .08);
 
@@ -2637,8 +2648,18 @@ function registerServiceWorker() {
 }
 
 function initApp() {
+  hideTrainerDashboard();
+  
+  isConnected = false;
+  wcaScrambleReady = false;
+  
+  if (btn) btn.style.display = "";
+  if (normalCubeBtn) normalCubeBtn.style.display = "";
+  if (status) status.innerText = "Disconnected";
+  if (stateMsg) stateMsg.innerText = "Connect the cube";
+  
   updateModeLabel();
-
+  
   setupTrainingButtons();
   setupCompactControls();
   setupDevButtons();
