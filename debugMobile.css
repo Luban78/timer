@@ -1,38 +1,383 @@
 /* =====================================================
    CUBE TRAINER – FINÁLNÍ MOBILNÍ VIZUÁLNÍ ÚPRAVY
+
    Načítá se jako poslední CSS soubor.
-   Sem patří pouze finální úpravy exportované z Visual Debugu.
+   Sem patří pouze finální vzhled a úpravy
+   exportované z Visual Debugu.
+
+   Mobilní rozsah: maximálně 899 px
 ===================================================== */
 
 @media (max-width: 899px) {
 
-  /* =========================================
+  /* =====================================================
+     START SCREEN
+  ===================================================== */
+
+  body.start-screen-active {
+    min-height: 100dvh;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at 50% 24%,
+        rgba(0, 230, 118, 0.11),
+        transparent 34%
+      ),
+      linear-gradient(
+        180deg,
+        #020706 0%,
+        #000403 100%
+      );
+  }
+
+  body.start-screen-active #globalMenuBtn,
+  body.start-screen-active #screen-menu-dropdown,
+  body.start-screen-active #screen-top-strip,
+  body.start-screen-active #main-layout,
+  body.start-screen-active .visual-debug-launcher,
+  body.start-screen-active #visualDebugLauncher {
+    display: none !important;
+  }
+
+  .start-screen {
+    display: none;
+  }
+
+  body.start-screen-active .start-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+
+    display: flex;
+    justify-content: center;
+
+    overflow-y: auto;
+
+    padding:
+      max(18px, env(safe-area-inset-top))
+      20px
+      max(24px, env(safe-area-inset-bottom));
+
+    background:
+      linear-gradient(
+        rgba(0, 230, 118, 0.035) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        rgba(0, 230, 118, 0.035) 1px,
+        transparent 1px
+      ),
+      radial-gradient(
+        circle at 50% 27%,
+        rgba(0, 230, 118, 0.10),
+        transparent 32%
+      );
+
+    background-size:
+      42px 42px,
+      42px 42px,
+      auto;
+
+    background-position:
+      center bottom,
+      center bottom,
+      center;
+  }
+
+  .start-screen__content {
+    width: min(100%, 430px);
+    min-height: calc(100dvh - 42px);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 18px;
+  }
+
+  .start-screen__logo {
+    width: clamp(210px, 58vw, 286px);
+    aspect-ratio: 1;
+
+    object-fit: cover;
+    border-radius: 50%;
+
+    filter:
+      drop-shadow(
+        0 0 22px rgba(0, 255, 140, 0.34)
+      );
+
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .start-screen__heading {
+    margin-top: -10px;
+    text-align: center;
+  }
+
+  .start-screen__heading h1 {
+    margin: 0;
+
+    font-size: clamp(44px, 13vw, 66px);
+    font-weight: 900;
+    line-height: 0.88;
+    letter-spacing: 0.035em;
+  }
+
+  .start-screen__heading h1 span,
+  .start-screen__heading h1 strong {
+    display: block;
+  }
+
+  .start-screen__heading h1 span {
+    color: #f4f7f6;
+  }
+
+  .start-screen__heading h1 strong {
+    margin-top: 10px;
+
+    color: #22ef73;
+
+    text-shadow:
+      0 0 20px rgba(34, 239, 115, 0.35);
+  }
+
+  .start-screen__heading p {
+    margin: 17px 0 0;
+
+    color: rgba(255, 255, 255, 0.82);
+
+    font-size: clamp(13px, 3.7vw, 17px);
+    letter-spacing: 0.28em;
+    white-space: nowrap;
+  }
+
+  .start-screen__actions {
+    width: 100%;
+
+    display: grid;
+    gap: 14px;
+
+    margin-top: 12px;
+  }
+
+  .start-mode-btn {
+    width: 100% !important;
+    min-height: 94px;
+
+    margin: 0 !important;
+    padding: 16px 24px !important;
+
+    display: grid !important;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: center;
+
+    border-radius: 26px !important;
+
+    text-align: left;
+
+    font: inherit;
+    font-size: clamp(23px, 6.4vw, 30px) !important;
+    font-weight: 850 !important;
+    line-height: 1.08;
+    letter-spacing: 0.01em;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+
+    transition:
+      transform 0.13s ease,
+      filter 0.13s ease;
+  }
+
+  .start-mode-btn span {
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .start-mode-btn:active {
+    transform: scale(0.985);
+    filter: brightness(0.92);
+  }
+
+  .start-mode-btn__icon {
+    width: 48px;
+    height: 48px;
+
+    justify-self: center;
+    flex-shrink: 0;
+  }
+
+  .start-mode-btn--smart {
+    color: #001b0c !important;
+
+    border:
+      1px solid rgba(255, 255, 255, 0.75) !important;
+
+    background:
+      linear-gradient(
+        135deg,
+        #67f58f 0%,
+        #18dc68 100%
+      ) !important;
+
+    box-shadow:
+      0 0 30px rgba(25, 232, 105, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+  }
+
+  .start-mode-btn--normal {
+    color: #f5f8f6 !important;
+
+    border:
+      2px solid #00df70 !important;
+
+    background:
+      linear-gradient(
+        180deg,
+        rgba(6, 24, 19, 0.92),
+        rgba(1, 10, 8, 0.96)
+      ) !important;
+
+    box-shadow:
+      inset 0 0 28px rgba(0, 230, 118, 0.06),
+      0 0 18px rgba(0, 230, 118, 0.10) !important;
+  }
+
+  .start-mode-btn--normal .start-mode-btn__icon {
+    color: #00ef78;
+  }
+
+
+  /* -----------------------------------------------------
+     START SCREEN – VISUAL DEBUG EXPORT
+     Upravené prvky tlačítka NORMAL CUBE
+  ----------------------------------------------------- */
+
+  :is(
+    #ct-vd-specificity-a,
+    button.start-mode-btn.start-mode-btn--normal:nth-of-type(2) > span
+  ):is(
+    #ct-vd-specificity-b,
+    button.start-mode-btn.start-mode-btn--normal:nth-of-type(2) > span
+  ) {
+    transform:
+      translate(0px, -15px)
+      scale(1) !important;
+  }
+
+  :is(
+    #ct-vd-specificity-a,
+    #normalCubeBtn .start-mode-btn__icon
+  ):is(
+    #ct-vd-specificity-b,
+    #normalCubeBtn .start-mode-btn__icon
+  ) {
+    transform:
+      translate(-10px, -14px)
+      scale(1) !important;
+  }
+
+
+  /* =====================================================
      TIMER
-  ========================================= */
+  ===================================================== */
 
 
-  /* =========================================
-     STATISTIKY
-  ========================================= */
 
 
-  /* =========================================
-     NASTAVENÍ
-  ========================================= */
+
+  /* =====================================================
+     STATISTICS
+  ===================================================== */
 
 
-  /* =========================================
-     HISTORIE / AO PANELY
-  ========================================= */
 
 
-  /* =========================================
-     OLL / PLL VÝBĚR A OBRÁZKY
-  ========================================= */
+
+  /* =====================================================
+     SETTINGS
+  ===================================================== */
 
 
-  /* =========================================
-     DIALOGY A MODALY
-  ========================================= */
 
+
+
+  /* =====================================================
+     HISTORY / AO PANELS
+  ===================================================== */
+
+
+
+
+
+  /* =====================================================
+     OLL MENU
+  ===================================================== */
+
+
+
+
+
+  /* =====================================================
+     PLL MENU
+  ===================================================== */
+
+
+
+
+
+  /* =====================================================
+     ALGORITHM IMAGES
+  ===================================================== */
+
+
+
+
+
+  /* =====================================================
+     DIALOGS / MODALS
+  ===================================================== */
+
+
+
+
+
+  /* =====================================================
+     SMALL MOBILE HEIGHT
+     Telefony s malou dostupnou výškou
+  ===================================================== */
+
+  @media (max-height: 730px) {
+
+    .start-screen__content {
+      justify-content: flex-start;
+      gap: 10px;
+    }
+
+    .start-screen__logo {
+      width: 190px;
+    }
+
+    .start-screen__heading h1 {
+      font-size: 42px;
+    }
+
+    .start-screen__heading p {
+      margin-top: 12px;
+    }
+
+    .start-screen__actions {
+      margin-top: 8px;
+    }
+
+    .start-mode-btn {
+      min-height: 78px;
+      font-size: 22px !important;
+    }
+  }
 }

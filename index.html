@@ -26,7 +26,34 @@
   <title>Cube Trainer</title>
 </head>
 
-<body>
+<body class="start-screen-active">
+
+<section id="start-screen" class="start-screen" aria-labelledby="start-title">
+  <div class="start-screen__content">
+    <img class="start-screen__logo" src="start-logo.png" alt="Cube Trainer logo">
+
+    <header class="start-screen__heading">
+      <h1 id="start-title"><span>CUBE</span><strong>TRAINER</strong></h1>
+      <p>SPEEDCUBING TRAINER</p>
+    </header>
+
+    <div class="start-screen__actions" aria-label="Výběr režimu kostky">
+      <button id="btn" class="start-mode-btn start-mode-btn--smart" type="button">
+        <svg class="start-mode-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 7l10 10-5 5V2l5 5L7 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>CONNECT SMART CUBE</span>
+      </button>
+
+      <button id="normalCubeBtn" class="start-mode-btn start-mode-btn--normal" type="button">
+        <svg class="start-mode-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2 3.5 7v10L12 22l8.5-5V7L12 2Zm0 0v10m8.5-5L12 12 3.5 7m0 10 8.5-5 8.5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+        <span>NORMAL CUBE</span>
+      </button>
+    </div>
+  </div>
+</section>
 
 <button id="globalMenuBtn" class="global-menu-fab" type="button" aria-label="Menu obrazovek">☰</button>
 <div id="screen-menu-dropdown" class="screen-menu-dropdown" aria-label="Výběr obrazovky">
@@ -62,10 +89,6 @@
 
   <div id="app">
     <div id="app-version">Cube Trainer</div>
-
-    <!-- původní připojovací tlačítka - JS je pořád používá -->
-    <button id="btn">Connect the cube</button>
-    <button id="normalCubeBtn">Normal cube</button>
 
     <!-- status necháváme kvůli JS, ale vizuálně ho můžeme skrýt přes CSS -->
     <div id="status">Disconnected</div>

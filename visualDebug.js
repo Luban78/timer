@@ -484,24 +484,28 @@
     resolveSelector();
   }
 
-  function unlockFromWcaClicks() {
-    const button = document.getElementById("puzzleModeBtn");
-    if (!button) return;
+  function unlockFromSecretClicks() {
+    const targets = [
+      { element: document.querySelector(".start-screen__logo"), clicks: 5 },
+      { element: document.getElementById("puzzleModeBtn"), clicks: 4 }
+    ].filter(item => item.element);
 
-    button.addEventListener("click", () => {
-      const now = performance.now();
-      state.unlockClicks = state.unlockClicks.filter(time => now - time < 2200);
-      state.unlockClicks.push(now);
+    targets.forEach(({ element, clicks }) => {
+      element.addEventListener("click", () => {
+        const now = performance.now();
+        state.unlockClicks = state.unlockClicks.filter(time => now - time < 2200);
+        state.unlockClicks.push(now);
 
-      if (state.unlockClicks.length >= 4) {
-        state.unlockClicks = [];
-        state.unlocked = true;
-        setDebugUiVisible(true, true);
-        refreshElementList();
-        updateRuleInfo();
-        toast("Visual Debug odemčen");
-      }
-    }, true);
+        if (state.unlockClicks.length >= clicks) {
+          state.unlockClicks = [];
+          state.unlocked = true;
+          setDebugUiVisible(true, true);
+          refreshElementList();
+          updateRuleInfo();
+          toast("Visual Debug odemčen");
+        }
+      }, true);
+    });
   }
 
   function syncControls() {
@@ -1163,7 +1167,7 @@
     buildPanel();
     restorePanelState();
     updateRuleInfo();
-    unlockFromWcaClicks();
+    unlockFromSecretClicks();
 
     /* Po startu nesmí být vybraný ani orámovaný žádný prvek.
        Výběr začne až po odemčení panelu a stisku „Vybrat prvek“. */

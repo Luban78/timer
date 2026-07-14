@@ -414,6 +414,7 @@ function toggleTrainerPaused() {
 //localStorage.setItem("pllVariant:Jb-perm", "2");
 
 function showTrainerDashboard() {
+  document.body.classList.remove("start-screen-active");
   document.body.classList.add("trainer-ready");
 
   const topDashboard = document.getElementById("top-dashboard");
@@ -423,6 +424,7 @@ function showTrainerDashboard() {
 }
 
 function hideTrainerDashboard() {
+  document.body.classList.add("start-screen-active");
   document.body.classList.remove("trainer-ready");
 
   const topDashboard = document.getElementById("top-dashboard");
@@ -525,14 +527,13 @@ function switchToNormalCubeMode() {
   updateSettingsCubeModeButton();
 
   if (status) status.innerText = "Normal Cube režim";
+  showTrainerDashboard();
 
-showTrainerDashboard();
-
-if (puzzleMode === "wca") {
-  prepareWcaScramble();
-} else {
-  if (stateMsg) stateMsg.innerText = "PŘIPRAVEN";
-}
+  if (puzzleMode === "wca") {
+    prepareWcaScramble();
+  } else if (stateMsg) {
+    stateMsg.innerText = "PŘIPRAVEN";
+  }
 }
 
 
@@ -719,10 +720,6 @@ function setTrainingMode(mode) {
 function setupCompactControls() {
   updateCompactControlsState();
 
-  /*if (puzzleMode === "wca") {
-    prepareWcaScramble();
-  }
-*/
   if (puzzleModeBtn) {
     puzzleModeBtn.onclick = e => {
       e.preventDefault();
@@ -1221,13 +1218,13 @@ function setupCubeButtons() {
 
       status.innerText = "Připojeno, začni otočením kostky";
       showTrainerDashboard();
-updateSettingsCubeModeButton();
+      updateSettingsCubeModeButton();
 
-if (puzzleMode === "wca") {
-  prepareWcaScramble();
-} else {
-  stateMsg.innerText = "PŘIPRAVEN";
-}
+      if (puzzleMode === "wca") {
+        prepareWcaScramble();
+      } else {
+        stateMsg.innerText = "PŘIPRAVEN";
+      }
 
       beep(523, .08);
 
@@ -2649,17 +2646,14 @@ function registerServiceWorker() {
 
 function initApp() {
   hideTrainerDashboard();
-  
   isConnected = false;
   wcaScrambleReady = false;
-  
-  if (btn) btn.style.display = "";
-  if (normalCubeBtn) normalCubeBtn.style.display = "";
+
   if (status) status.innerText = "Disconnected";
   if (stateMsg) stateMsg.innerText = "Connect the cube";
-  
+
   updateModeLabel();
-  
+
   setupTrainingButtons();
   setupCompactControls();
   setupDevButtons();
