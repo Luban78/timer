@@ -75,6 +75,115 @@
     translate: 0px 10px !important;
   }
   /* CT-VD:h1%20%3E%20span:END */
+
+
+  /* CT-VD:%23settingsCubeModeText:START */
+  :is(#ct-vd-specificity-a, #settingsCubeModeText):is(#ct-vd-specificity-b, #settingsCubeModeText) {
+    width: 1076px !important;
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    font-size: 20px !important;
+    translate: -27px 0px !important;
+  }
+  /* CT-VD:%23settingsCubeModeText:END */
+
+
+  /* CT-VD:%23settingsCubeModeBtn:START */
+  :is(#ct-vd-specificity-a, #settingsCubeModeBtn):is(#ct-vd-specificity-b, #settingsCubeModeBtn) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23settingsCubeModeBtn:END */
+
+
+  /* CT-VD:%23colorPresetBtn%20.settings-label:START */
+  :is(#ct-vd-specificity-a, #colorPresetBtn .settings-label):is(#ct-vd-specificity-b, #colorPresetBtn .settings-label) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    font-size: 20px !important;
+    translate: -26px 0px !important;
+  }
+  /* CT-VD:%23colorPresetBtn%20.settings-label:END */
+
+
+  /* CT-VD:%23colorPresetBtn:START */
+  :is(#ct-vd-specificity-a, #colorPresetBtn):is(#ct-vd-specificity-b, #colorPresetBtn) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23colorPresetBtn:END */
+
+
+  /* CT-VD:%23settings-export-btn%20.settings-label:START */
+  :is(#ct-vd-specificity-a, #settings-export-btn .settings-label):is(#ct-vd-specificity-b, #settings-export-btn .settings-label) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    font-size: 20px !important;
+    translate: -22px 0px !important;
+  }
+  /* CT-VD:%23settings-export-btn%20.settings-label:END */
+
+
+  /* CT-VD:%23settings-export-btn:START */
+  :is(#ct-vd-specificity-a, #settings-export-btn):is(#ct-vd-specificity-b, #settings-export-btn) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23settings-export-btn:END */
+
+
+  /* CT-VD:%23settings-import-btn%20.settings-label:START */
+  :is(#ct-vd-specificity-a, #settings-import-btn .settings-label):is(#ct-vd-specificity-b, #settings-import-btn .settings-label) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    font-size: 20px !important;
+    translate: -23px 0px !important;
+  }
+  /* CT-VD:%23settings-import-btn%20.settings-label:END */
+
+
+  /* CT-VD:%23settings-import-btn:START */
+  :is(#ct-vd-specificity-a, #settings-import-btn):is(#ct-vd-specificity-b, #settings-import-btn) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23settings-import-btn:END */
+
+
+  /* CT-VD:%23settings-clear-btn%20.settings-label:START */
+  :is(#ct-vd-specificity-a, #settings-clear-btn .settings-label):is(#ct-vd-specificity-b, #settings-clear-btn .settings-label) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    font-size: 20px !important;
+    translate: -22px 0px !important;
+  }
+  /* CT-VD:%23settings-clear-btn%20.settings-label:END */
+
+
+  /* CT-VD:%23settings-clear-btn:START */
+  :is(#ct-vd-specificity-a, #settings-clear-btn):is(#ct-vd-specificity-b, #settings-clear-btn) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23settings-clear-btn:END */
+
+
+  /* CT-VD:%23settings-reset-profile-btn%20.settings-label:START */
+  :is(#ct-vd-specificity-a, #settings-reset-profile-btn .settings-label):is(#ct-vd-specificity-b, #settings-reset-profile-btn .settings-label) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    font-size: 20px !important;
+    translate: -23px -1px !important;
+  }
+  /* CT-VD:%23settings-reset-profile-btn%20.settings-label:END */
+
+
+  /* CT-VD:%23settings-reset-profile-btn:START */
+  :is(#ct-vd-specificity-a, #settings-reset-profile-btn):is(#ct-vd-specificity-b, #settings-reset-profile-btn) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23settings-reset-profile-btn:END */
 /* CT-VD-SECTION:START SCREEN:END */
 
   /* CT-VD-SECTION:TIMER:START */
@@ -84,7 +193,13 @@
   /* CT-VD-SECTION:STATISTICS:END */
 
   /* CT-VD-SECTION:SETTINGS:START */
-  /* CT-VD-SECTION:SETTINGS:END */
+
+  /* CT-VD:%23settingsTitle:START */
+  :is(#ct-vd-specificity-a, #settingsTitle):is(#ct-vd-specificity-b, #settingsTitle) {
+    font-size: 25px !important;
+  }
+  /* CT-VD:%23settingsTitle:END */
+/* CT-VD-SECTION:SETTINGS:END */
 
   /* CT-VD-SECTION:HISTORY / AO PANELS:START */
   /* CT-VD-SECTION:HISTORY / AO PANELS:END */
