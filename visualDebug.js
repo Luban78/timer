@@ -421,6 +421,39 @@
     }
   }
 
+
+
+function reloadConnectedDebugStylesheet() {
+  const stylesheet = Array.from(
+    document.querySelectorAll('link[rel="stylesheet"]')
+  ).find((link) => {
+    const href = link.getAttribute("href") || "";
+    return href.includes("debugMobile.css");
+  });
+
+  if (!stylesheet) {
+    return Promise.resolve(false);
+  }
+
+  const currentHref = stylesheet.getAttribute("href") || "debugMobile.css";
+  const cleanHref = currentHref.split("?")[0];
+  const refreshedHref = `${cleanHref}?vd=${Date.now()}`;
+
+  return new Promise((resolve) => {
+    const onLoad = () => {
+      stylesheet.removeEventListener("load", onLoad);
+      resolve(true);
+    };
+
+    stylesheet.addEventListener("load", onLoad);
+    stylesheet.setAttribute("href", refreshedHref);
+
+    setTimeout(() => resolve(true), 1000);
+  });
+}
+
+
+
   async function saveCurrentRuleToCssFile() {
     if (!state.selector) { toast("Nejdřív vyber prvek"); return; }
     const ruleCss = currentSelectorCss();
@@ -436,10 +469,18 @@
       const result = replaceOrInsertRuleInSection(original, state.exportSection, state.selector, ruleCss);
       const writable = await handle.createWritable();
       await writable.write(result.text);
-      await writable.close();
-      const action = result.replaced ? "Přepsáno" : "Uloženo";
-      const suffix = result.createdSection ? " (sekce byla vytvořena)" : "";
-      toast(`${action} do ${state.exportSection}${suffix}`);
+await writable.close();
+
+await reloadConnectedDebugStylesheet();
+
+const action = result.replaced ? "Přepsáno" : "Uloženo";
+const suffix = result.createdSection ?
+  " (sekce byla vytvořena)" :
+  "";
+
+toast(`${action} do ${state.exportSection}${suffix} a znovu načteno`);
+      
+      
     } catch (error) {
       console.error(error);
       toast(error?.message || "Přímý zápis selhal");
