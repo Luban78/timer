@@ -2,8 +2,9 @@
    CUBE TRAINER – VISUAL DEBUG PANEL
    Live element picker and responsive CSS editor.
 
-   Controls are stored in localStorage and applied on every reload.
-   Exported CSS can later be pasted into the relevant project CSS file.
+   Úpravy existují pouze v paměti aktuální relace.
+   Nic se neukládá do localStorage. Po restartu je Visual Debug čistý.
+   Celá relace se exportuje do debugMobileGenerated.css.
    ============================================================= */
 
 (() => {
@@ -53,7 +54,10 @@
     selected: null,
     selector: "",
     profile: window.innerWidth <= MOBILE_MAX ? "mobile" : "desktop",
-    rules: loadJson(STORAGE_KEY, { mobile: {}, desktop: {}, all: {} }),
+    rules: { mobile: {}, desktop: {}, all: {} },
+    ruleSections: { mobile: {}, desktop: {}, all: {} },
+    baselineRules: { mobile: {}, desktop: {}, all: {} },
+    baselineSections: { mobile: {}, desktop: {}, all: {} },
     picking: false,
     hoverTarget: null,
     panelOpen: false,
@@ -109,17 +113,20 @@
 
   let refs = {};
 
-  function loadJson(key, fallback) {
+  function loadJson(_key, fallback) {
+    return fallback;
+  }
+
+  function clearOldStoredDebugData() {
     try {
-      const parsed = JSON.parse(localStorage.getItem(key) || "null");
-      return parsed && typeof parsed === "object" ? parsed : fallback;
-    } catch (_) {
-      return fallback;
-    }
+      [STORAGE_KEY, PANEL_KEY, SNAPSHOT_KEY, LEGACY_COMMITTED_CSS_KEY].forEach(key =>
+        localStorage.removeItem(key)
+      );
+    } catch (_) {}
+    document.getElementById(LEGACY_COMMITTED_STYLE_ID)?.remove();
   }
 
   function saveRules() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.rules));
     renderRuntimeCss();
     updateRuleInfo();
   }
@@ -200,8 +207,7 @@
   }
 
   function clearLegacyCommittedMirror() {
-    localStorage.removeItem(LEGACY_COMMITTED_CSS_KEY);
-    document.getElementById(LEGACY_COMMITTED_STYLE_ID)?.remove();
+    clearOldStoredDebugData();
   }
 
   function declarationsToCss(declarations) {
@@ -218,8 +224,11 @@
     delete normal["box-shadow-blur"];
     delete normal["--ct-vd-glow-color"];
 
-    if (tx !== "0px" || ty !== "0px" || scale !== "1") {
-      normal.transform = `translate(${tx}, ${ty}) scale(${scale})`;
+    if (tx !== "0px" || ty !== "0px") {
+      normal.translate = `${tx} ${ty}`;
+    }
+    if (scale !== "1") {
+      normal.scale = scale;
     }
     if (glow && parseFloat(glow) > 0) {
       normal["box-shadow"] = `0 0 ${glow} ${glowColor}`;
@@ -896,6 +905,88 @@
     return ensureGeneratedSectionMarkers(await response.text());
   }
 
+  function parseGeneratedDeclarations(blockText) {
+    const open = blockText.indexOf("{");
+    const close = blockText.lastIndexOf("}");
+    if (open < 0 || close <= open) return {};
+
+    const body = blockText.slice(open + 1, close);
+    const declarations = {};
+    const regex = /([a-zA-Z-]+)\s*:\s*([^;]+?)\s*!important\s*;/g;
+    let match;
+
+    while ((match = regex.exec(body))) {
+      const property = match[1].trim();
+      const value = match[2].trim();
+
+      if (property === "transform") {
+        const translate = value.match(/translate\(\s*([^,]+)\s*,\s*([^)]+)\)/i);
+        const scale = value.match(/scale\(\s*([^)]+)\)/i);
+        if (translate) {
+          declarations["translate-x"] = translate[1].trim();
+          declarations["translate-y"] = translate[2].trim();
+        }
+        if (scale) declarations.scale = scale[1].trim();
+        continue;
+      }
+
+      if (property === "translate") {
+        const parts = value.split(/\s+/).filter(Boolean);
+        declarations["translate-x"] = parts[0] || "0px";
+        declarations["translate-y"] = parts[1] || "0px";
+        continue;
+      }
+
+      if (property === "scale") {
+        declarations.scale = value;
+        continue;
+      }
+
+      declarations[property] = value;
+    }
+
+    return declarations;
+  }
+
+  function hydrateRulesFromGeneratedCss(cssText) {
+    const text = ensureGeneratedSectionMarkers(cssText);
+    const hydratedRules = {};
+    const hydratedSections = {};
+
+    for (const section of GENERATED_SECTION_NAMES) {
+      const sectionStartMarker = `/* CT-VD-SECTION:${section}:START */`;
+      const sectionEndMarker = `/* CT-VD-SECTION:${section}:END */`;
+      const sectionStart = text.indexOf(sectionStartMarker);
+      const sectionEnd = text.indexOf(sectionEndMarker, sectionStart + sectionStartMarker.length);
+      if (sectionStart < 0 || sectionEnd < 0) continue;
+
+      const sectionText = text.slice(sectionStart + sectionStartMarker.length, sectionEnd);
+      const markerRegex = /\/\* CT-VD:(.*?):START \*\/([\s\S]*?)\/\* CT-VD:\1:END \*\//g;
+      let match;
+
+      while ((match = markerRegex.exec(sectionText))) {
+        let selector = "";
+        try {
+          selector = decodeURIComponent(match[1]);
+        } catch (_) {
+          selector = match[1];
+        }
+        if (!selector) continue;
+        const declarations = parseGeneratedDeclarations(match[2]);
+        if (!Object.keys(declarations).length) continue;
+        hydratedRules[selector] = declarations;
+        hydratedSections[selector] = section;
+      }
+    }
+
+    state.baselineRules.mobile = JSON.parse(JSON.stringify(hydratedRules));
+    state.baselineSections.mobile = { ...hydratedSections };
+    state.rules.mobile = JSON.parse(JSON.stringify(hydratedRules));
+    state.ruleSections.mobile = { ...hydratedSections };
+    renderRuntimeCss();
+    updateRuleInfo();
+  }
+
   function findDebugMobileStylesheet() {
     return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
       .find(link => (link.getAttribute("href") || "").includes("debugMobile.css")) || null;
@@ -916,10 +1007,13 @@
     try {
       state.projectCssSource = await readServedGeneratedMobileCss();
       state.projectCssLoadedAt = Date.now();
+      if (!totalEditedSelectors()) {
+        hydrateRulesFromGeneratedCss(state.projectCssSource);
+      }
       return true;
     } catch (error) {
       console.error(error);
-      state.projectCssSource = "";
+      state.projectCssSource = generatedMobileCssTemplate();
       state.projectCssLoadedAt = 0;
       return false;
     }
@@ -959,17 +1053,38 @@
   }
 
   async function buildUpdatedDebugMobileCss() {
-    if (!state.selector) throw new Error("Nejdřív vyber prvek");
-    const ruleCss = currentSelectorCss();
-    if (!ruleCss) throw new Error("Vybraný prvek nemá žádnou úpravu");
+    if (!totalEditedSelectors()) {
+      throw new Error("V této relaci zatím není žádná úprava");
+    }
 
-    const original = state.projectCssSource || await readServedGeneratedMobileCss();
-    return replaceOrInsertGeneratedRule(
-      original,
-      state.exportSection,
-      state.selector,
-      ruleCss
-    );
+    let text = state.projectCssSource || await readServedGeneratedMobileCss();
+    let replacedCount = 0;
+    let addedCount = 0;
+
+    for (const profile of ["mobile", "all"]) {
+      for (const [selector, declarations] of Object.entries(state.rules[profile] || {})) {
+        if (!declarations || !Object.keys(declarations).length) continue;
+        const css = declarationsToCss(declarations);
+        if (!css) continue;
+        const ruleCss = `${boostedSelector(selector)} {\n${css}\n}`;
+        const section = state.ruleSections[profile]?.[selector] || "START SCREEN";
+        const result = replaceOrInsertGeneratedRule(text, section, selector, ruleCss);
+        text = result.text;
+        if (result.replaced) replacedCount++;
+        else addedCount++;
+      }
+    }
+
+    assertBalancedCssBraces(text);
+    return {
+      text,
+      replaced: replacedCount > 0,
+      replacedCount,
+      addedCount,
+      duplicatesRemoved: 0,
+      structureRepairs: 0,
+      createdSection: false
+    };
   }
 
   async function copyUpdatedDebugMobileCss() {
@@ -986,6 +1101,7 @@
       }
 
       const result = await buildUpdatedDebugMobileCss();
+      state.projectCssSource = result.text;
       const copied = await copyTextRobust(result.text);
 
       if (!copied) {
@@ -994,21 +1110,14 @@
         return;
       }
 
-      const action = result.replaced ? "přepsaným" : "přidaným";
-      const cleanup = result.duplicatesRemoved
-        ? `, odstraněno duplicit: ${result.duplicatesRemoved}`
-        : "";
-      const repairs = result.structureRepairs
-        ? `, opraveno strukturálních chyb: ${result.structureRepairs}`
-        : "";
-      toast(`Celý debugMobileGenerated.css s ${action} prvkem je ve schránce${cleanup}${repairs}`);
+      toast(`Hotové CSS je ve schránce — přidáno ${result.addedCount}, přepsáno ${result.replacedCount}`);
     } catch (error) {
       console.error(error);
       toast(error?.message || "Aktualizovaný CSS se nepodařilo zkopírovat");
     } finally {
       if (button) {
         button.disabled = false;
-        button.textContent = "Kopírovat generovaný CSS";
+        button.textContent = "Kopírovat hotové CSS";
       }
     }
   }
@@ -1016,14 +1125,9 @@
   async function downloadUpdatedDebugMobileCss() {
     try {
       const result = await buildUpdatedDebugMobileCss();
+      state.projectCssSource = result.text;
       downloadText(GENERATED_MOBILE_CSS_FILE, result.text);
-      const cleanup = result.duplicatesRemoved
-        ? ` Odstraněno duplicit: ${result.duplicatesRemoved}.`
-        : "";
-      const repairs = result.structureRepairs
-        ? ` Opraveno strukturálních chyb: ${result.structureRepairs}.`
-        : "";
-      toast(`Aktualizovaný debugMobileGenerated.css byl stažen.${cleanup}${repairs}`);
+      toast(`Hotové CSS staženo — přidáno ${result.addedCount}, přepsáno ${result.replacedCount}`);
     } catch (error) {
       console.error(error);
       toast(error?.message || "Aktualizovaný CSS se nepodařilo stáhnout");
@@ -1131,8 +1235,57 @@
     return profileRules[state.selector] || null;
   }
 
+  function rememberRuleSection(selector = state.selector, section = state.exportSection) {
+    if (!selector) return;
+    const sections = state.ruleSections[state.profile] || (state.ruleSections[state.profile] = {});
+    sections[selector] = section || "START SCREEN";
+  }
+
+  function ruleSection(selector, profile = state.profile) {
+    return state.ruleSections[profile]?.[selector] || "START SCREEN";
+  }
+
+  function ensureMovementSafety() {
+    if (!state.selected || !state.selector) return;
+
+    const rule = currentRule(true);
+    const selectedStyle = getComputedStyle(state.selected);
+    if ((selectedStyle.position || "static") === "static" && !rule.position) {
+      rule.position = "relative";
+    }
+    if (!rule["z-index"]) rule["z-index"] = "20";
+    rule.overflow = "visible";
+    rememberRuleSection();
+
+    const parent = state.selected.parentElement;
+    if (!parent || parent === document.body || isInternal(parent)) return;
+    const parentSelector = uniqueSelector(parent);
+    if (!parentSelector) return;
+    const profileRules = state.rules[state.profile] || (state.rules[state.profile] = {});
+    const parentRule = profileRules[parentSelector] || (profileRules[parentSelector] = {});
+    parentRule.overflow = "visible";
+    const sections = state.ruleSections[state.profile] || (state.ruleSections[state.profile] = {});
+    sections[parentSelector] = state.exportSection || "START SCREEN";
+  }
+
+  function freeSelectedMovement() {
+    if (!state.selected || !state.selector) {
+      toast("Nejdřív vyber prvek");
+      return;
+    }
+    pushHistory();
+    ensureMovementSafety();
+    saveRules();
+    syncControls();
+    updateHighlight();
+    toast("Přesah a vrstva prvku jsou uvolněné");
+  }
+
   function pushHistory() {
-    state.history.push(JSON.stringify(state.rules));
+    state.history.push(JSON.stringify({
+      rules: state.rules,
+      ruleSections: state.ruleSections
+    }));
     if (state.history.length > 30) state.history.shift();
   }
 
@@ -1140,9 +1293,18 @@
     if (!state.selector) return;
     pushHistory();
     const rule = currentRule(true);
+    rememberRuleSection();
     if (value === "" || value == null) delete rule[property];
     else rule[property] = value;
-    if (!Object.keys(rule).length) delete state.rules[state.profile][state.selector];
+
+    if (["translate-x", "translate-y", "scale"].includes(property)) {
+      ensureMovementSafety();
+    }
+
+    if (!Object.keys(rule).length) {
+      delete state.rules[state.profile][state.selector];
+      delete state.ruleSections[state.profile]?.[state.selector];
+    }
     saveRules();
   }
 
@@ -1162,8 +1324,18 @@
       case "translate-x": return 0;
       case "translate-y": return 0;
       case "scale": return 1;
-      case "width": return Math.round(element.getBoundingClientRect().width);
-      case "height": return Math.round(element.getBoundingClientRect().height);
+      case "width": {
+        const value = element instanceof SVGElement
+          ? (element.getBBox?.().width || element.getBoundingClientRect().width)
+          : (element.offsetWidth || parseFloat(style.width) || element.getBoundingClientRect().width);
+        return Math.round(value);
+      }
+      case "height": {
+        const value = element instanceof SVGElement
+          ? (element.getBBox?.().height || element.getBoundingClientRect().height)
+          : (element.offsetHeight || parseFloat(style.height) || element.getBoundingClientRect().height);
+        return Math.round(value);
+      }
       case "max-width": return style.maxWidth === "none" ? 0 : parseFloat(style.maxWidth) || 0;
       default: return parseFloat(style.getPropertyValue(config.key)) || 0;
     }
@@ -1196,6 +1368,8 @@
     state.selector = selectorOverride || uniqueSelector(element);
     refs.selector.value = state.selector;
     refs.targetName.textContent = describeElement(element);
+    state.exportSection = ruleSection(state.selector);
+    if (refs.exportSection) refs.exportSection.value = state.exportSection;
     syncControls();
     updateHighlight(element);
     updateRuleInfo();
@@ -1443,19 +1617,32 @@
   function resetSelected() {
     if (!state.selector) return;
     pushHistory();
-    delete state.rules[state.profile][state.selector];
+
+    const baseline = state.baselineRules[state.profile]?.[state.selector];
+    if (baseline) {
+      state.rules[state.profile][state.selector] = JSON.parse(JSON.stringify(baseline));
+      state.ruleSections[state.profile][state.selector] =
+        state.baselineSections[state.profile]?.[state.selector] || "START SCREEN";
+    } else {
+      delete state.rules[state.profile][state.selector];
+      delete state.ruleSections[state.profile]?.[state.selector];
+    }
+
     saveRules();
     syncControls();
-    toast(`Resetováno: ${state.profile}`);
+    updateHighlight();
+    toast("Prvek je zpět na stavu z načteného CSS");
   }
 
   function resetAll() {
     clearLegacyCommittedMirror();
     pushHistory();
-    state.rules = { mobile: {}, desktop: {}, all: {} };
+    state.rules = JSON.parse(JSON.stringify(state.baselineRules));
+    state.ruleSections = JSON.parse(JSON.stringify(state.baselineSections));
     saveRules();
     syncControls();
-    toast("Všechny debug úpravy byly odstraněny");
+    updateHighlight();
+    toast("Relace je zpět na stavu z načteného CSS");
   }
 
   function undo() {
@@ -1464,7 +1651,9 @@
       toast("Není co vrátit");
       return;
     }
-    state.rules = JSON.parse(previous);
+    const restored = JSON.parse(previous);
+    state.rules = restored.rules || { mobile: {}, desktop: {}, all: {} };
+    state.ruleSections = restored.ruleSections || { mobile: {}, desktop: {}, all: {} };
     saveRules();
     syncControls();
     toast("Poslední změna vrácena");
@@ -1509,21 +1698,11 @@
   }
 
   function saveSnapshot() {
-    localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(state.rules));
-    toast("Snapshot uložen");
+    toast("Snapshoty jsou vypnuté — nic se neukládá do prohlížeče");
   }
 
   function restoreSnapshot() {
-    const snapshot = loadJson(SNAPSHOT_KEY, null);
-    if (!snapshot) {
-      toast("Žádný snapshot není uložen");
-      return;
-    }
-    pushHistory();
-    state.rules = snapshot;
-    saveRules();
-    syncControls();
-    toast("Snapshot obnoven");
+    toast("Snapshoty jsou vypnuté — relace je pouze v paměti");
   }
 
   function importPreset(file) {
@@ -1573,49 +1752,21 @@
   }
 
   function savePanelState() {
-    const data = {
-      open: state.panelOpen,
-      profile: state.profile,
-      tab: state.activeTab,
-      top: refs.panel.style.top || "",
-      left: refs.panel.style.left || "",
-      right: refs.panel.style.right || "",
-      minimized: state.minimized,
-      opacity: state.panelOpacity,
-      showMeasure: state.showMeasure,
-      exportSection: state.exportSection
-    };
-    localStorage.setItem(PANEL_KEY, JSON.stringify(data));
+    /* Záměrně prázdné: Visual Debug nic neukládá do prohlížeče. */
   }
 
   function restorePanelState() {
-    const data = loadJson(PANEL_KEY, {});
-    state.profile = ["mobile", "desktop", "all"].includes(data.profile) ? data.profile : state.profile;
-    state.activeTab = data.tab || "layout";
-    refs.profile.value = state.profile;
-    activateTab(state.activeTab);
-    if (data.left) {
-      setPanelPosition(
-        Number.parseFloat(data.left) || 0,
-        Number.parseFloat(data.top) || 12
-      );
-    }
-    state.showMeasure = data.showMeasure !== false;
-    state.exportSection = data.exportSection || "START SCREEN";
-    refs.toggleMeasure.textContent = state.showMeasure ? "Skrýt název objektu" : "Zobrazit název objektu";
+    state.profile = "mobile";
+    state.activeTab = "layout";
+    refs.profile.value = "mobile";
+    activateTab("layout");
+    state.showMeasure = true;
+    state.exportSection = "START SCREEN";
+    refs.toggleMeasure.textContent = "Skrýt název objektu";
     refs.exportSection.value = state.exportSection;
-    state.minimized = Boolean(data.minimized);
-    refs.panel.classList.toggle("ct-vd-minimized", state.minimized);
-    refs.minimize?.setAttribute("aria-expanded", String(!state.minimized));
-    refs.minimize && (refs.minimize.textContent = state.minimized ? "▢" : "—");
-
-    const storedOpacity = Number(data.opacity);
-    state.panelOpacity = Number.isFinite(storedOpacity)
-      ? clamp(storedOpacity, 0.35, 1)
-      : 0.92;
-    applyPanelOpacity(state.panelOpacity, false);
-
-    /* Debug je tajný: po každém načtení zůstane zavřený a bez FAB. */
+    state.minimized = false;
+    refs.panel.classList.remove("ct-vd-minimized");
+    applyPanelOpacity(0.92, false);
     setDebugUiVisible(false, false);
   }
 
@@ -1976,8 +2127,6 @@
             <button id="ct-vd-pick" class="ct-vd-btn primary" type="button">Vybrat prvek</button>
             <select id="ct-vd-profile" class="ct-vd-select" aria-label="Profil">
               <option value="mobile">Mobil ≤899</option>
-              <option value="desktop">Desktop ≥900</option>
-              <option value="all">Všechny velikosti</option>
             </select>
           </div>
         </section>
@@ -2016,6 +2165,7 @@
               <option value="block">block</option><option value="flex">flex</option><option value="grid">grid</option><option value="inline-flex">inline-flex</option><option value="none">none</option>
             </select><span></span>
           </div>
+          <button id="ct-vd-free-move" class="ct-vd-btn primary" type="button">Uvolnit překrytí prvku</button>
         </section>
 
         <section class="ct-vd-section">
@@ -2028,36 +2178,24 @@
         </section>
 
         <section class="ct-vd-section">
-          <div class="ct-vd-section-title">Uložit / exportovat</div>
-          <div class="ct-vd-actions three">
-            <button id="ct-vd-copy" class="ct-vd-btn primary" type="button">Kopírovat celé CSS</button>
-            <button id="ct-vd-download" class="ct-vd-btn" type="button">Stáhnout celé CSS</button>
-            <button id="ct-vd-json" class="ct-vd-btn" type="button">Export preset</button>
-          </div>
-          <div class="ct-vd-actions three" style="margin-top:7px !important">
-            <button id="ct-vd-snapshot-save" class="ct-vd-btn" type="button">Uložit snapshot</button>
-            <button id="ct-vd-snapshot-load" class="ct-vd-btn" type="button">Obnovit snapshot</button>
-            <button id="ct-vd-import" class="ct-vd-btn" type="button">Import preset</button>
-          </div>
-          <div class="ct-vd-auto-save" style="margin-top:9px !important">
+          <div class="ct-vd-section-title"><span>Hotové CSS relace</span><span>nic se neukládá lokálně</span></div>
+          <div class="ct-vd-auto-save">
             <select id="ct-vd-export-section" class="ct-vd-select" aria-label="Sekce CSS">
               <option>START SCREEN</option><option>TIMER</option><option>STATISTICS</option>
               <option>SETTINGS</option><option>HISTORY / AO PANELS</option><option>OLL MENU</option>
               <option>PLL MENU</option><option>ALGORITHM IMAGES</option><option>DIALOGS / MODALS</option>
             </select>
-            <button id="ct-vd-copy-project-css" class="ct-vd-btn primary" type="button">Kopírovat generovaný CSS</button>
-            <button id="ct-vd-download-project-css" class="ct-vd-btn" type="button">Stáhnout generovaný CSS</button>
-            <button id="ct-vd-copy-current" class="ct-vd-btn" type="button">Kopírovat jen prvek</button>
-            <small id="ct-vd-css-file-status">Bezpečný režim: upravuje se pouze debugMobileGenerated.css; ruční debugMobile.css zůstává beze změny.</small>
+            <button id="ct-vd-copy-project-css" class="ct-vd-btn primary" type="button">Kopírovat hotové CSS</button>
+            <button id="ct-vd-download-project-css" class="ct-vd-btn" type="button">Stáhnout hotové CSS</button>
+            <small id="ct-vd-css-file-status">Uprav klidně více objektů. Export obsahuje celou relaci a zachová dřívější obsah debugMobileGenerated.css.</small>
           </div>
-          <input id="ct-vd-file" type="file" accept="application/json,.json" hidden>
         </section>
 
         <section class="ct-vd-section">
-          <div class="ct-vd-section-title">Reset</div>
+          <div class="ct-vd-section-title">Rozpracovaná relace</div>
           <div class="ct-vd-actions">
-            <button id="ct-vd-reset-selected" class="ct-vd-btn" type="button">Reset prvku</button>
-            <button id="ct-vd-reset-all" class="ct-vd-btn danger" type="button">Reset všeho</button>
+            <button id="ct-vd-reset-selected" class="ct-vd-btn" type="button">Vrátit rozpracovaný prvek</button>
+            <button id="ct-vd-reset-all" class="ct-vd-btn danger" type="button">Zahodit celou relaci</button>
           </div>
         </section>
 
@@ -2108,6 +2246,7 @@
       copyProjectCss: panel.querySelector("#ct-vd-copy-project-css"),
       downloadProjectCss: panel.querySelector("#ct-vd-download-project-css"),
       copyCurrent: panel.querySelector("#ct-vd-copy-current"),
+      freeMove: panel.querySelector("#ct-vd-free-move"),
       cssFileStatus: panel.querySelector("#ct-vd-css-file-status"),
       undo: panel.querySelector("#ct-vd-undo"),
       targetName: panel.querySelector("#ct-vd-target-name"),
@@ -2193,10 +2332,14 @@
       if (state.selected) updateHighlight();
       savePanelState();
     });
-    refs.exportSection.addEventListener("change", () => { state.exportSection = refs.exportSection.value; savePanelState(); });
+    refs.exportSection.addEventListener("change", () => {
+      state.exportSection = refs.exportSection.value;
+      if (state.selector && currentRule(false)) rememberRuleSection();
+    });
     refs.copyProjectCss.addEventListener("click", copyUpdatedDebugMobileCss);
     refs.downloadProjectCss.addEventListener("click", downloadUpdatedDebugMobileCss);
-    refs.copyCurrent.addEventListener("click", copyCurrentRule);
+    refs.copyCurrent?.addEventListener("click", copyCurrentRule);
+    refs.freeMove?.addEventListener("click", freeSelectedMovement);
     refs.undo.addEventListener("click", undo);
     refs.pickBtn.addEventListener("click", () => setPicking(!state.picking));
     refs.elementList?.addEventListener("change", selectFromElementList);
@@ -2205,10 +2348,10 @@
     refs.selector.addEventListener("keydown", event => { if (event.key === "Enter") resolveSelector(); });
 
     refs.profile.addEventListener("change", () => {
-      state.profile = refs.profile.value;
+      state.profile = "mobile";
+      refs.profile.value = "mobile";
       syncControls();
       updateRuleInfo();
-      savePanelState();
     });
 
     refs.tabs.forEach(button => button.addEventListener("click", () => activateTab(button.dataset.tab)));
@@ -2232,13 +2375,8 @@
     });
     refs.panel.querySelector("#ct-vd-refresh").addEventListener("click", () => { syncControls(); updateHighlight(); });
 
-    refs.panel.querySelector("#ct-vd-copy").addEventListener("click", copyCss);
-    refs.panel.querySelector("#ct-vd-download").addEventListener("click", downloadCss);
-    refs.panel.querySelector("#ct-vd-json").addEventListener("click", downloadJson);
-    refs.panel.querySelector("#ct-vd-snapshot-save").addEventListener("click", saveSnapshot);
-    refs.panel.querySelector("#ct-vd-snapshot-load").addEventListener("click", restoreSnapshot);
-    refs.panel.querySelector("#ct-vd-import").addEventListener("click", () => refs.panel.querySelector("#ct-vd-file").click());
-    refs.panel.querySelector("#ct-vd-file").addEventListener("change", event => importPreset(event.target.files?.[0]));
+    refs.panel.querySelector("#ct-vd-copy")?.addEventListener("click", copyCss);
+    refs.panel.querySelector("#ct-vd-download")?.addEventListener("click", downloadCss);
     refs.panel.querySelector("#ct-vd-reset-selected").addEventListener("click", resetSelected);
     refs.panel.querySelector("#ct-vd-reset-all").addEventListener("click", resetAll);
 
@@ -2279,7 +2417,11 @@
   }
 
   function init() {
-    clearLegacyCommittedMirror();
+    clearOldStoredDebugData();
+    state.rules = { mobile: {}, desktop: {}, all: {} };
+    state.ruleSections = { mobile: {}, desktop: {}, all: {} };
+    state.baselineRules = { mobile: {}, desktop: {}, all: {} };
+    state.baselineSections = { mobile: {}, desktop: {}, all: {} };
     renderRuntimeCss();
     buildPanel();
     restorePanelState();
@@ -2306,7 +2448,7 @@
         refs.selector.value = selector;
         resolveSelector();
       },
-      exportCss: generateCss,
+      exportCss: buildUpdatedDebugMobileCss,
       setPanelOpacity: value => applyPanelOpacity(Number(value)),
       centerPanel,
       resetPanelPosition,

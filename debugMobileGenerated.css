@@ -10,19 +10,71 @@
 @media (max-width: 899px) {
   /* CT-VD-SECTION:START SCREEN:START */
 
-/* CT-VD:%23btn%20.start-mode-btn__icon:START */
+/* CT-VD:button.start-mode-btn.start-mode-btn--smart%3Anth-of-type(1)%20%3E%20span:START */
+  :is(#ct-vd-specificity-a, button.start-mode-btn.start-mode-btn--smart:nth-of-type(1) > span):is(#ct-vd-specificity-b, button.start-mode-btn.start-mode-btn--smart:nth-of-type(1) > span) {
+    color: #ffffff !important;
+    translate: 9px -13px !important;
+  }
+  /* CT-VD:button.start-mode-btn.start-mode-btn--smart%3Anth-of-type(1)%20%3E%20span:END */
+
+
+  /* CT-VD:%23btn%20.start-mode-btn__icon:START */
   :is(#ct-vd-specificity-a, #btn .start-mode-btn__icon):is(#ct-vd-specificity-b, #btn .start-mode-btn__icon) {
     color: #ffffff !important;
-    transform: translate(-11px, -13px) scale(1) !important;
+    translate: -11px -13px !important;
   }
   /* CT-VD:%23btn%20.start-mode-btn__icon:END */
 
 
-  /* CT-VD:button.start-mode-btn.start-mode-btn--smart%3Anth-of-type(1)%20%3E%20span:START */
-  :is(#ct-vd-specificity-a, button.start-mode-btn.start-mode-btn--smart:nth-of-type(1) > span):is(#ct-vd-specificity-b, button.start-mode-btn.start-mode-btn--smart:nth-of-type(1) > span) {
-    color: #0000ff !important;
+  /* CT-VD:button.start-mode-btn.start-mode-btn--smart%3Anth-of-type(1)%20%3E%20svg.start-mode-btn__icon%20%3E%20path:START */
+  :is(#ct-vd-specificity-a, button.start-mode-btn.start-mode-btn--smart:nth-of-type(1) > svg.start-mode-btn__icon > path):is(#ct-vd-specificity-b, button.start-mode-btn.start-mode-btn--smart:nth-of-type(1) > svg.start-mode-btn__icon > path) {
+    color: #64de5f !important;
   }
-  /* CT-VD:button.start-mode-btn.start-mode-btn--smart%3Anth-of-type(1)%20%3E%20span:END */
+  /* CT-VD:button.start-mode-btn.start-mode-btn--smart%3Anth-of-type(1)%20%3E%20svg.start-mode-btn__icon%20%3E%20path:END */
+
+
+  /* CT-VD:header.start-screen__heading%20%3E%20p:START */
+  :is(#ct-vd-specificity-a, header.start-screen__heading > p):is(#ct-vd-specificity-b, header.start-screen__heading > p) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0px 6px !important;
+  }
+  /* CT-VD:header.start-screen__heading%20%3E%20p:END */
+
+
+  /* CT-VD:%23start-screen%20.start-screen__heading:START */
+  :is(#ct-vd-specificity-a, #start-screen .start-screen__heading):is(#ct-vd-specificity-b, #start-screen .start-screen__heading) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23start-screen%20.start-screen__heading:END */
+
+
+  /* CT-VD:h1%20%3E%20strong:START */
+  :is(#ct-vd-specificity-a, h1 > strong):is(#ct-vd-specificity-b, h1 > strong) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0px 8px !important;
+  }
+  /* CT-VD:h1%20%3E%20strong:END */
+
+
+  /* CT-VD:%23start-title:START */
+  :is(#ct-vd-specificity-a, #start-title):is(#ct-vd-specificity-b, #start-title) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23start-title:END */
+
+
+  /* CT-VD:h1%20%3E%20span:START */
+  :is(#ct-vd-specificity-a, h1 > span):is(#ct-vd-specificity-b, h1 > span) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0px 10px !important;
+  }
+  /* CT-VD:h1%20%3E%20span:END */
 /* CT-VD-SECTION:START SCREEN:END */
 
   /* CT-VD-SECTION:TIMER:START */
