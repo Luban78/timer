@@ -52,3 +52,14 @@ Visual Debug nyní používá zesílenou specificitu pravidel. Díky tomu funguj
 - Scrollování uvnitř panelu už nikdy nevybere ani neupraví prvek pod prstem.
 - V režimu „Vybrat prvek“ se prvek vybere pouze krátkým klepnutím bez pohybu.
 - Tah, scroll a dlouhé podržení jsou ignorovány.
+
+## Verze 10 – přímý zápis a podržení − / +
+
+- Tlačítko **Skrýt název objektu** schová zelený štítek nad vybraným prvkem.
+- Po výběru parametru lze panel skrýt a ladit jen přetažitelnou trojicí `− / 🛠 / +`.
+- Krátké klepnutí na `−` nebo `+` změní hodnotu o jeden krok.
+- Přidržení `−` nebo `+` po 320 ms spustí automatické opakování až do puštění tlačítka.
+- **Připojit CSS** umožní vybrat `debugMobile.css`.
+- **Zapsat prvek** najde zvolenou sekci, přepíše předchozí blok stejného prvku nebo vloží nový.
+- Rozpoznávání sekcí podporuje anglické i starší české názvy. Když sekce v souboru opravdu chybí, Visual Debug ji bezpečně vytvoří před poslední závorkou mobilního media bloku.
+- Přímý zápis závisí na podpoře File System Access API v prohlížeči nebo ve Spck Preview.
