@@ -416,7 +416,7 @@
   background-size: 10px 10px, 10px 10px, 50px 50px, 50px 50px !important;
 }
 
-body.ct-vd-outlines *:not(#ct-vd-panel):not(#ct-vd-panel *):not(#ct-vd-fab):not(#ct-vd-highlight):not(#ct-vd-measure):not(#ct-vd-toast):not(#ct-vd-grid) {
+body.ct-vd-outlines *:not(#ct-vd-panel):not(#ct-vd-panel *):not(#ct-vd-quickbar):not(#ct-vd-quickbar *):not(#ct-vd-fab):not(#ct-vd-highlight):not(#ct-vd-measure):not(#ct-vd-toast):not(#ct-vd-grid) {
   outline: 1px solid rgba(0, 229, 255, 0.22) !important;
 }
 
@@ -427,7 +427,9 @@ body.ct-vd-picking * {
 
 body.ct-vd-picking #ct-vd-panel,
 body.ct-vd-picking #ct-vd-panel *,
-body.ct-vd-picking #ct-vd-fab {
+body.ct-vd-picking #ct-vd-fab,
+body.ct-vd-picking #ct-vd-quickbar,
+body.ct-vd-picking #ct-vd-quickbar * {
   cursor: default !important;
 }
 
@@ -639,4 +641,165 @@ body.ct-vd-picking {
   top: 50%;
   height: 3px;
   transform: translateY(-50%);
+}
+/* =============================================================
+   VISUAL DEBUG v9 – MOBILNÍ RYCHLÉ LADĚNÍ − / 🛠 / +
+   Celá trojice je přetažitelná po obrazovce.
+   ============================================================= */
+
+#ct-vd-quickbar {
+  position: fixed !important;
+  left: max(10px, env(safe-area-inset-left)) !important;
+  bottom: max(12px, calc(env(safe-area-inset-bottom) + 8px)) !important;
+  z-index: 2147483600 !important;
+  display: grid !important;
+  grid-template-columns: 46px 50px 46px !important;
+  grid-template-rows: 50px auto !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 5px !important;
+  border: 1.5px solid rgba(24, 239, 125, 0.82) !important;
+  border-radius: 17px !important;
+  color: #18ef7d !important;
+  background: rgba(4, 17, 21, 0.96) !important;
+  box-shadow: 0 0 18px rgba(24, 239, 125, 0.28) !important;
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+#ct-vd-quickbar[hidden] {
+  display: none !important;
+}
+
+#ct-vd-quickbar > button {
+  width: 100% !important;
+  height: 46px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 1px solid rgba(24, 239, 125, 0.48) !important;
+  border-radius: 12px !important;
+  color: #18ef7d !important;
+  background: rgba(2, 19, 21, 0.94) !important;
+  box-shadow: none !important;
+  font: 900 25px/1 system-ui, sans-serif !important;
+  cursor: pointer !important;
+  touch-action: none !important;
+}
+
+#ct-vd-quickbar > button:active,
+#ct-vd-quickbar > button.ct-vd-quick-pressing {
+  color: #06130e !important;
+  background: #18ef7d !important;
+  transform: scale(0.94) !important;
+}
+
+#ct-vd-quickbar #ct-vd-fab {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 14px !important;
+  font-size: 22px !important;
+}
+
+#ct-vd-quick-status {
+  grid-column: 1 / -1 !important;
+  min-width: 0 !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 7px !important;
+  padding: 2px 5px 1px !important;
+  color: rgba(238, 248, 244, 0.76) !important;
+  font-size: 9px !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+}
+
+#ct-vd-quick-status b {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+#ct-vd-quick-status small {
+  color: #18ef7d !important;
+  font-size: 9px !important;
+}
+
+#ct-vd-quickbar.ct-vd-quick-active #ct-vd-quick-status {
+  display: flex !important;
+}
+
+#ct-vd-quickbar[data-ready="false"] > button:first-child,
+#ct-vd-quickbar[data-ready="false"] > button:nth-child(3) {
+  opacity: 0.45 !important;
+}
+
+.ct-vd-control.ct-vd-control-active {
+  margin-inline: -4px !important;
+  padding: 5px 4px !important;
+  border: 1px solid rgba(24, 239, 125, 0.72) !important;
+  border-radius: 9px !important;
+  background: rgba(24, 239, 125, 0.08) !important;
+}
+
+.ct-vd-control.ct-vd-control-active > label {
+  color: #18ef7d !important;
+  font-weight: 850 !important;
+}
+
+@media (max-width: 899px) {
+  #ct-vd-quickbar {
+    left: max(10px, env(safe-area-inset-left)) !important;
+    bottom: calc(env(safe-area-inset-bottom) + 62px) !important;
+    grid-template-columns: 44px 48px 44px !important;
+    grid-template-rows: 48px auto !important;
+  }
+
+  #ct-vd-quickbar > button {
+    height: 44px !important;
+    font-size: 23px !important;
+  }
+
+  #ct-vd-quickbar #ct-vd-fab {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 20px !important;
+  }
+}
+
+/* Visual Debug – přímý zápis CSS */
+#ct-vd-panel .ct-vd-auto-save {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 7px !important;
+}
+
+#ct-vd-panel .ct-vd-auto-save #ct-vd-export-section,
+#ct-vd-panel .ct-vd-auto-save #ct-vd-css-file-status {
+  grid-column: 1 / -1 !important;
+}
+
+#ct-vd-panel .ct-vd-auto-save #ct-vd-css-file-status {
+  display: block !important;
+  padding: 5px 3px 0 !important;
+  color: rgba(230, 255, 240, .72) !important;
+  font-size: 11px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 899px) {
+  #ct-vd-panel .ct-vd-auto-save {
+    grid-template-columns: 1fr 1fr !important;
+  }
 }

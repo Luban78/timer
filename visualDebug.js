@@ -34,7 +34,16 @@
     suppressClickUntil: 0,
     minimized: false,
     panelOpacity: 0.92,
-    history: []
+    history: [],
+    activeProperty: "",
+    quickDrag: null,
+    quickMoved: false,
+    quickPressDelay: null,
+    quickPressInterval: null,
+    quickPressPointerId: null,
+    showMeasure: true,
+    cssFileHandle: null,
+    exportSection: "START SCREEN"
   };
 
   const propertyConfig = [
@@ -226,6 +235,230 @@
     return css.split("\n").map(line => `  ${line}`).join("\n");
   }
 
+  function currentSelectorCss() {
+    if (!state.selector) return "";
+    const declarations = currentRule(false);
+    if (!declarations || !Object.keys(declarations).length) return "";
+    const css = declarationsToCss(declarations);
+    return `${boostedSelector(state.selector)} {\n${css}\n}`;
+  }
+
+  const CSS_SECTION_ALIASES = {
+    "START SCREEN": ["START SCREEN", "START OBRAZOVKA", "STARTOVNI OBRAZOVKA", "START OBRAZOVKA MOBIL"],
+    "TIMER": ["TIMER"],
+    "STATISTICS": ["STATISTICS", "STATISTIKY"],
+    "SETTINGS": ["SETTINGS", "NASTAVENI"],
+    "HISTORY / AO PANELS": ["HISTORY / AO PANELS", "HISTORIE / AO PANELY", "HISTORY AO PANELS", "HISTORIE AO PANELY"],
+    "OLL MENU": ["OLL MENU", "OLL VYBER"],
+    "PLL MENU": ["PLL MENU", "PLL VYBER"],
+    "ALGORITHM IMAGES": ["ALGORITHM IMAGES", "OBRAZKY ALGORITMU"],
+    "DIALOGS / MODALS": ["DIALOGS / MODALS", "DIALOGY A MODALY", "DIALOGY MODALY"]
+  };
+
+  function normalizeSectionLabel(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, " ")
+      .trim()
+      .replace(/\s+/g, " ");
+  }
+
+  function sectionAliases(section) {
+    const aliases = CSS_SECTION_ALIASES[section] || [section];
+    return aliases.map(normalizeSectionLabel).filter(Boolean);
+  }
+
+  function cssComments(fileText) {
+    const comments = [];
+    const regex = /\/\*[\s\S]*?\*\//g;
+    let match;
+    while ((match = regex.exec(fileText))) {
+      comments.push({ index: match.index, end: regex.lastIndex, text: match[0] });
+    }
+    return comments;
+  }
+
+  function sectionMatchScore(commentText, section) {
+    const aliases = sectionAliases(section);
+    const lines = commentText
+      .replace(/^\/\*|\*\/$/g, "")
+      .split(/\r?\n/)
+      .map(normalizeSectionLabel)
+      .filter(Boolean);
+
+    let score = 0;
+    for (const line of lines) {
+      for (const alias of aliases) {
+        if (line === alias) score = Math.max(score, 100);
+        else if (line.startsWith(`${alias} `) && !line.includes("VISUAL DEBUG EXPORT")) score = Math.max(score, 60);
+      }
+    }
+    return score;
+  }
+
+  function findSectionHeading(fileText, section) {
+    let best = null;
+    for (const comment of cssComments(fileText)) {
+      const score = sectionMatchScore(comment.text, section);
+      if (!score) continue;
+      if (!best || score > best.score || (score === best.score && comment.index < best.index)) {
+        best = { ...comment, score };
+      }
+    }
+    return best;
+  }
+
+  function findNextSectionStart(fileText, currentHeading) {
+    const headings = Object.keys(CSS_SECTION_ALIASES)
+      .map(section => findSectionHeading(fileText, section))
+      .filter(Boolean)
+      .filter((heading, index, all) => all.findIndex(item => item.index === heading.index) === index)
+      .sort((a, b) => a.index - b.index);
+
+    return headings.find(heading => heading.index > currentHeading.index)?.index ?? -1;
+  }
+
+  function sectionHeadingComment(section) {
+    return `\n\n  /* =====================================================\n     ${section}\n  ===================================================== */\n`;
+  }
+
+  function replaceOrInsertRuleInSection(fileText, section, selector, ruleCss) {
+    let heading = findSectionHeading(fileText, section);
+    let createdSection = false;
+
+    if (!heading) {
+      const insertionPoint = fileText.lastIndexOf("}");
+      const safePoint = insertionPoint >= 0 ? insertionPoint : fileText.length;
+      const headingText = sectionHeadingComment(section);
+      fileText = fileText.slice(0, safePoint) + headingText + "\n" + fileText.slice(safePoint);
+      heading = findSectionHeading(fileText, section);
+      createdSection = true;
+    }
+
+    if (!heading) throw new Error(`Sekci ${section} se nepodařilo vytvořit`);
+
+    const sectionStart = heading.end;
+    const nextSectionStart = findNextSectionStart(fileText, heading);
+    const finalBrace = fileText.lastIndexOf("}");
+    const sectionEnd = nextSectionStart >= 0
+      ? nextSectionStart
+      : (finalBrace >= sectionStart ? finalBrace : fileText.length);
+    const sectionText = fileText.slice(sectionStart, sectionEnd);
+    const markerKey = encodeURIComponent(selector);
+    const startMarker = `/* CT-VD:${markerKey} */`;
+    const endMarker = `/* /CT-VD:${markerKey} */`;
+    const managedBlock = `${startMarker}\n${ruleCss}\n${endMarker}`;
+
+    const markerStart = sectionText.indexOf(startMarker);
+    if (markerStart >= 0) {
+      const markerEnd = sectionText.indexOf(endMarker, markerStart);
+      if (markerEnd >= 0) {
+        const after = markerEnd + endMarker.length;
+        const updated = sectionText.slice(0, markerStart) + managedBlock + sectionText.slice(after);
+        return {
+          text: fileText.slice(0, sectionStart) + updated + fileText.slice(sectionEnd),
+          createdSection,
+          replaced: true
+        };
+      }
+    }
+
+    const selectorIndex = sectionText.indexOf(selector);
+    if (selectorIndex >= 0) {
+      let blockStart = sectionText.lastIndexOf("}", selectorIndex);
+      blockStart = blockStart < 0 ? 0 : blockStart + 1;
+      while (blockStart < selectorIndex && /\s/.test(sectionText[blockStart])) blockStart++;
+      const openBrace = sectionText.indexOf("{", selectorIndex);
+      if (openBrace >= 0) {
+        let depth = 0;
+        let blockEnd = -1;
+        for (let i = openBrace; i < sectionText.length; i++) {
+          if (sectionText[i] === "{") depth++;
+          if (sectionText[i] === "}") {
+            depth--;
+            if (depth === 0) { blockEnd = i + 1; break; }
+          }
+        }
+        if (blockEnd > 0) {
+          const updated = sectionText.slice(0, blockStart) + managedBlock + sectionText.slice(blockEnd);
+          return {
+            text: fileText.slice(0, sectionStart) + updated + fileText.slice(sectionEnd),
+            createdSection,
+            replaced: true
+          };
+        }
+      }
+    }
+
+    const spacer = sectionText.trim() ? "\n\n" : "\n";
+    const updated = sectionText.replace(/\s*$/, "") + spacer + managedBlock + "\n\n";
+    return {
+      text: fileText.slice(0, sectionStart) + updated + fileText.slice(sectionEnd),
+      createdSection,
+      replaced: false
+    };
+  }
+
+  async function chooseCssFile() {
+    if (!("showOpenFilePicker" in window)) {
+      toast("Přímý zápis zde není podporovaný – použij kopírování");
+      return null;
+    }
+    try {
+      const [handle] = await window.showOpenFilePicker({
+        multiple: false,
+        types: [{ description: "CSS soubor", accept: { "text/css": [".css"] } }]
+      });
+      state.cssFileHandle = handle;
+      refs.cssFileStatus.textContent = handle.name || "CSS připojeno";
+      toast(`Připojeno: ${handle.name}`);
+      return handle;
+    } catch (error) {
+      if (error?.name !== "AbortError") toast("Soubor se nepodařilo připojit");
+      return null;
+    }
+  }
+
+  async function saveCurrentRuleToCssFile() {
+    if (!state.selector) { toast("Nejdřív vyber prvek"); return; }
+    const ruleCss = currentSelectorCss();
+    if (!ruleCss) { toast("Vybraný prvek nemá žádnou úpravu"); return; }
+    const handle = state.cssFileHandle || await chooseCssFile();
+    if (!handle) {
+      await copyCurrentRule();
+      return;
+    }
+    try {
+      const file = await handle.getFile();
+      const original = await file.text();
+      const result = replaceOrInsertRuleInSection(original, state.exportSection, state.selector, ruleCss);
+      const writable = await handle.createWritable();
+      await writable.write(result.text);
+      await writable.close();
+      const action = result.replaced ? "Přepsáno" : "Uloženo";
+      const suffix = result.createdSection ? " (sekce byla vytvořena)" : "";
+      toast(`${action} do ${state.exportSection}${suffix}`);
+    } catch (error) {
+      console.error(error);
+      toast(error?.message || "Přímý zápis selhal");
+    }
+  }
+
+  async function copyCurrentRule() {
+    const css = currentSelectorCss();
+    if (!css) { toast("Vybraný prvek nemá žádnou úpravu"); return; }
+    const text = `/* Sekce: ${state.exportSection} */\n${css}\n`;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast("CSS aktuálního prvku zkopírováno");
+    } catch (_) {
+      downloadText("visualDebug-current-rule.css", text);
+      toast("CSS aktuálního prvku staženo");
+    }
+  }
+
   function renderRuntimeCss() {
     ensureStyleElement().textContent = generateCss();
   }
@@ -343,7 +576,7 @@
       width: `${rect.width}px`,
       height: `${rect.height}px`
     });
-    refs.measure.hidden = false;
+    refs.measure.hidden = !state.showMeasure;
     refs.measure.textContent = `${state.selector || describeElement(element)}  ${Math.round(rect.width)}×${Math.round(rect.height)} px`;
     const top = Math.max(4, rect.top - 27);
     const left = Math.min(Math.max(4, rect.left), window.innerWidth - Math.min(440, window.innerWidth - 8));
@@ -686,7 +919,9 @@
       left: refs.panel.style.left || "",
       right: refs.panel.style.right || "",
       minimized: state.minimized,
-      opacity: state.panelOpacity
+      opacity: state.panelOpacity,
+      showMeasure: state.showMeasure,
+      exportSection: state.exportSection
     };
     localStorage.setItem(PANEL_KEY, JSON.stringify(data));
   }
@@ -703,6 +938,10 @@
         Number.parseFloat(data.top) || 12
       );
     }
+    state.showMeasure = data.showMeasure !== false;
+    state.exportSection = data.exportSection || "START SCREEN";
+    refs.toggleMeasure.textContent = state.showMeasure ? "Skrýt název objektu" : "Zobrazit název objektu";
+    refs.exportSection.value = state.exportSection;
     state.minimized = Boolean(data.minimized);
     refs.panel.classList.toggle("ct-vd-minimized", state.minimized);
     refs.minimize?.setAttribute("aria-expanded", String(!state.minimized));
@@ -738,11 +977,11 @@
     state.unlocked = Boolean(unlocked);
 
     if (state.unlocked) {
-      refs.fab.hidden = false;
-      refs.fab.style.removeProperty("display");
+      refs.quickbar.hidden = false;
+      refs.quickbar.style.removeProperty("display");
     } else {
-      refs.fab.hidden = true;
-      refs.fab.style.setProperty("display", "none", "important");
+      refs.quickbar.hidden = true;
+      refs.quickbar.style.setProperty("display", "none", "important");
     }
 
     if (state.panelOpen && state.unlocked) {
@@ -853,6 +1092,148 @@
     savePanelState();
   }
 
+  function activePropertyConfig() {
+    return propertyConfig.find(config => config.key === state.activeProperty) || null;
+  }
+
+  function setActiveProperty(config) {
+    if (!config) return;
+    state.activeProperty = config.key;
+    refs.quickLabel.textContent = config.label;
+    refs.quickbar.dataset.ready = state.selected ? "true" : "false";
+    refs.controls.forEach((control, key) => {
+      control.row?.classList.toggle("ct-vd-control-active", key === config.key);
+    });
+  }
+
+  function adjustActiveProperty(direction) {
+    const config = activePropertyConfig();
+    if (!state.selected || !state.selector) {
+      toast("Nejdřív vyber prvek");
+      return false;
+    }
+    if (!config) {
+      toast("Nejdřív klepni na parametr v panelu");
+      return false;
+    }
+
+    const current = valueForControl(config);
+    const decimals = config.step < 1 ? 2 : 0;
+    const next = Number(clamp(current + direction * config.step, config.min, config.max).toFixed(decimals));
+    setDeclaration(config.key, formatPropertyValue(config, next));
+
+    const control = refs.controls.get(config.key);
+    if (control) {
+      control.range.value = next;
+      control.number.value = next;
+    }
+    updateHighlight();
+    refs.quickValue.textContent = `${next}${config.unit}`;
+    return true;
+  }
+
+  function stopQuickPressRepeat() {
+    if (state.quickPressDelay) clearTimeout(state.quickPressDelay);
+    if (state.quickPressInterval) clearInterval(state.quickPressInterval);
+    state.quickPressDelay = null;
+    state.quickPressInterval = null;
+    state.quickPressPointerId = null;
+    refs.quickMinus?.classList.remove("ct-vd-quick-pressing");
+    refs.quickPlus?.classList.remove("ct-vd-quick-pressing");
+  }
+
+  function startQuickPressRepeat(event, direction) {
+    if (event.button != null && event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    stopQuickPressRepeat();
+
+    if (!adjustActiveProperty(direction)) return;
+
+    const button = event.currentTarget;
+    state.quickPressPointerId = event.pointerId ?? "mouse";
+    button.classList.add("ct-vd-quick-pressing");
+    try { button.setPointerCapture?.(event.pointerId); } catch (_) {}
+
+    state.quickPressDelay = setTimeout(() => {
+      state.quickPressInterval = setInterval(() => {
+        adjustActiveProperty(direction);
+      }, 70);
+    }, 320);
+  }
+
+  function endQuickPressRepeat(event) {
+    if (state.quickPressPointerId == null) return;
+    if (event?.pointerId != null && state.quickPressPointerId !== event.pointerId) return;
+    stopQuickPressRepeat();
+  }
+
+  function enterQuickMode() {
+    if (!state.selected || !state.selector) {
+      toast("Nejdřív vyber prvek");
+      return;
+    }
+    if (!activePropertyConfig()) {
+      toast("Klepni nejdřív na parametr, který chceš ladit");
+      return;
+    }
+    togglePanel(false);
+    refs.quickbar.classList.add("ct-vd-quick-active");
+    refs.quickLabel.textContent = activePropertyConfig().label;
+    refs.quickValue.textContent = String(valueForControl(activePropertyConfig()));
+    toast("Rychlé ladění: použij − a +");
+  }
+
+  function toggleQuickPanel() {
+    if (state.panelOpen) enterQuickMode();
+    else {
+      refs.quickbar.classList.remove("ct-vd-quick-active");
+      togglePanel(true);
+    }
+  }
+
+  function setQuickbarPosition(left, top) {
+    refs.quickbar.style.setProperty("left", `${Math.round(left)}px`, "important");
+    refs.quickbar.style.setProperty("top", `${Math.round(top)}px`, "important");
+    refs.quickbar.style.setProperty("right", "auto", "important");
+    refs.quickbar.style.setProperty("bottom", "auto", "important");
+  }
+
+  function startQuickDrag(event) {
+    if (event.button != null && event.button !== 0) return;
+    const rect = refs.quickbar.getBoundingClientRect();
+    state.quickDrag = {
+      pointerId: event.pointerId ?? "mouse",
+      x: event.clientX,
+      y: event.clientY,
+      left: rect.left,
+      top: rect.top
+    };
+    state.quickMoved = false;
+    try { refs.quickbar.setPointerCapture?.(event.pointerId); } catch (_) {}
+  }
+
+  function moveQuickDrag(event) {
+    if (!state.quickDrag) return;
+    if (event.pointerId != null && state.quickDrag.pointerId !== event.pointerId) return;
+    const dx = event.clientX - state.quickDrag.x;
+    const dy = event.clientY - state.quickDrag.y;
+    if (Math.hypot(dx, dy) < 7 && !state.quickMoved) return;
+    state.quickMoved = true;
+    const rect = refs.quickbar.getBoundingClientRect();
+    const left = clamp(state.quickDrag.left + dx, 0, Math.max(0, window.innerWidth - rect.width));
+    const top = clamp(state.quickDrag.top + dy, 0, Math.max(0, window.innerHeight - rect.height));
+    setQuickbarPosition(left, top);
+    event.preventDefault();
+  }
+
+  function endQuickDrag(event) {
+    if (!state.quickDrag) return;
+    if (event?.pointerId != null && state.quickDrag.pointerId !== event.pointerId) return;
+    state.quickDrag = null;
+    setTimeout(() => { state.quickMoved = false; }, 0);
+  }
+
   function createControl(config) {
     const row = document.createElement("div");
     row.className = "ct-vd-control";
@@ -863,6 +1244,11 @@
     `;
     const range = row.children[1];
     const number = row.children[2];
+    row.dataset.property = config.key;
+    const activate = () => setActiveProperty(config);
+    row.addEventListener("pointerdown", activate);
+    range.addEventListener("focus", activate);
+    number.addEventListener("focus", activate);
 
     const apply = raw => {
       const value = clamp(raw, config.min, config.max);
@@ -873,18 +1259,21 @@
     };
     range.addEventListener("input", () => apply(range.value));
     number.addEventListener("change", () => apply(number.value));
-    refs.controls.set(config.key, { range, number });
+    refs.controls.set(config.key, { range, number, row });
     return row;
   }
 
   function buildPanel() {
-    const fab = document.createElement("button");
-    fab.id = "ct-vd-fab";
-    fab.type = "button";
-    fab.title = "Visual Debug Panel (Ctrl+Shift+D)";
-    fab.setAttribute("aria-label", "Otevřít Visual Debug Panel");
-    fab.textContent = "🛠";
-    fab.hidden = true;
+    const quickbar = document.createElement("div");
+    quickbar.id = "ct-vd-quickbar";
+    quickbar.hidden = true;
+    quickbar.innerHTML = `
+      <button id="ct-vd-quick-minus" type="button" aria-label="Zmenšit hodnotu">−</button>
+      <button id="ct-vd-fab" type="button" title="Otevřít nebo skrýt Visual Debug" aria-label="Visual Debug">🛠</button>
+      <button id="ct-vd-quick-plus" type="button" aria-label="Zvětšit hodnotu">+</button>
+      <span id="ct-vd-quick-status"><b id="ct-vd-quick-label">parametr</b><small id="ct-vd-quick-value">–</small></span>
+    `;
+    const fab = quickbar.querySelector("#ct-vd-fab");
 
     const panel = document.createElement("aside");
     panel.id = "ct-vd-panel";
@@ -911,6 +1300,7 @@
           <div class="ct-vd-actions" style="margin-top:8px !important">
             <button id="ct-vd-center-panel" class="ct-vd-btn" type="button">Vycentrovat panel</button>
             <button id="ct-vd-reset-panel-position" class="ct-vd-btn" type="button">Vrátit doprava</button>
+            <button id="ct-vd-toggle-measure" class="ct-vd-btn" type="button">Skrýt název objektu</button>
           </div>
         </section>
 
@@ -987,6 +1377,17 @@
             <button id="ct-vd-snapshot-load" class="ct-vd-btn" type="button">Obnovit snapshot</button>
             <button id="ct-vd-import" class="ct-vd-btn" type="button">Import preset</button>
           </div>
+          <div class="ct-vd-auto-save" style="margin-top:9px !important">
+            <select id="ct-vd-export-section" class="ct-vd-select" aria-label="Sekce CSS">
+              <option>START SCREEN</option><option>TIMER</option><option>STATISTICS</option>
+              <option>SETTINGS</option><option>HISTORY / AO PANELS</option><option>OLL MENU</option>
+              <option>PLL MENU</option><option>ALGORITHM IMAGES</option><option>DIALOGS / MODALS</option>
+            </select>
+            <button id="ct-vd-connect-css" class="ct-vd-btn" type="button">Připojit CSS</button>
+            <button id="ct-vd-save-current" class="ct-vd-btn primary" type="button">Zapsat prvek</button>
+            <button id="ct-vd-copy-current" class="ct-vd-btn" type="button">Kopírovat prvek</button>
+            <small id="ct-vd-css-file-status">Soubor nepřipojen</small>
+          </div>
           <input id="ct-vd-file" type="file" accept="application/json,.json" hidden>
         </section>
 
@@ -1022,10 +1423,15 @@
     grid.id = "ct-vd-grid";
     grid.hidden = true;
 
-    document.body.append(fab, panel, highlight, measure, toastEl, grid);
+    document.body.append(quickbar, panel, highlight, measure, toastEl, grid);
 
     refs = {
       fab,
+      quickbar,
+      quickMinus: quickbar.querySelector("#ct-vd-quick-minus"),
+      quickPlus: quickbar.querySelector("#ct-vd-quick-plus"),
+      quickLabel: quickbar.querySelector("#ct-vd-quick-label"),
+      quickValue: quickbar.querySelector("#ct-vd-quick-value"),
       panel,
       head: panel.querySelector(".ct-vd-head"),
       dragHandle: panel.querySelector("#ct-vd-drag-handle"),
@@ -1035,6 +1441,12 @@
       panelOpacityValue: panel.querySelector("#ct-vd-panel-opacity-value"),
       centerPanel: panel.querySelector("#ct-vd-center-panel"),
       resetPanelPosition: panel.querySelector("#ct-vd-reset-panel-position"),
+      toggleMeasure: panel.querySelector("#ct-vd-toggle-measure"),
+      exportSection: panel.querySelector("#ct-vd-export-section"),
+      connectCss: panel.querySelector("#ct-vd-connect-css"),
+      saveCurrent: panel.querySelector("#ct-vd-save-current"),
+      copyCurrent: panel.querySelector("#ct-vd-copy-current"),
+      cssFileStatus: panel.querySelector("#ct-vd-css-file-status"),
       undo: panel.querySelector("#ct-vd-undo"),
       targetName: panel.querySelector("#ct-vd-target-name"),
       selector: panel.querySelector("#ct-vd-selector"),
@@ -1073,7 +1485,39 @@
   }
 
   function wireEvents() {
-    refs.fab.addEventListener("click", () => togglePanel());
+    refs.fab.addEventListener("click", event => {
+      if (state.quickMoved) return;
+      event.stopPropagation();
+      toggleQuickPanel();
+    });
+    refs.quickMinus.addEventListener("pointerdown", event => startQuickPressRepeat(event, -1));
+    refs.quickPlus.addEventListener("pointerdown", event => startQuickPressRepeat(event, 1));
+    refs.quickMinus.addEventListener("pointerup", endQuickPressRepeat);
+    refs.quickPlus.addEventListener("pointerup", endQuickPressRepeat);
+    refs.quickMinus.addEventListener("pointercancel", endQuickPressRepeat);
+    refs.quickPlus.addEventListener("pointercancel", endQuickPressRepeat);
+    refs.quickMinus.addEventListener("lostpointercapture", endQuickPressRepeat);
+    refs.quickPlus.addEventListener("lostpointercapture", endQuickPressRepeat);
+    refs.quickMinus.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.detail === 0) adjustActiveProperty(-1);
+    });
+    refs.quickPlus.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.detail === 0) adjustActiveProperty(1);
+    });
+    refs.quickbar.addEventListener("pointerdown", startQuickDrag, { passive: true });
+    refs.quickbar.addEventListener("pointermove", moveQuickDrag, { passive: false });
+    refs.quickbar.addEventListener("pointerup", endQuickDrag);
+    refs.quickbar.addEventListener("pointercancel", endQuickDrag);
+    window.addEventListener("pointerup", endQuickPressRepeat, true);
+    window.addEventListener("pointercancel", endQuickPressRepeat, true);
+    window.addEventListener("blur", stopQuickPressRepeat);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stopQuickPressRepeat();
+    });
     refs.close.addEventListener("click", () => togglePanel(false));
     refs.minimize.addEventListener("click", toggleMinimize);
     refs.panelOpacity.addEventListener("input", () => {
@@ -1081,6 +1525,16 @@
     });
     refs.centerPanel.addEventListener("click", centerPanel);
     refs.resetPanelPosition.addEventListener("click", resetPanelPosition);
+    refs.toggleMeasure.addEventListener("click", () => {
+      state.showMeasure = !state.showMeasure;
+      refs.toggleMeasure.textContent = state.showMeasure ? "Skrýt název objektu" : "Zobrazit název objektu";
+      if (state.selected) updateHighlight();
+      savePanelState();
+    });
+    refs.exportSection.addEventListener("change", () => { state.exportSection = refs.exportSection.value; savePanelState(); });
+    refs.connectCss.addEventListener("click", chooseCssFile);
+    refs.saveCurrent.addEventListener("click", saveCurrentRuleToCssFile);
+    refs.copyCurrent.addEventListener("click", copyCurrentRule);
     refs.undo.addEventListener("click", undo);
     refs.pickBtn.addEventListener("click", () => setPicking(!state.picking));
     refs.elementList?.addEventListener("change", selectFromElementList);
@@ -1192,7 +1646,8 @@
       setPanelOpacity: value => applyPanelOpacity(Number(value)),
       centerPanel,
       resetPanelPosition,
-      resetAll
+      resetAll,
+      quickMode: enterQuickMode
     };
   }
 
