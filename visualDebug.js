@@ -12,11 +12,42 @@
   const STORAGE_KEY = "cubeTrainer.visualDebug.rules.v1";
   const PANEL_KEY = "cubeTrainer.visualDebug.panel.v1";
   const SNAPSHOT_KEY = "cubeTrainer.visualDebug.snapshot.v1";
-  const COMMITTED_CSS_KEY = "cubeTrainer.visualDebug.committedCss.v1";
+  const LEGACY_COMMITTED_CSS_KEY = "cubeTrainer.visualDebug.committedCss.v1";
   const STYLE_ID = "ct-vd-runtime-style";
-  const COMMITTED_STYLE_ID = "ct-vd-committed-style";
+  const LEGACY_COMMITTED_STYLE_ID = "ct-vd-committed-style";
   const INTERNAL_PREFIX = "ct-vd-";
   const MOBILE_MAX = 899;
+  const GENERATED_MOBILE_CSS_FILE = "debugMobileGenerated.css";
+
+  const GENERATED_SECTION_NAMES = [
+    "START SCREEN",
+    "TIMER",
+    "STATISTICS",
+    "SETTINGS",
+    "HISTORY / AO PANELS",
+    "OLL MENU",
+    "PLL MENU",
+    "ALGORITHM IMAGES",
+    "DIALOGS / MODALS"
+  ];
+
+  function generatedMobileCssTemplate() {
+    const sections = GENERATED_SECTION_NAMES.map((name) => `
+  /* CT-VD-SECTION:${name}:START */
+  /* CT-VD-SECTION:${name}:END */`).join("\n");
+    return `/* =====================================================
+   CUBE TRAINER – VISUAL DEBUG GENERATED MOBILE CSS
+
+   Tento soubor spravuje Visual Debug.
+   Ruční základní styly nechávej v debugMobile.css.
+   Tento soubor je načten až za ním a obsahuje pouze
+   finální pravidla vytvořená přes Visual Debug.
+===================================================== */
+
+@media (max-width: ${MOBILE_MAX}px) {${sections}
+}
+`;
+  }
 
   const state = {
     selected: null,
@@ -44,8 +75,9 @@
     quickPressInterval: null,
     quickPressPointerId: null,
     showMeasure: true,
-    cssFileHandle: null,
-    exportSection: "START SCREEN"
+    exportSection: "START SCREEN",
+    projectCssSource: "",
+    projectCssLoadedAt: 0
   };
 
   const propertyConfig = [
@@ -167,29 +199,9 @@
     return style;
   }
 
-  function ensureCommittedStyleElement() {
-    let style = document.getElementById(COMMITTED_STYLE_ID);
-    if (!style) {
-      style = document.createElement("style");
-      style.id = COMMITTED_STYLE_ID;
-      document.head.appendChild(style);
-    }
-    return style;
-  }
-
-  function renderCommittedCss() {
-    const css = localStorage.getItem(COMMITTED_CSS_KEY) || "";
-    ensureCommittedStyleElement().textContent = css;
-  }
-
-  function saveCommittedCss(cssText) {
-    localStorage.setItem(COMMITTED_CSS_KEY, cssText);
-    ensureCommittedStyleElement().textContent = cssText;
-  }
-
-  function clearCommittedCss() {
-    localStorage.removeItem(COMMITTED_CSS_KEY);
-    ensureCommittedStyleElement().textContent = "";
+  function clearLegacyCommittedMirror() {
+    localStorage.removeItem(LEGACY_COMMITTED_CSS_KEY);
+    document.getElementById(LEGACY_COMMITTED_STYLE_ID)?.remove();
   }
 
   function declarationsToCss(declarations) {
@@ -351,13 +363,371 @@
     return `\n\n  /* =====================================================\n     ${section}\n  ===================================================== */\n`;
   }
 
+
+  function findPrimaryMobileMediaBlock(fileText) {
+    const regex = new RegExp(
+      `@media\\s*\\(\\s*max-width\\s*:\\s*${MOBILE_MAX}px\\s*\\)\\s*\\{`,
+      "i"
+    );
+    const match = regex.exec(fileText);
+    if (!match) return null;
+
+    const open = fileText.indexOf("{", match.index);
+    if (open < 0) return null;
+    const close = findMatchingCssBrace(fileText, open);
+    if (close < 0) return null;
+
+    return {
+      start: match.index,
+      open,
+      contentStart: open + 1,
+      close,
+      end: close + 1
+    };
+  }
+
+  function findSectionBounds(fileText, section) {
+    const heading = findSectionHeading(fileText, section);
+    if (!heading) return null;
+
+    /*
+     * The next named section is the safest boundary. Do not limit this search
+     * by the currently parsed outer @media closing brace: an old malformed
+     * export may contain one orphan `}` before the next section, which would
+     * otherwise make the parser believe the mobile block ended too early.
+     */
+    const nextHeading = Object.keys(CSS_SECTION_ALIASES)
+      .map(name => findSectionHeading(fileText, name))
+      .filter(Boolean)
+      .filter(item => item.index > heading.index)
+      .sort((a, b) => a.index - b.index)[0] || null;
+
+    const mobileBlock = findPrimaryMobileMediaBlock(fileText);
+    const fallbackEnd = fileText.lastIndexOf("}");
+    const containerEnd = nextHeading?.index
+      ?? (fallbackEnd >= heading.end ? fallbackEnd : fileText.length);
+
+    return {
+      heading,
+      start: heading.end,
+      end: containerEnd,
+      containerEnd,
+      mobileBlock
+    };
+  }
+
+  function unwrapRedundantMobileMedia(sectionText) {
+    let text = sectionText;
+    let removed = 0;
+    const regex = new RegExp(
+      `@media\\s*\\(\\s*max-width\\s*:\\s*${MOBILE_MAX}px\\s*\\)\\s*\\{`,
+      "i"
+    );
+
+    for (let guard = 0; guard < 20; guard++) {
+      const match = regex.exec(text);
+      if (!match) break;
+
+      const open = text.indexOf("{", match.index);
+      if (open < 0) break;
+      const close = findMatchingCssBrace(text, open);
+      if (close < 0) break;
+
+      const inner = text.slice(open + 1, close);
+      text = text.slice(0, match.index) + "\n" + inner + "\n" + text.slice(close + 1);
+      removed++;
+    }
+
+    return { text, removed };
+  }
+
+  function removeOrphanSectionClosingBraces(sectionText) {
+    const removals = [];
+    let depth = 0;
+    let quote = "";
+
+    for (let i = 0; i < sectionText.length; i++) {
+      const char = sectionText[i];
+      const next = sectionText[i + 1];
+
+      if (quote) {
+        if (char === "\\") { i++; continue; }
+        if (char === quote) quote = "";
+        continue;
+      }
+
+      if (char === '"' || char === "'") {
+        quote = char;
+        continue;
+      }
+
+      if (char === "/" && next === "*") {
+        const commentEnd = sectionText.indexOf("*/", i + 2);
+        if (commentEnd < 0) break;
+        i = commentEnd + 1;
+        continue;
+      }
+
+      if (char === "{") {
+        depth++;
+      } else if (char === "}") {
+        if (depth > 0) depth--;
+        else removals.push(i);
+      }
+    }
+
+    if (depth > 0) {
+      throw new Error("Ve zvolené sekci chybí zavírací složená závorka");
+    }
+
+    if (!removals.length) return { text: sectionText, removed: 0 };
+
+    const removalSet = new Set(removals);
+    const cleaned = [...sectionText]
+      .filter((_, index) => !removalSet.has(index))
+      .join("");
+
+    return { text: cleaned, removed: removals.length };
+  }
+
+  function normalizeSectionStructure(fileText, section) {
+    const bounds = findSectionBounds(fileText, section);
+    if (!bounds) return { text: fileText, repairs: 0 };
+
+    let sectionText = fileText.slice(bounds.start, bounds.end);
+    const unwrapped = unwrapRedundantMobileMedia(sectionText);
+    sectionText = unwrapped.text;
+
+    const orphanFix = removeOrphanSectionClosingBraces(sectionText);
+    sectionText = orphanFix.text;
+
+    return {
+      text: fileText.slice(0, bounds.start) + sectionText + fileText.slice(bounds.end),
+      repairs: unwrapped.removed + orphanFix.removed
+    };
+  }
+
+  function assertBalancedCssBraces(cssText) {
+    let depth = 0;
+    let quote = "";
+
+    for (let i = 0; i < cssText.length; i++) {
+      const char = cssText[i];
+      const next = cssText[i + 1];
+
+      if (quote) {
+        if (char === "\\") { i++; continue; }
+        if (char === quote) quote = "";
+        continue;
+      }
+
+      if (char === '"' || char === "'") {
+        quote = char;
+        continue;
+      }
+
+      if (char === "/" && next === "*") {
+        const commentEnd = cssText.indexOf("*/", i + 2);
+        if (commentEnd < 0) {
+          throw new Error("CSS obsahuje neukončený komentář");
+        }
+        i = commentEnd + 1;
+        continue;
+      }
+
+      if (char === "{") depth++;
+      if (char === "}") {
+        depth--;
+        if (depth < 0) {
+          throw new Error("CSS obsahuje přebytečnou zavírací složenou závorku");
+        }
+      }
+    }
+
+    if (depth !== 0) {
+      throw new Error("CSS nemá vyvážené složené závorky");
+    }
+  }
+
+  function stripCssComments(value) {
+    return String(value || "").replace(/\/\*[\s\S]*?\*\//g, "");
+  }
+
+  function canonicalSelectorKey(selector) {
+    return stripCssComments(selector)
+      .trim()
+      .replace(/\s+/g, " ")
+      .replace(/\s*([>+~,:()])\s*/g, "$1");
+  }
+
+  function findMatchingCssBrace(text, openIndex, limit = text.length) {
+    let depth = 0;
+    let quote = "";
+
+    for (let i = openIndex; i < limit; i++) {
+      const char = text[i];
+      const next = text[i + 1];
+
+      if (quote) {
+        if (char === "\\") { i++; continue; }
+        if (char === quote) quote = "";
+        continue;
+      }
+
+      if (char === '"' || char === "'") { quote = char; continue; }
+      if (char === "/" && next === "*") {
+        const commentEnd = text.indexOf("*/", i + 2);
+        if (commentEnd < 0) return -1;
+        i = commentEnd + 1;
+        continue;
+      }
+
+      if (char === "{") depth++;
+      if (char === "}") {
+        depth--;
+        if (depth === 0) return i;
+      }
+    }
+    return -1;
+  }
+
+  function selectorStartInsidePrelude(prelude) {
+    let lastCommentEnd = 0;
+    const commentRegex = /\/\*[\s\S]*?\*\//g;
+    let match;
+    while ((match = commentRegex.exec(prelude))) lastCommentEnd = commentRegex.lastIndex;
+    let index = lastCommentEnd;
+    while (index < prelude.length && /\s/.test(prelude[index])) index++;
+    return index;
+  }
+
+  function collectLeafCssRules(text, rangeStart, rangeEnd, output) {
+    let cursor = rangeStart;
+
+    while (cursor < rangeEnd) {
+      let openBrace = -1;
+      let quote = "";
+
+      for (let i = cursor; i < rangeEnd; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (quote) {
+          if (char === "\\") { i++; continue; }
+          if (char === quote) quote = "";
+          continue;
+        }
+
+        if (char === '"' || char === "'") { quote = char; continue; }
+        if (char === "/" && next === "*") {
+          const commentEnd = text.indexOf("*/", i + 2);
+          if (commentEnd < 0 || commentEnd >= rangeEnd) return;
+          i = commentEnd + 1;
+          continue;
+        }
+
+        if (char === ";") cursor = i + 1;
+        if (char === "{") { openBrace = i; break; }
+      }
+
+      if (openBrace < 0) return;
+      const closeBrace = findMatchingCssBrace(text, openBrace, rangeEnd);
+      if (closeBrace < 0) return;
+
+      const prelude = text.slice(cursor, openBrace);
+      const cleanPrelude = stripCssComments(prelude).trim();
+
+      if (cleanPrelude.startsWith("@")) {
+        collectLeafCssRules(text, openBrace + 1, closeBrace, output);
+      } else if (cleanPrelude) {
+        const selectorOffset = selectorStartInsidePrelude(prelude);
+        output.push({
+          start: cursor + selectorOffset,
+          end: closeBrace + 1,
+          selector: cleanPrelude,
+          key: canonicalSelectorKey(cleanPrelude)
+        });
+      }
+
+      cursor = closeBrace + 1;
+    }
+  }
+
+  function extendRuleRangeOverManagedMarkers(text, range, sectionStart, sectionEnd) {
+    let start = range.start;
+    let end = range.end;
+
+    const beforeStart = Math.max(sectionStart, start - 1200);
+    const before = text.slice(beforeStart, start);
+    const startMarker = before.match(/\/\* CT-VD:[\s\S]*?\*\/\s*$/);
+    if (startMarker) start = beforeStart + startMarker.index;
+
+    const after = text.slice(end, Math.min(sectionEnd, end + 1200));
+    const endMarker = after.match(/^\s*\/\* \/CT-VD:[\s\S]*?\*\//);
+    if (endMarker) end += endMarker[0].length;
+
+    while (end < sectionEnd && (text[end] === "\n" || text[end] === "\r")) end++;
+    return { start, end };
+  }
+
+  function deduplicateRulesInSection(fileText, section) {
+    const normalized = normalizeSectionStructure(fileText, section);
+    fileText = normalized.text;
+
+    const bounds = findSectionBounds(fileText, section);
+    if (!bounds) {
+      return { text: fileText, removed: 0, structureRepairs: normalized.repairs };
+    }
+
+    const rules = [];
+    collectLeafCssRules(fileText, bounds.start, bounds.end, rules);
+
+    const bySelector = new Map();
+    for (const rule of rules) {
+      if (!rule.key) continue;
+      if (!bySelector.has(rule.key)) bySelector.set(rule.key, []);
+      bySelector.get(rule.key).push(rule);
+    }
+
+    const removals = [];
+    for (const duplicates of bySelector.values()) {
+      if (duplicates.length < 2) continue;
+      duplicates.sort((a, b) => a.start - b.start);
+      for (const duplicate of duplicates.slice(0, -1)) {
+        removals.push(extendRuleRangeOverManagedMarkers(
+          fileText,
+          duplicate,
+          bounds.start,
+          bounds.end
+        ));
+      }
+    }
+
+    removals.sort((a, b) => b.start - a.start);
+    let cleaned = fileText;
+    for (const removal of removals) {
+      cleaned = cleaned.slice(0, removal.start) + cleaned.slice(removal.end);
+    }
+
+    return {
+      text: cleaned,
+      removed: removals.length,
+      structureRepairs: normalized.repairs
+    };
+  }
+
   function replaceOrInsertRuleInSection(fileText, section, selector, ruleCss) {
+    const cleanup = deduplicateRulesInSection(fileText, section);
+    fileText = cleanup.text;
+    const duplicatesRemoved = cleanup.removed;
+    const structureRepairs = cleanup.structureRepairs || 0;
+
     let heading = findSectionHeading(fileText, section);
     let createdSection = false;
 
     if (!heading) {
-      const insertionPoint = fileText.lastIndexOf("}");
-      const safePoint = insertionPoint >= 0 ? insertionPoint : fileText.length;
+      const finalBrace = fileText.lastIndexOf("}");
+      const safePoint = finalBrace >= 0 ? finalBrace : fileText.length;
       const headingText = sectionHeadingComment(section);
       fileText = fileText.slice(0, safePoint) + headingText + "\n" + fileText.slice(safePoint);
       heading = findSectionHeading(fileText, section);
@@ -366,17 +736,27 @@
 
     if (!heading) throw new Error(`Sekci ${section} se nepodařilo vytvořit`);
 
-    const sectionStart = heading.end;
-    const nextSectionStart = findNextSectionStart(fileText, heading);
-    const finalBrace = fileText.lastIndexOf("}");
-    const sectionEnd = nextSectionStart >= 0
-      ? nextSectionStart
-      : (finalBrace >= sectionStart ? finalBrace : fileText.length);
+    const bounds = findSectionBounds(fileText, section);
+    if (!bounds) throw new Error(`Sekci ${section} se nepodařilo bezpečně načíst`);
+
+    const sectionStart = bounds.start;
+    const sectionEnd = bounds.end;
     const sectionText = fileText.slice(sectionStart, sectionEnd);
     const markerKey = encodeURIComponent(selector);
     const startMarker = `/* CT-VD:${markerKey} */`;
     const endMarker = `/* /CT-VD:${markerKey} */`;
     const managedBlock = `${startMarker}\n${ruleCss}\n${endMarker}`;
+
+    const finish = (updatedText, replaced) => {
+      assertBalancedCssBraces(updatedText);
+      return {
+        text: updatedText,
+        createdSection,
+        replaced,
+        duplicatesRemoved,
+        structureRepairs
+      };
+    };
 
     const markerStart = sectionText.indexOf(startMarker);
     if (markerStart >= 0) {
@@ -384,53 +764,107 @@
       if (markerEnd >= 0) {
         const after = markerEnd + endMarker.length;
         const updated = sectionText.slice(0, markerStart) + managedBlock + sectionText.slice(after);
-        return {
-          text: fileText.slice(0, sectionStart) + updated + fileText.slice(sectionEnd),
-          createdSection,
-          replaced: true
-        };
+        return finish(
+          fileText.slice(0, sectionStart) + updated + fileText.slice(sectionEnd),
+          true
+        );
       }
     }
 
-    const selectorIndex = sectionText.indexOf(selector);
-    if (selectorIndex >= 0) {
-      let blockStart = sectionText.lastIndexOf("}", selectorIndex);
-      blockStart = blockStart < 0 ? 0 : blockStart + 1;
-      while (blockStart < selectorIndex && /\s/.test(sectionText[blockStart])) blockStart++;
-      const openBrace = sectionText.indexOf("{", selectorIndex);
-      if (openBrace >= 0) {
-        let depth = 0;
-        let blockEnd = -1;
-        for (let i = openBrace; i < sectionText.length; i++) {
-          if (sectionText[i] === "{") depth++;
-          if (sectionText[i] === "}") {
-            depth--;
-            if (depth === 0) { blockEnd = i + 1; break; }
-          }
-        }
-        if (blockEnd > 0) {
-          const updated = sectionText.slice(0, blockStart) + managedBlock + sectionText.slice(blockEnd);
-          return {
-            text: fileText.slice(0, sectionStart) + updated + fileText.slice(sectionEnd),
-            createdSection,
-            replaced: true
-          };
-        }
-      }
+    const rules = [];
+    collectLeafCssRules(fileText, sectionStart, sectionEnd, rules);
+    const rawKey = canonicalSelectorKey(selector);
+    const boostedKey = canonicalSelectorKey(boostedSelector(selector));
+    const matchingRules = rules
+      .filter(rule => rule.key === rawKey || rule.key === boostedKey)
+      .sort((a, b) => a.start - b.start);
+
+    if (matchingRules.length) {
+      const target = extendRuleRangeOverManagedMarkers(
+        fileText,
+        matchingRules[matchingRules.length - 1],
+        sectionStart,
+        sectionEnd
+      );
+      const updatedText = fileText.slice(0, target.start) + managedBlock + fileText.slice(target.end);
+      return finish(updatedText, true);
     }
 
     const spacer = sectionText.trim() ? "\n\n" : "\n";
-    const updated = sectionText.replace(/\s*$/, "") + spacer + managedBlock + "\n\n";
+    const updatedSection = sectionText.replace(/\s*$/, "") + spacer + managedBlock + "\n\n";
+    return finish(
+      fileText.slice(0, sectionStart) + updatedSection + fileText.slice(sectionEnd),
+      false
+    );
+  }
+
+  function ensureGeneratedSectionMarkers(fileText) {
+    let text = String(fileText || "").trim();
+    if (!text || !text.includes("CT-VD-SECTION:")) {
+      return generatedMobileCssTemplate();
+    }
+
+    for (const section of GENERATED_SECTION_NAMES) {
+      const start = `/* CT-VD-SECTION:${section}:START */`;
+      const end = `/* CT-VD-SECTION:${section}:END */`;
+      if (!text.includes(start) || !text.includes(end)) {
+        return generatedMobileCssTemplate();
+      }
+    }
+
+    return text.endsWith("\n") ? text : `${text}\n`;
+  }
+
+  function replaceOrInsertGeneratedRule(fileText, section, selector, ruleCss) {
+    const text = ensureGeneratedSectionMarkers(fileText);
+    const sectionStartMarker = `/* CT-VD-SECTION:${section}:START */`;
+    const sectionEndMarker = `/* CT-VD-SECTION:${section}:END */`;
+    const sectionStart = text.indexOf(sectionStartMarker);
+    const sectionEnd = text.indexOf(sectionEndMarker, sectionStart + sectionStartMarker.length);
+
+    if (sectionStart < 0 || sectionEnd < 0) {
+      throw new Error(`Sekce ${section} nebyla v generovaném CSS nalezena`);
+    }
+
+    const contentStart = sectionStart + sectionStartMarker.length;
+    const sectionContent = text.slice(contentStart, sectionEnd);
+    const markerKey = encodeURIComponent(selector);
+    const startMarker = `/* CT-VD:${markerKey}:START */`;
+    const endMarker = `/* CT-VD:${markerKey}:END */`;
+    const managedBlock = `\n\n  ${startMarker}\n${indentCss(ruleCss)}\n  ${endMarker}\n`;
+
+    let cleaned = sectionContent;
+    let removed = 0;
+    while (true) {
+      const oldStart = cleaned.indexOf(startMarker);
+      if (oldStart < 0) break;
+      const oldEnd = cleaned.indexOf(endMarker, oldStart + startMarker.length);
+      if (oldEnd < 0) break;
+      const after = oldEnd + endMarker.length;
+      cleaned = cleaned.slice(0, oldStart) + cleaned.slice(after);
+      removed++;
+    }
+
+    cleaned = cleaned.replace(/^\s+|\s+$/g, "");
+    const updatedContent = cleaned
+      ? `\n\n${cleaned}\n${managedBlock}`
+      : managedBlock;
+
+    const updatedText = text.slice(0, contentStart) + updatedContent + text.slice(sectionEnd);
+    assertBalancedCssBraces(updatedText);
+
     return {
-      text: fileText.slice(0, sectionStart) + updated + fileText.slice(sectionEnd),
-      createdSection,
-      replaced: false
+      text: updatedText,
+      replaced: removed > 0,
+      duplicatesRemoved: Math.max(0, removed - 1),
+      structureRepairs: 0,
+      createdSection: false
     };
   }
 
   async function chooseCssFile() {
     if (!("showOpenFilePicker" in window)) {
-      toast("Přímý zápis zde není podporovaný – použij kopírování");
+      toast("Přímý zápis zde není podporovaný – použij bezpečné kopírování CSS");
       return null;
     }
     try {
@@ -438,118 +872,234 @@
         multiple: false,
         types: [{ description: "CSS soubor", accept: { "text/css": [".css"] } }]
       });
-      state.cssFileHandle = handle;
-      refs.cssFileStatus.textContent = handle.name || "CSS připojeno";
-      toast(`Připojeno: ${handle.name}`);
+      toast(`Vybráno: ${handle.name}`);
       return handle;
     } catch (error) {
-      if (error?.name !== "AbortError") toast("Soubor se nepodařilo připojit");
+      if (error?.name !== "AbortError") toast("Soubor se nepodařilo vybrat");
       return null;
     }
   }
 
-
-
-function reloadConnectedDebugStylesheet(expectedSelector = "", expectedCssText = "") {
-  const stylesheet = Array.from(
-    document.querySelectorAll('link[rel="stylesheet"]')
-  ).find((link) => {
-    const href = link.getAttribute("href") || "";
-    return href.includes("debugMobile.css");
-  });
-
-  if (!stylesheet) {
-    return Promise.resolve({ reloaded: false, servedMatches: false });
+  function findGeneratedMobileStylesheet() {
+    return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .find(link => (link.getAttribute("href") || "").includes(GENERATED_MOBILE_CSS_FILE)) || null;
   }
 
-  const currentHref = stylesheet.getAttribute("href") || "debugMobile.css";
-  const cleanHref = currentHref.split("?")[0];
-  const refreshedHref = `${cleanHref}?vd=${Date.now()}`;
+  async function readServedGeneratedMobileCss() {
+    const stylesheet = findGeneratedMobileStylesheet();
+    if (!stylesheet) return generatedMobileCssTemplate();
 
-  return new Promise((resolve) => {
-    let finished = false;
+    const href = stylesheet.getAttribute("href") || GENERATED_MOBILE_CSS_FILE;
+    const cleanHref = href.split("?")[0];
+    const response = await fetch(`${cleanHref}?vdsource=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) return generatedMobileCssTemplate();
+    return ensureGeneratedSectionMarkers(await response.text());
+  }
 
-    const finish = async () => {
-      if (finished) return;
-      finished = true;
-      stylesheet.removeEventListener("load", finish);
-      stylesheet.removeEventListener("error", finish);
+  function findDebugMobileStylesheet() {
+    return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .find(link => (link.getAttribute("href") || "").includes("debugMobile.css")) || null;
+  }
 
-      let servedMatches = false;
-      if (expectedSelector) {
-        try {
-          const response = await fetch(`${cleanHref}?vdcheck=${Date.now()}`, { cache: "no-store" });
-          const servedCss = await response.text();
-          const marker = `/* CT-VD:${encodeURIComponent(expectedSelector)} */`;
-          const normalizedServed = servedCss.trim().replace(/\r\n/g, "\n");
-          const normalizedExpected = String(expectedCssText).trim().replace(/\r\n/g, "\n");
-          servedMatches = response.ok && (
-            normalizedExpected
-              ? normalizedServed === normalizedExpected
-              : servedCss.includes(marker)
-          );
-        } catch (_) {
-          servedMatches = false;
-        }
+  async function readServedDebugMobileCss() {
+    const stylesheet = findDebugMobileStylesheet();
+    if (!stylesheet) throw new Error("debugMobile.css není v index.html načten");
+
+    const href = stylesheet.getAttribute("href") || "debugMobile.css";
+    const cleanHref = href.split("?")[0];
+    const response = await fetch(`${cleanHref}?vdsource=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) throw new Error("Localhost nedokázal načíst debugMobile.css");
+    return await response.text();
+  }
+
+  async function refreshProjectCssSource() {
+    try {
+      state.projectCssSource = await readServedGeneratedMobileCss();
+      state.projectCssLoadedAt = Date.now();
+      return true;
+    } catch (error) {
+      console.error(error);
+      state.projectCssSource = "";
+      state.projectCssLoadedAt = 0;
+      return false;
+    }
+  }
+
+  function copyTextFallback(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.top = "0";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    let copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } catch (_) {
+      copied = false;
+    }
+    textarea.remove();
+    return copied;
+  }
+
+  async function copyTextRobust(text) {
+    if (copyTextFallback(text)) return true;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  async function buildUpdatedDebugMobileCss() {
+    if (!state.selector) throw new Error("Nejdřív vyber prvek");
+    const ruleCss = currentSelectorCss();
+    if (!ruleCss) throw new Error("Vybraný prvek nemá žádnou úpravu");
+
+    const original = state.projectCssSource || await readServedGeneratedMobileCss();
+    return replaceOrInsertGeneratedRule(
+      original,
+      state.exportSection,
+      state.selector,
+      ruleCss
+    );
+  }
+
+  async function copyUpdatedDebugMobileCss() {
+    const button = refs.copyProjectCss;
+    try {
+      if (button) {
+        button.disabled = true;
+        button.textContent = "Připravuji…";
       }
 
-      resolve({ reloaded: true, servedMatches });
-    };
+      if (!state.projectCssSource) {
+        const loaded = await refreshProjectCssSource();
+        if (!loaded) throw new Error("Nepodařilo se načíst debugMobile.css z localhostu");
+      }
 
-    stylesheet.addEventListener("load", finish);
-    stylesheet.addEventListener("error", finish);
-    stylesheet.setAttribute("href", refreshedHref);
+      const result = await buildUpdatedDebugMobileCss();
+      const copied = await copyTextRobust(result.text);
 
-    setTimeout(finish, 1500);
-  });
-}
+      if (!copied) {
+        downloadText(GENERATED_MOBILE_CSS_FILE, result.text);
+        toast("Schránka nebyla dostupná, proto se stáhl aktualizovaný debugMobileGenerated.css");
+        return;
+      }
 
+      const action = result.replaced ? "přepsaným" : "přidaným";
+      const cleanup = result.duplicatesRemoved
+        ? `, odstraněno duplicit: ${result.duplicatesRemoved}`
+        : "";
+      const repairs = result.structureRepairs
+        ? `, opraveno strukturálních chyb: ${result.structureRepairs}`
+        : "";
+      toast(`Celý debugMobileGenerated.css s ${action} prvkem je ve schránce${cleanup}${repairs}`);
+    } catch (error) {
+      console.error(error);
+      toast(error?.message || "Aktualizovaný CSS se nepodařilo zkopírovat");
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Kopírovat generovaný CSS";
+      }
+    }
+  }
 
+  async function downloadUpdatedDebugMobileCss() {
+    try {
+      const result = await buildUpdatedDebugMobileCss();
+      downloadText(GENERATED_MOBILE_CSS_FILE, result.text);
+      const cleanup = result.duplicatesRemoved
+        ? ` Odstraněno duplicit: ${result.duplicatesRemoved}.`
+        : "";
+      const repairs = result.structureRepairs
+        ? ` Opraveno strukturálních chyb: ${result.structureRepairs}.`
+        : "";
+      toast(`Aktualizovaný debugMobileGenerated.css byl stažen.${cleanup}${repairs}`);
+    } catch (error) {
+      console.error(error);
+      toast(error?.message || "Aktualizovaný CSS se nepodařilo stáhnout");
+    }
+  }
 
+  function reloadConnectedDebugStylesheet(expectedSelector = "", expectedCssText = "") {
+    const stylesheet = findDebugMobileStylesheet();
+    if (!stylesheet) return Promise.resolve({ reloaded: false, servedMatches: false });
+
+    const currentHref = stylesheet.getAttribute("href") || "debugMobile.css";
+    const cleanHref = currentHref.split("?")[0];
+    const refreshedHref = `${cleanHref}?vd=${Date.now()}`;
+
+    return new Promise((resolve) => {
+      let finished = false;
+
+      const finish = async () => {
+        if (finished) return;
+        finished = true;
+        stylesheet.removeEventListener("load", finish);
+        stylesheet.removeEventListener("error", finish);
+
+        let servedMatches = false;
+        if (expectedSelector) {
+          try {
+            const response = await fetch(`${cleanHref}?vdcheck=${Date.now()}`, { cache: "no-store" });
+            const servedCss = await response.text();
+            const marker = `/* CT-VD:${encodeURIComponent(expectedSelector)} */`;
+            servedMatches = response.ok && servedCss.includes(marker);
+          } catch (_) {
+            servedMatches = false;
+          }
+        }
+        resolve({ reloaded: true, servedMatches });
+      };
+
+      stylesheet.addEventListener("load", finish);
+      stylesheet.addEventListener("error", finish);
+      stylesheet.setAttribute("href", refreshedHref);
+      setTimeout(finish, 1500);
+    });
+  }
+
+  /*
+   * Přímý zápis ponecháváme pouze jako experimentální desktopovou funkci.
+   * Na Androidu může systémový picker předat kopii souboru mimo projekt Spck.
+   * Funkce proto nikdy nevytváří lokální CSS zrcadlo a nic nepředstírá.
+   */
   async function saveCurrentRuleToCssFile() {
     if (!state.selector) { toast("Nejdřív vyber prvek"); return; }
     const ruleCss = currentSelectorCss();
     if (!ruleCss) { toast("Vybraný prvek nemá žádnou úpravu"); return; }
-    const handle = state.cssFileHandle || await chooseCssFile();
-    if (!handle) {
-      await copyCurrentRule();
-      return;
-    }
+
+    const handle = await chooseCssFile();
+    if (!handle) return;
+
     try {
       const file = await handle.getFile();
       const original = await file.text();
-      const result = replaceOrInsertRuleInSection(original, state.exportSection, state.selector, ruleCss);
+      const result = replaceOrInsertRuleInSection(
+        original,
+        state.exportSection,
+        state.selector,
+        ruleCss
+      );
+
       const writable = await handle.createWritable();
       await writable.write(result.text);
       await writable.close();
 
-      /* Ověříme, že se skutečně změnil soubor vybraný přes Android picker. */
-      const verifiedFile = await handle.getFile();
-      const verifiedText = await verifiedFile.text();
-      if (verifiedText !== result.text) {
-        throw new Error("Vybraný CSS soubor se nepodařilo ověřit po zápisu");
-      }
-
-      /*
-       * Android/Spck může přes picker otevřít jinou kopii souboru, než jakou
-       * localhost právě servíruje. Uložené CSS proto zároveň zrcadlíme do
-       * samostatného trvalého style tagu. Reset debug pravidel toto zrcadlo
-       * nesmaže, takže uložená úprava po Reset všeho zůstane viditelná.
-       */
-      saveCommittedCss(verifiedText);
-
-      const reloadResult = await reloadConnectedDebugStylesheet(state.selector, verifiedText);
-
-      const action = result.replaced ? "Přepsáno" : "Uloženo";
-      const suffix = result.createdSection
-        ? " (sekce byla vytvořena)"
-        : "";
-
+      const reloadResult = await reloadConnectedDebugStylesheet(state.selector, result.text);
       if (reloadResult.servedMatches) {
-        clearCommittedCss();
-        toast(`${action} do ${state.exportSection}${suffix} a načteno z CSS`);
+        toast(`Projektový CSS byl zapsán a načten z ${state.exportSection}`);
       } else {
-        toast(`${action}${suffix}. Localhost používá jinou kopii; aktivní přes uložené zrcadlo`);
+        toast("Změnil se vybraný soubor, ale ne CSS servírovaný Spck");
       }
     } catch (error) {
       console.error(error);
@@ -900,6 +1450,7 @@ function reloadConnectedDebugStylesheet(expectedSelector = "", expectedCssText =
   }
 
   function resetAll() {
+    clearLegacyCommittedMirror();
     pushHistory();
     state.rules = { mobile: {}, desktop: {}, all: {} };
     saveRules();
@@ -1494,10 +2045,10 @@ function reloadConnectedDebugStylesheet(expectedSelector = "", expectedCssText =
               <option>SETTINGS</option><option>HISTORY / AO PANELS</option><option>OLL MENU</option>
               <option>PLL MENU</option><option>ALGORITHM IMAGES</option><option>DIALOGS / MODALS</option>
             </select>
-            <button id="ct-vd-connect-css" class="ct-vd-btn" type="button">Připojit CSS</button>
-            <button id="ct-vd-save-current" class="ct-vd-btn primary" type="button">Zapsat prvek</button>
-            <button id="ct-vd-copy-current" class="ct-vd-btn" type="button">Kopírovat prvek</button>
-            <small id="ct-vd-css-file-status">Soubor nepřipojen</small>
+            <button id="ct-vd-copy-project-css" class="ct-vd-btn primary" type="button">Kopírovat generovaný CSS</button>
+            <button id="ct-vd-download-project-css" class="ct-vd-btn" type="button">Stáhnout generovaný CSS</button>
+            <button id="ct-vd-copy-current" class="ct-vd-btn" type="button">Kopírovat jen prvek</button>
+            <small id="ct-vd-css-file-status">Bezpečný režim: upravuje se pouze debugMobileGenerated.css; ruční debugMobile.css zůstává beze změny.</small>
           </div>
           <input id="ct-vd-file" type="file" accept="application/json,.json" hidden>
         </section>
@@ -1554,8 +2105,8 @@ function reloadConnectedDebugStylesheet(expectedSelector = "", expectedCssText =
       resetPanelPosition: panel.querySelector("#ct-vd-reset-panel-position"),
       toggleMeasure: panel.querySelector("#ct-vd-toggle-measure"),
       exportSection: panel.querySelector("#ct-vd-export-section"),
-      connectCss: panel.querySelector("#ct-vd-connect-css"),
-      saveCurrent: panel.querySelector("#ct-vd-save-current"),
+      copyProjectCss: panel.querySelector("#ct-vd-copy-project-css"),
+      downloadProjectCss: panel.querySelector("#ct-vd-download-project-css"),
       copyCurrent: panel.querySelector("#ct-vd-copy-current"),
       cssFileStatus: panel.querySelector("#ct-vd-css-file-status"),
       undo: panel.querySelector("#ct-vd-undo"),
@@ -1643,8 +2194,8 @@ function reloadConnectedDebugStylesheet(expectedSelector = "", expectedCssText =
       savePanelState();
     });
     refs.exportSection.addEventListener("change", () => { state.exportSection = refs.exportSection.value; savePanelState(); });
-    refs.connectCss.addEventListener("click", chooseCssFile);
-    refs.saveCurrent.addEventListener("click", saveCurrentRuleToCssFile);
+    refs.copyProjectCss.addEventListener("click", copyUpdatedDebugMobileCss);
+    refs.downloadProjectCss.addEventListener("click", downloadUpdatedDebugMobileCss);
     refs.copyCurrent.addEventListener("click", copyCurrentRule);
     refs.undo.addEventListener("click", undo);
     refs.pickBtn.addEventListener("click", () => setPicking(!state.picking));
@@ -1728,12 +2279,13 @@ function reloadConnectedDebugStylesheet(expectedSelector = "", expectedCssText =
   }
 
   function init() {
-    renderCommittedCss();
+    clearLegacyCommittedMirror();
     renderRuntimeCss();
     buildPanel();
     restorePanelState();
     updateRuleInfo();
     unlockFromSecretClicks();
+    refreshProjectCssSource();
 
     /* Po startu nesmí být vybraný ani orámovaný žádný prvek.
        Výběr začne až po odemčení panelu a stisku „Vybrat prvek“. */
