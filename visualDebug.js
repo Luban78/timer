@@ -12,7 +12,9 @@
   const STORAGE_KEY = "cubeTrainer.visualDebug.rules.v1";
   const PANEL_KEY = "cubeTrainer.visualDebug.panel.v1";
   const SNAPSHOT_KEY = "cubeTrainer.visualDebug.snapshot.v1";
+  const COMMITTED_CSS_KEY = "cubeTrainer.visualDebug.committedCss.v1";
   const STYLE_ID = "ct-vd-runtime-style";
+  const COMMITTED_STYLE_ID = "ct-vd-committed-style";
   const INTERNAL_PREFIX = "ct-vd-";
   const MOBILE_MAX = 899;
 
@@ -163,6 +165,31 @@
       document.head.appendChild(style);
     }
     return style;
+  }
+
+  function ensureCommittedStyleElement() {
+    let style = document.getElementById(COMMITTED_STYLE_ID);
+    if (!style) {
+      style = document.createElement("style");
+      style.id = COMMITTED_STYLE_ID;
+      document.head.appendChild(style);
+    }
+    return style;
+  }
+
+  function renderCommittedCss() {
+    const css = localStorage.getItem(COMMITTED_CSS_KEY) || "";
+    ensureCommittedStyleElement().textContent = css;
+  }
+
+  function saveCommittedCss(cssText) {
+    localStorage.setItem(COMMITTED_CSS_KEY, cssText);
+    ensureCommittedStyleElement().textContent = cssText;
+  }
+
+  function clearCommittedCss() {
+    localStorage.removeItem(COMMITTED_CSS_KEY);
+    ensureCommittedStyleElement().textContent = "";
   }
 
   function declarationsToCss(declarations) {
@@ -423,7 +450,7 @@
 
 
 
-function reloadConnectedDebugStylesheet() {
+function reloadConnectedDebugStylesheet(expectedSelector = "", expectedCssText = "") {
   const stylesheet = Array.from(
     document.querySelectorAll('link[rel="stylesheet"]')
   ).find((link) => {
@@ -432,7 +459,7 @@ function reloadConnectedDebugStylesheet() {
   });
 
   if (!stylesheet) {
-    return Promise.resolve(false);
+    return Promise.resolve({ reloaded: false, servedMatches: false });
   }
 
   const currentHref = stylesheet.getAttribute("href") || "debugMobile.css";
@@ -440,15 +467,40 @@ function reloadConnectedDebugStylesheet() {
   const refreshedHref = `${cleanHref}?vd=${Date.now()}`;
 
   return new Promise((resolve) => {
-    const onLoad = () => {
-      stylesheet.removeEventListener("load", onLoad);
-      resolve(true);
+    let finished = false;
+
+    const finish = async () => {
+      if (finished) return;
+      finished = true;
+      stylesheet.removeEventListener("load", finish);
+      stylesheet.removeEventListener("error", finish);
+
+      let servedMatches = false;
+      if (expectedSelector) {
+        try {
+          const response = await fetch(`${cleanHref}?vdcheck=${Date.now()}`, { cache: "no-store" });
+          const servedCss = await response.text();
+          const marker = `/* CT-VD:${encodeURIComponent(expectedSelector)} */`;
+          const normalizedServed = servedCss.trim().replace(/\r\n/g, "\n");
+          const normalizedExpected = String(expectedCssText).trim().replace(/\r\n/g, "\n");
+          servedMatches = response.ok && (
+            normalizedExpected
+              ? normalizedServed === normalizedExpected
+              : servedCss.includes(marker)
+          );
+        } catch (_) {
+          servedMatches = false;
+        }
+      }
+
+      resolve({ reloaded: true, servedMatches });
     };
 
-    stylesheet.addEventListener("load", onLoad);
+    stylesheet.addEventListener("load", finish);
+    stylesheet.addEventListener("error", finish);
     stylesheet.setAttribute("href", refreshedHref);
 
-    setTimeout(() => resolve(true), 1000);
+    setTimeout(finish, 1500);
   });
 }
 
@@ -469,18 +521,36 @@ function reloadConnectedDebugStylesheet() {
       const result = replaceOrInsertRuleInSection(original, state.exportSection, state.selector, ruleCss);
       const writable = await handle.createWritable();
       await writable.write(result.text);
-await writable.close();
+      await writable.close();
 
-await reloadConnectedDebugStylesheet();
+      /* Ověříme, že se skutečně změnil soubor vybraný přes Android picker. */
+      const verifiedFile = await handle.getFile();
+      const verifiedText = await verifiedFile.text();
+      if (verifiedText !== result.text) {
+        throw new Error("Vybraný CSS soubor se nepodařilo ověřit po zápisu");
+      }
 
-const action = result.replaced ? "Přepsáno" : "Uloženo";
-const suffix = result.createdSection ?
-  " (sekce byla vytvořena)" :
-  "";
+      /*
+       * Android/Spck může přes picker otevřít jinou kopii souboru, než jakou
+       * localhost právě servíruje. Uložené CSS proto zároveň zrcadlíme do
+       * samostatného trvalého style tagu. Reset debug pravidel toto zrcadlo
+       * nesmaže, takže uložená úprava po Reset všeho zůstane viditelná.
+       */
+      saveCommittedCss(verifiedText);
 
-toast(`${action} do ${state.exportSection}${suffix} a znovu načteno`);
-      
-      
+      const reloadResult = await reloadConnectedDebugStylesheet(state.selector, verifiedText);
+
+      const action = result.replaced ? "Přepsáno" : "Uloženo";
+      const suffix = result.createdSection
+        ? " (sekce byla vytvořena)"
+        : "";
+
+      if (reloadResult.servedMatches) {
+        clearCommittedCss();
+        toast(`${action} do ${state.exportSection}${suffix} a načteno z CSS`);
+      } else {
+        toast(`${action}${suffix}. Localhost používá jinou kopii; aktivní přes uložené zrcadlo`);
+      }
     } catch (error) {
       console.error(error);
       toast(error?.message || "Přímý zápis selhal");
@@ -1658,6 +1728,7 @@ toast(`${action} do ${state.exportSection}${suffix} a znovu načteno`);
   }
 
   function init() {
+    renderCommittedCss();
     renderRuntimeCss();
     buildPanel();
     restorePanelState();
