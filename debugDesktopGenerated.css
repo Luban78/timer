@@ -1,4 +1,89 @@
-start-screen__logo:END */
+/* Cube Trainer – Visual Debug generated DESKTOP CSS */
+@media (min-width: 1200px) {
+  /* CT-VD-SECTION:START SCREEN:START */
+
+/* CT-VD:button.start-mode-btn.start-mode-btn--smart%3Anth-of-type(1)%20%3E%20span:START */
+  :is(#ct-vd-specificity-a, button.start-mode-btn.start-mode-btn--smart:nth-of-type(1) > span):is(#ct-vd-specificity-b, button.start-mode-btn.start-mode-btn--smart:nth-of-type(1) > span) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    font-size: 27px !important;
+    width: 183px !important;
+    translate: 72px -3px !important;
+  }
+  /* CT-VD:button.start-mode-btn.start-mode-btn--smart%3Anth-of-type(1)%20%3E%20span:END */
+
+
+  /* CT-VD:%23btn:START */
+  :is(#ct-vd-specificity-a, #btn):is(#ct-vd-specificity-b, #btn) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23btn:END */
+
+
+  /* CT-VD:button.start-mode-btn.start-mode-btn--normal%3Anth-of-type(2)%20%3E%20span:START */
+  :is(#ct-vd-specificity-a, button.start-mode-btn.start-mode-btn--normal:nth-of-type(2) > span):is(#ct-vd-specificity-b, button.start-mode-btn.start-mode-btn--normal:nth-of-type(2) > span) {
+    width: 330px !important;
+    font-size: 27px !important;
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 57px -3px !important;
+  }
+  /* CT-VD:button.start-mode-btn.start-mode-btn--normal%3Anth-of-type(2)%20%3E%20span:END */
+
+
+  /* CT-VD:button.start-mode-btn.start-mode-btn--smart%3Anth-of-type(1)%20%3E%20svg.start-mode-btn__icon%20%3E%20path:START */
+  :is(#ct-vd-specificity-a, button.start-mode-btn.start-mode-btn--smart:nth-of-type(1) > svg.start-mode-btn__icon > path):is(#ct-vd-specificity-b, button.start-mode-btn.start-mode-btn--smart:nth-of-type(1) > svg.start-mode-btn__icon > path) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0px 1px !important;
+    scale: 0.9 !important;
+  }
+  /* CT-VD:button.start-mode-btn.start-mode-btn--smart%3Anth-of-type(1)%20%3E%20svg.start-mode-btn__icon%20%3E%20path:END */
+
+
+  /* CT-VD:%23btn%20.start-mode-btn__icon:START */
+  :is(#ct-vd-specificity-a, #btn .start-mode-btn__icon):is(#ct-vd-specificity-b, #btn .start-mode-btn__icon) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23btn%20.start-mode-btn__icon:END */
+
+
+  /* CT-VD:button.start-mode-btn.start-mode-btn--normal%3Anth-of-type(2)%20%3E%20svg.start-mode-btn__icon%20%3E%20path:START */
+  :is(#ct-vd-specificity-a, button.start-mode-btn.start-mode-btn--normal:nth-of-type(2) > svg.start-mode-btn__icon > path):is(#ct-vd-specificity-b, button.start-mode-btn.start-mode-btn--normal:nth-of-type(2) > svg.start-mode-btn__icon > path) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    scale: 0.9 !important;
+  }
+  /* CT-VD:button.start-mode-btn.start-mode-btn--normal%3Anth-of-type(2)%20%3E%20svg.start-mode-btn__icon%20%3E%20path:END */
+
+
+  /* CT-VD:%23normalCubeBtn%20.start-mode-btn__icon:START */
+  :is(#ct-vd-specificity-a, #normalCubeBtn .start-mode-btn__icon):is(#ct-vd-specificity-b, #normalCubeBtn .start-mode-btn__icon) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23normalCubeBtn%20.start-mode-btn__icon:END */
+
+
+  /* CT-VD:%23normalCubeBtn:START */
+  :is(#ct-vd-specificity-a, #normalCubeBtn):is(#ct-vd-specificity-b, #normalCubeBtn) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23normalCubeBtn:END */
+
+
+  /* CT-VD:%23start-screen%20.start-screen__logo:START */
+  :is(#ct-vd-specificity-a, #start-screen .start-screen__logo):is(#ct-vd-specificity-b, #start-screen .start-screen__logo) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0px -31px !important;
+    scale: 1.23 !important;
+  }
+  /* CT-VD:%23start-screen%20.start-screen__logo:END */
 
 
   /* CT-VD:%23start-screen%20.start-screen__content:START */
@@ -23,4 +108,4 @@ start-screen__logo:END */
   /* CT-VD-SECTION:ALGORITHM IMAGES:END */
   /* CT-VD-SECTION:DIALOGS / MODALS:START */
   /* CT-VD-SECTION:DIALOGS / MODALS:END */
-
+}
