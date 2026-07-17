@@ -91,6 +91,53 @@
     overflow: visible !important;
   }
   /* CT-VD:%23start-screen%20.start-screen__content:END */
+
+
+  /* CT-VD:%23history:START */
+  :is(#ct-vd-specificity-a, #history):is(#ct-vd-specificity-b, #history) {
+    z-index: 20 !important;
+    overflow: visible !important;
+    height: 411px !important;
+    min-height: 614px !important;
+    max-width: 716px !important;
+    translate: 0px -4px !important;
+    scale: 0.98 !important;
+  }
+  /* CT-VD:%23history:END */
+
+
+  /* CT-VD:%23main-layout:START */
+  :is(#ct-vd-specificity-a, #main-layout):is(#ct-vd-specificity-b, #main-layout) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23main-layout:END */
+
+
+  /* CT-VD:%23history-list:START */
+  :is(#ct-vd-specificity-a, #history-list):is(#ct-vd-specificity-b, #history-list) {
+    max-width: 215px !important;
+    min-height: 602px !important;
+  }
+  /* CT-VD:%23history-list:END */
+
+
+  /* CT-VD:div.alg-move-line%3Anth-of-type(1):START */
+  :is(#ct-vd-specificity-a, div.alg-move-line:nth-of-type(1)):is(#ct-vd-specificity-b, div.alg-move-line:nth-of-type(1)) {
+    font-size: 17px !important;
+    overflow: visible !important;
+  }
+  /* CT-VD:div.alg-move-line%3Anth-of-type(1):END */
+
+
+  /* CT-VD:.alg-move-line%20span:START */
+  :is(#ct-vd-specificity-a, .alg-move-line span):is(#ct-vd-specificity-b, .alg-move-line span) {
+    font-size: 30px !important;
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: -4px 0px !important;
+  }
+  /* CT-VD:.alg-move-line%20span:END */
 /* CT-VD-SECTION:START SCREEN:END */
   /* CT-VD-SECTION:TIMER:START */
   /* CT-VD-SECTION:TIMER:END */
@@ -109,3 +156,4 @@
   /* CT-VD-SECTION:DIALOGS / MODALS:START */
   /* CT-VD-SECTION:DIALOGS / MODALS:END */
 }
+
