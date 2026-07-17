@@ -1,7 +1,12 @@
-/* Cube Trainer – Visual Debug generated DESKTOP CSS */
-@media (min-width: 1200px) {
-  /* CT-VD-SECTION:START SCREEN:START */
-  /* CT-VD-SECTION:START SCREEN:END */
+start-screen__logo:END */
+
+
+  /* CT-VD:%23start-screen%20.start-screen__content:START */
+  :is(#ct-vd-specificity-a, #start-screen .start-screen__content):is(#ct-vd-specificity-b, #start-screen .start-screen__content) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23start-screen%20.start-screen__content:END */
+/* CT-VD-SECTION:START SCREEN:END */
   /* CT-VD-SECTION:TIMER:START */
   /* CT-VD-SECTION:TIMER:END */
   /* CT-VD-SECTION:STATISTICS:START */
@@ -18,4 +23,4 @@
   /* CT-VD-SECTION:ALGORITHM IMAGES:END */
   /* CT-VD-SECTION:DIALOGS / MODALS:START */
   /* CT-VD-SECTION:DIALOGS / MODALS:END */
-}
+
