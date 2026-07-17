@@ -1,0 +1,30 @@
+/* Cube Trainer – finální tabletové úpravy */
+@media (min-width: 900px) and (max-width: 1199px) {
+  body.start-screen-active { min-height:100dvh; overflow:hidden; background:#000403; }
+  body.start-screen-active #globalMenuBtn,
+  body.start-screen-active #screen-menu-dropdown,
+  body.start-screen-active #screen-top-strip,
+  body.start-screen-active #main-layout { display:none !important; }
+  .start-screen { display:none; }
+  body.start-screen-active .start-screen {
+    position:fixed; inset:0; z-index:10000; display:flex; justify-content:center; align-items:center;
+    overflow:auto; padding:28px;
+    background:
+      linear-gradient(rgba(0,230,118,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,230,118,.035) 1px, transparent 1px),
+      radial-gradient(circle at 50% 30%, rgba(0,230,118,.12), transparent 38%);
+    background-size:48px 48px,48px 48px,auto;
+  }
+  .start-screen__content { width:min(100%,520px); display:flex; flex-direction:column; align-items:center; gap:18px; }
+  .start-screen__logo { width:250px; aspect-ratio:1; object-fit:contain; filter:drop-shadow(0 0 24px rgba(0,255,140,.32)); }
+  .start-screen__heading { text-align:center; }
+  .start-screen__heading h1 { margin:0; font-size:58px; line-height:.9; font-weight:900; letter-spacing:.035em; }
+  .start-screen__heading h1 span,.start-screen__heading h1 strong { display:block; }
+  .start-screen__heading h1 span { color:#f4f7f6; }
+  .start-screen__heading h1 strong { margin-top:10px; color:#22ef73; }
+  .start-screen__heading p { margin:16px 0 0; font-size:16px; letter-spacing:.28em; white-space:nowrap; }
+  .start-screen__actions { width:100%; display:grid; gap:14px; margin-top:10px; }
+  .start-mode-btn { width:100% !important; min-height:92px; display:grid !important; grid-template-columns:62px 1fr; align-items:center; padding:16px 28px !important; border-radius:26px !important; font-size:30px !important; font-weight:850 !important; }
+  .start-mode-btn span { white-space:nowrap; }
+  .start-mode-btn__icon { width:52px; height:52px; justify-self:center; }
+}

@@ -18,7 +18,11 @@
   const LEGACY_COMMITTED_STYLE_ID = "ct-vd-committed-style";
   const INTERNAL_PREFIX = "ct-vd-";
   const MOBILE_MAX = 899;
-  const GENERATED_MOBILE_CSS_FILE = "debugMobileGenerated.css";
+  const GENERATED_CSS_FILES = {
+    mobile: "debugMobileGenerated.css",
+    tablet: "debugTabletGenerated.css",
+    desktop: "debugDesktopGenerated.css"
+  };
 
   const GENERATED_SECTION_NAMES = [
     "START SCREEN",
@@ -32,32 +36,29 @@
     "DIALOGS / MODALS"
   ];
 
-  function generatedMobileCssTemplate() {
-    const sections = GENERATED_SECTION_NAMES.map((name) => `
-  /* CT-VD-SECTION:${name}:START */
-  /* CT-VD-SECTION:${name}:END */`).join("\n");
-    return `/* =====================================================
-   CUBE TRAINER – VISUAL DEBUG GENERATED MOBILE CSS
-
-   Tento soubor spravuje Visual Debug.
-   Ruční základní styly nechávej v debugMobile.css.
-   Tento soubor je načten až za ním a obsahuje pouze
-   finální pravidla vytvořená přes Visual Debug.
-===================================================== */
-
-@media (max-width: ${MOBILE_MAX}px) {${sections}
-}
-`;
+  function generatedCssTemplate(profile = state?.profile || "mobile") {
+    const labels = {
+      mobile: "MOBILE ≤899",
+      tablet: "TABLET 900–1199",
+      desktop: "DESKTOP ≥1200"
+    };
+    const media = {
+      mobile: "@media (max-width: 899px)",
+      tablet: "@media (min-width: 900px) and (max-width: 1199px)",
+      desktop: "@media (min-width: 1200px)"
+    };
+    const sections = GENERATED_SECTION_NAMES.map(name => `  /* CT-VD-SECTION:${name}:START */\n  /* CT-VD-SECTION:${name}:END */`).join("\n\n");
+    return `/* Cube Trainer – Visual Debug generated ${labels[profile]} CSS */\n\n${media[profile]} {\n${sections}\n}\n`;
   }
 
   const state = {
     selected: null,
     selector: "",
-    profile: window.innerWidth <= MOBILE_MAX ? "mobile" : "desktop",
-    rules: { mobile: {}, desktop: {}, all: {} },
-    ruleSections: { mobile: {}, desktop: {}, all: {} },
-    baselineRules: { mobile: {}, desktop: {}, all: {} },
-    baselineSections: { mobile: {}, desktop: {}, all: {} },
+    profile: window.innerWidth <= 899 ? "mobile" : (window.innerWidth <= 1199 ? "tablet" : "desktop"),
+    rules: { mobile: {}, tablet: {}, desktop: {} },
+    ruleSections: { mobile: {}, tablet: {}, desktop: {} },
+    baselineRules: { mobile: {}, tablet: {}, desktop: {} },
+    baselineSections: { mobile: {}, tablet: {}, desktop: {} },
     picking: false,
     hoverTarget: null,
     panelOpen: false,
@@ -810,14 +811,14 @@
   function ensureGeneratedSectionMarkers(fileText) {
     let text = String(fileText || "").trim();
     if (!text || !text.includes("CT-VD-SECTION:")) {
-      return generatedMobileCssTemplate();
+      return generatedCssTemplate(state.profile);
     }
 
     for (const section of GENERATED_SECTION_NAMES) {
       const start = `/* CT-VD-SECTION:${section}:START */`;
       const end = `/* CT-VD-SECTION:${section}:END */`;
       if (!text.includes(start) || !text.includes(end)) {
-        return generatedMobileCssTemplate();
+        return generatedCssTemplate(state.profile);
       }
     }
 
@@ -889,20 +890,8 @@
     }
   }
 
-  function findGeneratedMobileStylesheet() {
-    return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-      .find(link => (link.getAttribute("href") || "").includes(GENERATED_MOBILE_CSS_FILE)) || null;
-  }
-
-  async function readServedGeneratedMobileCss() {
-    const stylesheet = findGeneratedMobileStylesheet();
-    if (!stylesheet) return generatedMobileCssTemplate();
-
-    const href = stylesheet.getAttribute("href") || GENERATED_MOBILE_CSS_FILE;
-    const cleanHref = href.split("?")[0];
-    const response = await fetch(`${cleanHref}?vdsource=${Date.now()}`, { cache: "no-store" });
-    if (!response.ok) return generatedMobileCssTemplate();
-    return ensureGeneratedSectionMarkers(await response.text());
+  function generatedFileName(profile = state.profile) {
+    return GENERATED_CSS_FILES[profile] || GENERATED_CSS_FILES.mobile;
   }
 
   function parseGeneratedDeclarations(blockText) {
@@ -979,12 +968,28 @@
       }
     }
 
-    state.baselineRules.mobile = JSON.parse(JSON.stringify(hydratedRules));
-    state.baselineSections.mobile = { ...hydratedSections };
-    state.rules.mobile = JSON.parse(JSON.stringify(hydratedRules));
-    state.ruleSections.mobile = { ...hydratedSections };
+    const profile = state.profile;
+    state.baselineRules[profile] = JSON.parse(JSON.stringify(hydratedRules));
+    state.baselineSections[profile] = { ...hydratedSections };
+    state.rules[profile] = JSON.parse(JSON.stringify(hydratedRules));
+    state.ruleSections[profile] = { ...hydratedSections };
     renderRuntimeCss();
     updateRuleInfo();
+  }
+
+  function findGeneratedStylesheet(profile = state.profile) {
+    const fileName = generatedFileName(profile);
+    return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .find(link => (link.getAttribute("href") || "").includes(fileName)) || null;
+  }
+
+  async function readServedGeneratedCss(profile = state.profile) {
+    const stylesheet = findGeneratedStylesheet(profile);
+    if (!stylesheet) return generatedCssTemplate(profile);
+    const href = stylesheet.getAttribute("href") || generatedFileName(profile);
+    const response = await fetch(`${href.split("?")[0]}?vd=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) return generatedCssTemplate(profile);
+    return await response.text();
   }
 
   function findDebugMobileStylesheet() {
@@ -1005,7 +1010,7 @@
 
   async function refreshProjectCssSource() {
     try {
-      state.projectCssSource = await readServedGeneratedMobileCss();
+      state.projectCssSource = await readServedGeneratedCss(state.profile);
       state.projectCssLoadedAt = Date.now();
       if (!totalEditedSelectors()) {
         hydrateRulesFromGeneratedCss(state.projectCssSource);
@@ -1013,7 +1018,7 @@
       return true;
     } catch (error) {
       console.error(error);
-      state.projectCssSource = generatedMobileCssTemplate();
+      state.projectCssSource = generatedCssTemplate(state.profile);
       state.projectCssLoadedAt = 0;
       return false;
     }
@@ -1057,22 +1062,21 @@
       throw new Error("V této relaci zatím není žádná úprava");
     }
 
-    let text = state.projectCssSource || await readServedGeneratedMobileCss();
+    let text = state.projectCssSource || await readServedGeneratedCss(state.profile);
     let replacedCount = 0;
     let addedCount = 0;
 
-    for (const profile of ["mobile", "all"]) {
-      for (const [selector, declarations] of Object.entries(state.rules[profile] || {})) {
-        if (!declarations || !Object.keys(declarations).length) continue;
-        const css = declarationsToCss(declarations);
-        if (!css) continue;
-        const ruleCss = `${boostedSelector(selector)} {\n${css}\n}`;
-        const section = state.ruleSections[profile]?.[selector] || "START SCREEN";
-        const result = replaceOrInsertGeneratedRule(text, section, selector, ruleCss);
-        text = result.text;
-        if (result.replaced) replacedCount++;
-        else addedCount++;
-      }
+    const profile = state.profile;
+    for (const [selector, declarations] of Object.entries(state.rules[profile] || {})) {
+      if (!declarations || !Object.keys(declarations).length) continue;
+      const css = declarationsToCss(declarations);
+      if (!css) continue;
+      const ruleCss = `${boostedSelector(selector)} {\n${css}\n}`;
+      const section = state.ruleSections[profile]?.[selector] || "START SCREEN";
+      const result = replaceOrInsertGeneratedRule(text, section, selector, ruleCss);
+      text = result.text;
+      if (result.replaced) replacedCount++;
+      else addedCount++;
     }
 
     assertBalancedCssBraces(text);
@@ -1105,7 +1109,7 @@
       const copied = await copyTextRobust(result.text);
 
       if (!copied) {
-        downloadText(GENERATED_MOBILE_CSS_FILE, result.text);
+        downloadText(generatedFileName(state.profile), result.text);
         toast("Schránka nebyla dostupná, proto se stáhl aktualizovaný debugMobileGenerated.css");
         return;
       }
@@ -1126,7 +1130,7 @@
     try {
       const result = await buildUpdatedDebugMobileCss();
       state.projectCssSource = result.text;
-      downloadText(GENERATED_MOBILE_CSS_FILE, result.text);
+      downloadText(generatedFileName(state.profile), result.text);
       toast(`Hotové CSS staženo — přidáno ${result.addedCount}, přepsáno ${result.replacedCount}`);
     } catch (error) {
       console.error(error);
@@ -1756,9 +1760,9 @@
   }
 
   function restorePanelState() {
-    state.profile = "mobile";
+    state.profile = window.innerWidth <= 899 ? "mobile" : (window.innerWidth <= 1199 ? "tablet" : "desktop");
     state.activeTab = "layout";
-    refs.profile.value = "mobile";
+    refs.profile.value = state.profile;
     activateTab("layout");
     state.showMeasure = true;
     state.exportSection = "START SCREEN";
@@ -2127,6 +2131,8 @@
             <button id="ct-vd-pick" class="ct-vd-btn primary" type="button">Vybrat prvek</button>
             <select id="ct-vd-profile" class="ct-vd-select" aria-label="Profil">
               <option value="mobile">Mobil ≤899</option>
+              <option value="tablet">Tablet 900–1199</option>
+              <option value="desktop">Desktop ≥1200</option>
             </select>
           </div>
         </section>
@@ -2348,8 +2354,8 @@
     refs.selector.addEventListener("keydown", event => { if (event.key === "Enter") resolveSelector(); });
 
     refs.profile.addEventListener("change", () => {
-      state.profile = "mobile";
-      refs.profile.value = "mobile";
+      state.profile = refs.profile.value;
+      preloadProjectCss();
       syncControls();
       updateRuleInfo();
     });

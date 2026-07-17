@@ -1,0 +1,30 @@
+/* Cube Trainer – finální desktopové úpravy */
+@media (min-width: 1200px) {
+  body.start-screen-active { min-height:100vh; overflow:hidden; background:#000403; }
+  body.start-screen-active #globalMenuBtn,
+  body.start-screen-active #screen-menu-dropdown,
+  body.start-screen-active #screen-top-strip,
+  body.start-screen-active #main-layout { display:none !important; }
+  .start-screen { display:none; }
+  body.start-screen-active .start-screen {
+    position:fixed; inset:0; z-index:10000; display:flex; justify-content:center; align-items:center;
+    overflow:auto; padding:24px;
+    background:
+      linear-gradient(rgba(0,230,118,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,230,118,.03) 1px, transparent 1px),
+      radial-gradient(circle at 50% 30%, rgba(0,230,118,.11), transparent 34%);
+    background-size:52px 52px,52px 52px,auto;
+  }
+  .start-screen__content { width:min(92vw,470px); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; }
+  .start-screen__logo { width:230px; aspect-ratio:1; object-fit:contain; border-radius:50%; filter:drop-shadow(0 0 24px rgba(0,255,140,.3)); }
+  .start-screen__heading { text-align:center; margin-top:-8px; }
+  .start-screen__heading h1 { margin:0; font-size:56px; line-height:.9; font-weight:900; letter-spacing:.035em; }
+  .start-screen__heading h1 span,.start-screen__heading h1 strong { display:block; }
+  .start-screen__heading h1 span { color:#f4f7f6; }
+  .start-screen__heading h1 strong { margin-top:9px; color:#22ef73; text-shadow:0 0 20px rgba(34,239,115,.35); }
+  .start-screen__heading p { margin:14px 0 0; color:rgba(255,255,255,.82); font-size:15px; letter-spacing:.28em; white-space:nowrap; }
+  .start-screen__actions { width:100%; display:grid; gap:12px; margin-top:8px; }
+  .start-mode-btn { width:100% !important; min-height:78px; margin:0 !important; padding:14px 24px !important; display:grid !important; grid-template-columns:58px 1fr; align-items:center; border-radius:22px !important; font-size:28px !important; font-weight:850 !important; line-height:1.05; text-align:left; }
+  .start-mode-btn span { white-space:nowrap; }
+  .start-mode-btn__icon { width:48px; height:48px; justify-self:center; }
+}
