@@ -1,0 +1,23 @@
+{
+  "name": "timer",
+  "version": "1.0.0",
+  "description": "Smart-cube training PWA for WCA, OLL and PLL pract ice.",
+  "main": "timer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Luban78/timer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Luban78/timer/issues"
+  },
+  "homepage": "https://github.com/Luban78/timer#readme",
+  "devDependencies": {
+    "stylelint": "^17.14.1"
+  }
+}
