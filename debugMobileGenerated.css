@@ -91,6 +91,153 @@
   /* CT-VD:%23history%20.history-panel-controls:END */
 
 
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
   /* CT-VD:button.start-mode-btn.start-mode-btn--smart%3Anth-of-type(1)%20%3E%20span:START */
   :is(#ct-vd-specificity-a, button.start-mode-btn.start-mode-btn--smart:nth-of-type(1) > span):is(#ct-vd-specificity-b, button.start-mode-btn.start-mode-btn--smart:nth-of-type(1) > span) {
     color: #ffffff !important;
@@ -265,6 +412,89 @@
     overflow: visible !important;
   }
   /* CT-VD:%23settings-reset-profile-btn:END */
+
+
+  /* CT-VD:%23app:START */
+  :is(#ct-vd-specificity-a, #app):is(#ct-vd-specificity-b, #app) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23app:END */
+
+
+  /* CT-VD:%23selectedAlg%20.alg-moves-row:START */
+  :is(#ct-vd-specificity-a, #selectedAlg .alg-moves-row):is(#ct-vd-specificity-b, #selectedAlg .alg-moves-row) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0px -5px !important;
+  }
+  /* CT-VD:%23selectedAlg%20.alg-moves-row:END */
+
+
+  /* CT-VD:%23selectedAlg:START */
+  :is(#ct-vd-specificity-a, #selectedAlg):is(#ct-vd-specificity-b, #selectedAlg) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23selectedAlg:END */
+
+
+  /* CT-VD:%23selectedAlg%20.alg-cube-placeholder:START */
+  :is(#ct-vd-specificity-a, #selectedAlg .alg-cube-placeholder):is(#ct-vd-specificity-b, #selectedAlg .alg-cube-placeholder) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0px -1px !important;
+  }
+  /* CT-VD:%23selectedAlg%20.alg-cube-placeholder:END */
+
+
+  /* CT-VD:%23selectedAlg%20.alg-picture:START */
+  :is(#ct-vd-specificity-a, #selectedAlg .alg-picture):is(#ct-vd-specificity-b, #selectedAlg .alg-picture) {
+    overflow: visible !important;
+    z-index: 20 !important;
+    translate: 0px -22px !important;
+  }
+  /* CT-VD:%23selectedAlg%20.alg-picture:END */
+
+
+  /* CT-VD:div.alg-move-line%3Anth-of-type(2):START */
+  :is(#ct-vd-specificity-a, div.alg-move-line:nth-of-type(2)):is(#ct-vd-specificity-b, div.alg-move-line:nth-of-type(2)) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0px -19px !important;
+  }
+  /* CT-VD:div.alg-move-line%3Anth-of-type(2):END */
+
+
+  /* CT-VD:div.alg-move-line%3Anth-of-type(1):START */
+  :is(#ct-vd-specificity-a, div.alg-move-line:nth-of-type(1)):is(#ct-vd-specificity-b, div.alg-move-line:nth-of-type(1)) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0px -17px !important;
+  }
+  /* CT-VD:div.alg-move-line%3Anth-of-type(1):END */
+
+
+  /* CT-VD:div.alg-move-line%3Anth-of-type(3):START */
+  :is(#ct-vd-specificity-a, div.alg-move-line:nth-of-type(3)):is(#ct-vd-specificity-b, div.alg-move-line:nth-of-type(3)) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0px -22px !important;
+  }
+  /* CT-VD:div.alg-move-line%3Anth-of-type(3):END */
+
+
+  /* CT-VD:div.alg-move-line%3Anth-of-type(4):START */
+  :is(#ct-vd-specificity-a, div.alg-move-line:nth-of-type(4)):is(#ct-vd-specificity-b, div.alg-move-line:nth-of-type(4)) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0px -26px !important;
+  }
+  /* CT-VD:div.alg-move-line%3Anth-of-type(4):END */
 /* CT-VD-SECTION:START SCREEN:END */
 
   /* CT-VD-SECTION:TIMER:START */
@@ -285,6 +515,16 @@
     overflow: visible !important;
   }
   /* CT-VD:%23history%20.history-panel-controls:END */
+
+
+  /* CT-VD:%23state-msg:START */
+  :is(#ct-vd-specificity-a, #state-msg):is(#ct-vd-specificity-b, #state-msg) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0px -52px !important;
+  }
+  /* CT-VD:%23state-msg:END */
 /* CT-VD-SECTION:TIMER:END */
 
   /* CT-VD-SECTION:STATISTICS:START */
