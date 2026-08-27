@@ -238,6 +238,93 @@
   
 
 
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+
+
   /* CT-VD:button.start-mode-btn.start-mode-btn--smart%3Anth-of-type(1)%20%3E%20span:START */
   :is(#ct-vd-specificity-a, button.start-mode-btn.start-mode-btn--smart:nth-of-type(1) > span):is(#ct-vd-specificity-b, button.start-mode-btn.start-mode-btn--smart:nth-of-type(1) > span) {
     color: #ffffff !important;
@@ -434,6 +521,10 @@
   /* CT-VD:%23selectedAlg:START */
   :is(#ct-vd-specificity-a, #selectedAlg):is(#ct-vd-specificity-b, #selectedAlg) {
     overflow: visible !important;
+    z-index: 20 !important;
+    height: 183px !important;
+    min-height: 365px !important;
+    translate: 0px -17px !important;
   }
   /* CT-VD:%23selectedAlg:END */
 
@@ -495,6 +586,13 @@
     translate: 0px -26px !important;
   }
   /* CT-VD:div.alg-move-line%3Anth-of-type(4):END */
+
+
+  /* CT-VD:%23algorithm-card-wrap:START */
+  :is(#ct-vd-specificity-a, #algorithm-card-wrap):is(#ct-vd-specificity-b, #algorithm-card-wrap) {
+    overflow: visible !important;
+  }
+  /* CT-VD:%23algorithm-card-wrap:END */
 /* CT-VD-SECTION:START SCREEN:END */
 
   /* CT-VD-SECTION:TIMER:START */
@@ -522,9 +620,20 @@
     position: relative !important;
     z-index: 20 !important;
     overflow: visible !important;
-    translate: 0px -52px !important;
+    min-height: 28px !important;
+    translate: 0px -69px !important;
   }
   /* CT-VD:%23state-msg:END */
+
+
+  /* CT-VD:%23tps:START */
+  :is(#ct-vd-specificity-a, #tps):is(#ct-vd-specificity-b, #tps) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0px -67px !important;
+  }
+  /* CT-VD:%23tps:END */
 /* CT-VD-SECTION:TIMER:END */
 
   /* CT-VD-SECTION:STATISTICS:START */
