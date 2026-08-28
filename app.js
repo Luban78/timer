@@ -387,8 +387,10 @@ function toggleColorPreset() {
 
 let pocetPokusuRelace = 0;
 let soucetCasuRelace = 0;
+let nejlepsiCasRelace = Infinity;
 let relacePocetEl = null;
 let relacePrumerEl = null;
+let relaceRekordEl = null;
 
 function formatCasRelace(cas) {
   const hodnota = Number(cas) || 0;
@@ -410,11 +412,18 @@ function vykresliStatistikyRelace() {
       : 0;
     relacePrumerEl.textContent = formatCasRelace(prumer);
   }
+
+  if (relaceRekordEl) {
+    relaceRekordEl.textContent = Number.isFinite(nejlepsiCasRelace)
+      ? formatCasRelace(nejlepsiCasRelace)
+      : "—";
+  }
 }
 
 function resetujStatistikyRelace() {
   pocetPokusuRelace = 0;
   soucetCasuRelace = 0;
+  nejlepsiCasRelace = Infinity;
   vykresliStatistikyRelace();
 }
 
@@ -424,6 +433,7 @@ function pridejPokusDoRelace(cas) {
 
   pocetPokusuRelace += 1;
   soucetCasuRelace += hodnota;
+  nejlepsiCasRelace = Math.min(nejlepsiCasRelace, hodnota);
   vykresliStatistikyRelace();
 }
 
@@ -615,7 +625,10 @@ function vytvorPanelRelace() {
       <div class="session-stat-label">Průměrný čas</div>
       <div id="session-average-time" class="session-stat-value">0.00</div>
     </div>
-    <div class="session-stat-box session-stat-empty" aria-hidden="true"></div>
+    <div class="session-stat-box">
+      <div class="session-stat-label">Rekord</div>
+      <div id="session-best-time" class="session-stat-value">—</div>
+    </div>
   `;
 
   /*
@@ -627,6 +640,7 @@ function vytvorPanelRelace() {
 
   relacePocetEl = document.getElementById("session-solve-count");
   relacePrumerEl = document.getElementById("session-average-time");
+  relaceRekordEl = document.getElementById("session-best-time");
   vykresliStatistikyRelace();
 
   window.addEventListener("resize", naplanujUmisteniPaneluRelace);
