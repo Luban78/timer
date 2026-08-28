@@ -3345,6 +3345,57 @@ body.screen-algstats #algorithm-stats-screen {
 }
 
 
-
 /* =========================================================
-   
+   CUBE TRAINER – KLIDNÁ HORNÍ VOLBA REŽIMU
+   Bez zeleného probliknutí při tapnutí na WCA / PLL / OLL /
+   Single / Random. Stav se mění pouze obsahem tlačítka.
+   ========================================================= */
+#puzzleModeBtn,
+#trainingModeBtn,
+#puzzleModeMenu button,
+#trainingModeMenu button,
+#ollBtn,
+#pllBtn,
+#singleModeBtn,
+#randomModeBtn {
+  -webkit-tap-highlight-color: transparent !important;
+  transition: none !important;
+}
+
+#puzzleModeBtn:active,
+#puzzleModeBtn:focus,
+#puzzleModeBtn:focus-visible,
+#trainingModeBtn:active,
+#trainingModeBtn:focus,
+#trainingModeBtn:focus-visible,
+body.puzzle-menu-open #puzzleModeBtn,
+body.training-menu-open #trainingModeBtn {
+  background: linear-gradient(180deg, rgba(0,230,118,.18), rgba(3,12,12,.95)) !important;
+  color: #fff !important;
+  border-color: rgba(0,230,118,.85) !important;
+  box-shadow: inset 0 0 20px rgba(0,230,118,.10), 0 0 14px rgba(0,230,118,.10) !important;
+  transform: none !important;
+  filter: none !important;
+  outline: none !important;
+}
+
+#puzzleModeMenu button:active,
+#puzzleModeMenu button:focus,
+#puzzleModeMenu button:focus-visible,
+#trainingModeMenu button:active,
+#trainingModeMenu button:focus,
+#trainingModeMenu button:focus-visible {
+  background: rgba(255,255,255,.055) !important;
+  color: #fff !important;
+  transform: none !important;
+  filter: none !important;
+  outline: none !important;
+}
+
+#ollBtn:active,
+#pllBtn:active,
+#singleModeBtn:active,
+#randomModeBtn:active {
+  transform: none !important;
+  filter: none !important;
+}

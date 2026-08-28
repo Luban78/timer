@@ -96,6 +96,35 @@ function vlozStylyVyberuPll() {
       opacity: .38 !important;
     }
 
+    #modalTitle.pll-selection-title {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 12px !important;
+    }
+
+    .pll-select-all-label {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      margin-left: auto !important;
+      color: #dfe8e4 !important;
+      font-size: 14px !important;
+      font-weight: 750 !important;
+      line-height: 1.1 !important;
+      white-space: nowrap !important;
+      cursor: pointer !important;
+      user-select: none !important;
+    }
+
+    .pll-select-all-label input {
+      width: 22px !important;
+      height: 22px !important;
+      margin: 0 !important;
+      accent-color: #00e676 !important;
+      flex: 0 0 auto !important;
+    }
+
     @media (max-width: 899px) {
       .algGrid.alg-pll-selection-grid {
         grid-auto-rows: 64px !important;
@@ -115,6 +144,16 @@ function vlozStylyVyberuPll() {
         width: 22px;
         height: 22px;
         font-size: 17px;
+      }
+
+      .pll-select-all-label {
+        font-size: 13px !important;
+        gap: 6px !important;
+      }
+
+      .pll-select-all-label input {
+        width: 20px !important;
+        height: 20px !important;
       }
     }
   `;
@@ -163,7 +202,15 @@ function ulozVyberRandomPll(vyber) {
   }
 }
 
-window.getSelectedRandomPllNames = function() {
+window.getSelectedRandomPllNames = function(nazvy = []) {
+  if (
+    !(window.__cubeTrainerRandomPllSelection instanceof Set) &&
+    Array.isArray(nazvy) &&
+    nazvy.length > 0
+  ) {
+    window.__cubeTrainerRandomPllSelection = nactiVyberRandomPll(nazvy);
+  }
+
   const vyber = window.__cubeTrainerRandomPllSelection;
   return vyber instanceof Set ? Array.from(vyber) : [];
 };
@@ -196,6 +243,7 @@ function otevriPllVyber({
   }
 
   const tlacitka = new Map();
+  let vybratVseCheckbox = null;
 
   const prekresliVyber = () => {
     tlacitka.forEach((button, name) => {
@@ -203,6 +251,13 @@ function otevriPllVyber({
       button.classList.toggle("is-pll-selected", selected);
       button.setAttribute("aria-pressed", selected ? "true" : "false");
     });
+
+    if (vybratVseCheckbox) {
+      const pocetVybranych = rozpracovanyVyber.size;
+      const vsechny = nazvyAlgoritmu.length > 0 && pocetVybranych === nazvyAlgoritmu.length;
+      vybratVseCheckbox.checked = vsechny;
+      vybratVseCheckbox.indeterminate = pocetVybranych > 0 && !vsechny;
+    }
   };
 
   const footer = document.createElement("div");
@@ -212,6 +267,50 @@ function otevriPllVyber({
   applyBtn.className = "alg-pll-apply-btn";
   applyBtn.type = "button";
   applyBtn.textContent = "VYBRAT";
+
+  const modalTitle = modal.querySelector("#modalTitle");
+  if (modalTitle) {
+    modalTitle.classList.remove("pll-selection-title");
+    modalTitle.textContent = "PLL";
+
+    // „Vybrat všechny“ má smysl jen pro Random, kde lze vybrat více PLL.
+    if (jeRandom) {
+      modalTitle.classList.add("pll-selection-title");
+
+      const titleText = document.createElement("span");
+      titleText.textContent = "PLL";
+
+      const label = document.createElement("label");
+      label.className = "pll-select-all-label";
+      label.setAttribute("aria-label", "Vybrat nebo odznačit všechny PLL");
+
+      vybratVseCheckbox = document.createElement("input");
+      vybratVseCheckbox.type = "checkbox";
+
+      const labelText = document.createElement("span");
+      labelText.textContent = "Vybrat všechny";
+
+      label.append(vybratVseCheckbox, labelText);
+      modalTitle.replaceChildren(titleText, label);
+
+      label.addEventListener("click", event => {
+        event.stopPropagation();
+      });
+
+      vybratVseCheckbox.addEventListener("change", event => {
+        event.stopPropagation();
+
+        if (vybratVseCheckbox.checked) {
+          nazvyAlgoritmu.forEach(name => rozpracovanyVyber.add(name));
+        } else {
+          rozpracovanyVyber.clear();
+        }
+
+        prekresliVyber();
+        applyBtn.disabled = rozpracovanyVyber.size === 0;
+      });
+    }
+  }
 
   Object.keys(algorithms).forEach(name => {
     const button = document.createElement("button");
@@ -365,6 +464,12 @@ export function openOLLMenu({
   onSelect
 }) {
   console.log("OPEN OLL MENU");
+
+  const modalTitle = modal?.querySelector("#modalTitle");
+  if (modalTitle) {
+    modalTitle.classList.remove("pll-selection-title");
+    modalTitle.textContent = "OLL";
+  }
 
   openAlgorithmMenu({
     algList,

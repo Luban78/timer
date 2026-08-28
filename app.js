@@ -925,8 +925,16 @@ function scheduleNextWcaScramble(delay = 1100) {
 function finishWcaSolve(manual = false, stopTime = performance.now()) {
   if (puzzleMode !== "wca" || !isSolving) return false;
 
+  clearTimeout(wcaNextScrambleTimer);
+  wcaNextScrambleTimer = null;
+
   finishSolve(stopTime, manual);
-  scheduleNextWcaScramble(manual ? 1400 : 950);
+
+  // Po WCA solve zůstaneme stát na výsledku.
+  // Další scramble spustí až tlačítko „Next Scramble“.
+  setTrainerPaused(true);
+  if (stateMsg) stateMsg.innerText = "PAUZA";
+
   return true;
 }
 
@@ -1929,7 +1937,7 @@ function showAchievement(title) {
 
 function pickRandomPLL() {
   const vybraneNazvy = typeof window.getSelectedRandomPllNames === "function"
-    ? window.getSelectedRandomPllNames()
+    ? window.getSelectedRandomPllNames(Object.keys(pllAlgs))
     : [];
 
   const platneVybrane = Array.isArray(vybraneNazvy)
@@ -1966,6 +1974,17 @@ function prepareNextTrainerRun() {
 
   resetTrainer(selectedAlg);
   prepareNext();
+}
+
+/*
+ * Po chybě necháváme stejný algoritmus.
+ * Random vybere nový PLL až po ÚSPĚŠNÉM dokončení, ne po chybě.
+ */
+function restartCurrentTrainerRun() {
+  resetTrainer(selectedAlg);
+  prepareNext();
+  renderAlgorithmPreview(selectedAlg);
+  setTrainerPaused(false);
 }
 
 function prepareNext() {
@@ -2636,7 +2655,9 @@ showMoveDebug({
   failSolve();
   
   setTimeout(() => {
-    prepareNextTrainerRun();
+    // CHYBA = zkusit znovu STEJNÝ algoritmus.
+    // V Random režimu se nový PLL losuje až po správném dokončení.
+    restartCurrentTrainerRun();
     trainerLocked = false;
     
     // Ještě jedna pojistka po resetu traineru
@@ -2731,7 +2752,10 @@ function manualStop() {
   }
 
   if (wasWcaSolve) {
-    scheduleNextWcaScramble(1400);
+    clearTimeout(wcaNextScrambleTimer);
+    wcaNextScrambleTimer = null;
+    setTrainerPaused(true);
+    if (stateMsg) stateMsg.innerText = "PAUZA";
   }
 }
 
