@@ -384,6 +384,279 @@ function toggleColorPreset() {
   localStorage.setItem("trainerColorPreset", next);
   applyColorPreset();
 }
+
+let pocetPokusuRelace = 0;
+let soucetCasuRelace = 0;
+let relacePocetEl = null;
+let relacePrumerEl = null;
+
+function formatCasRelace(cas) {
+  const hodnota = Number(cas) || 0;
+  if (hodnota < 60) return hodnota.toFixed(2);
+
+  const minuty = Math.floor(hodnota / 60);
+  const sekundy = hodnota - minuty * 60;
+  return `${minuty}:${sekundy.toFixed(2).padStart(5, "0")}`;
+}
+
+function vykresliStatistikyRelace() {
+  if (relacePocetEl) {
+    relacePocetEl.textContent = String(pocetPokusuRelace);
+  }
+
+  if (relacePrumerEl) {
+    const prumer = pocetPokusuRelace > 0
+      ? soucetCasuRelace / pocetPokusuRelace
+      : 0;
+    relacePrumerEl.textContent = formatCasRelace(prumer);
+  }
+}
+
+function resetujStatistikyRelace() {
+  pocetPokusuRelace = 0;
+  soucetCasuRelace = 0;
+  vykresliStatistikyRelace();
+}
+
+function pridejPokusDoRelace(cas) {
+  const hodnota = Number(cas);
+  if (!Number.isFinite(hodnota) || hodnota <= 0) return;
+
+  pocetPokusuRelace += 1;
+  soucetCasuRelace += hodnota;
+  vykresliStatistikyRelace();
+}
+
+function vlozStylyPaneluRelace() {
+  if (document.getElementById("session-stats-style")) return;
+
+  const style = document.createElement("style");
+  style.id = "session-stats-style";
+  style.textContent = `
+    #app {
+      position: relative !important;
+    }
+
+    #session-stats-panel {
+      width: 100%;
+      min-height: 54px;
+      margin: 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      overflow: hidden;
+      border: 1.5px solid #00d96b;
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(7, 24, 26, .96), rgba(2, 13, 14, .98));
+      box-shadow: inset 0 0 24px rgba(0, 230, 118, .04), 0 0 14px rgba(0, 230, 118, .08);
+      box-sizing: border-box;
+      z-index: 14;
+    }
+
+    #session-stats-panel .session-stat-box {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 8px 6px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    #session-stats-panel .session-stat-box + .session-stat-box {
+      border-left: 1px solid rgba(0, 230, 118, .45);
+    }
+
+    #session-stats-panel .session-stat-label {
+      color: rgba(255, 255, 255, .66);
+      font-size: clamp(12px, 3.3vw, 17px);
+      line-height: 1.05;
+      white-space: nowrap;
+    }
+
+    #session-stats-panel .session-stat-value {
+      color: #00e676;
+      font-size: clamp(25px, 7vw, 38px);
+      font-weight: 800;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #session-stats-panel .session-stat-empty {
+      min-height: 100%;
+    }
+
+    body:not(.screen-timer) #session-stats-panel,
+    body:not(.trainer-ready) #session-stats-panel {
+      display: none !important;
+    }
+
+    body.screen-timer.trainer-ready #session-stats-panel {
+      display: grid;
+    }
+
+    /* Zvýraznění tahu nesmí měnit rozměry notace. */
+    body.screen-timer #selectedAlg .alg-move,
+    body.screen-timer #selectedAlg .next-move,
+    body.screen-timer #selectedAlg .done-move,
+    body.screen-timer #selectedAlg .wrong-move {
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+    }
+
+    body.screen-timer #selectedAlg .next-move,
+    body.screen-timer #selectedAlg .done-move,
+    body.screen-timer #selectedAlg .wrong-move {
+      padding: 0 !important;
+      border-radius: 8px !important;
+    }
+
+    body.screen-timer #selectedAlg .next-move {
+      box-shadow: 0 0 0 .15em var(--yellow) !important;
+    }
+
+    body.screen-timer #selectedAlg .done-move {
+      box-shadow: 0 0 0 .15em var(--green) !important;
+    }
+
+    body.screen-timer #selectedAlg .wrong-move {
+      box-shadow: 0 0 0 .15em var(--red) !important;
+    }
+
+    @media (max-width: 899px) {
+      #session-stats-panel {
+        position: absolute !important;
+      }
+    }
+
+    @media (min-width: 900px) {
+      #session-stats-panel {
+        position: relative !important;
+        order: 32 !important;
+        min-height: 86px;
+        margin: 10px 0;
+      }
+
+      body.screen-timer .stats-grid {
+        order: 33 !important;
+      }
+
+      #session-stats-panel .session-stat-label {
+        font-size: 15px;
+      }
+
+      #session-stats-panel .session-stat-value {
+        font-size: 32px;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function umistiPanelRelace() {
+  const panel = document.getElementById("session-stats-panel");
+  const app = document.getElementById("app");
+  const statsGrid = app?.querySelector(":scope > .stats-grid");
+
+  if (!panel || !app || !tpsDiv) return;
+
+  if (!window.matchMedia("(max-width: 899px)").matches) {
+    panel.style.removeProperty("top");
+    panel.style.removeProperty("left");
+    panel.style.removeProperty("width");
+    panel.style.removeProperty("height");
+    return;
+  }
+
+  const appRect = app.getBoundingClientRect();
+  const tpsRect = tpsDiv.getBoundingClientRect();
+  const statsRect = statsGrid?.getBoundingClientRect();
+
+  if (!appRect.width || !tpsRect.width) return;
+
+  const top = tpsRect.bottom - appRect.top + 8;
+  const mezera = statsRect
+    ? Math.max(0, statsRect.top - tpsRect.bottom - 12)
+    : 74;
+  const vyska = Math.max(54, Math.min(78, mezera || 74));
+
+  panel.style.top = `${Math.round(top)}px`;
+  panel.style.left = `${Math.round(tpsRect.left - appRect.left)}px`;
+  panel.style.width = `${Math.round(tpsRect.width)}px`;
+  panel.style.height = `${Math.round(vyska)}px`;
+}
+
+function naplanujUmisteniPaneluRelace() {
+  requestAnimationFrame(() => {
+    umistiPanelRelace();
+    setTimeout(umistiPanelRelace, 80);
+  });
+}
+
+function vytvorPanelRelace() {
+  if (document.getElementById("session-stats-panel")) {
+    naplanujUmisteniPaneluRelace();
+    return;
+  }
+  if (!tpsDiv) return;
+
+  vlozStylyPaneluRelace();
+
+  const panel = document.createElement("div");
+  panel.id = "session-stats-panel";
+  panel.setAttribute("aria-label", "Statistiky aktuální tréninkové relace");
+  panel.innerHTML = `
+    <div class="session-stat-box">
+      <div class="session-stat-label">Počet složení</div>
+      <div id="session-solve-count" class="session-stat-value">0</div>
+    </div>
+    <div class="session-stat-box">
+      <div class="session-stat-label">Průměrný čas</div>
+      <div id="session-average-time" class="session-stat-value">0.00</div>
+    </div>
+    <div class="session-stat-box session-stat-empty" aria-hidden="true"></div>
+  `;
+
+  /*
+   * Panel je v DOM přesně za timerem. Na mobilu je absolutní, takže
+   * neodsune spodní Moves/TPS panel a využije volné místo vytvořené
+   * vizuálním posunem timeru ve Visual Debugu.
+   */
+  tpsDiv.insertAdjacentElement("afterend", panel);
+
+  relacePocetEl = document.getElementById("session-solve-count");
+  relacePrumerEl = document.getElementById("session-average-time");
+  vykresliStatistikyRelace();
+
+  window.addEventListener("resize", naplanujUmisteniPaneluRelace);
+
+  if (typeof ResizeObserver === "function") {
+    const observer = new ResizeObserver(naplanujUmisteniPaneluRelace);
+    observer.observe(tpsDiv);
+    const statsGrid = document.querySelector("#app > .stats-grid");
+    if (statsGrid) observer.observe(statsGrid);
+  }
+
+  if (document.body && typeof MutationObserver === "function") {
+    const observer = new MutationObserver(naplanujUmisteniPaneluRelace);
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"]
+    });
+  }
+
+  window.addEventListener("cube-trainer-random-pll-selection-changed", () => {
+    if (trainingMode === "random" && puzzleMode === "pll") {
+      resetujStatistikyRelace();
+      pickRandomPLL();
+      naplanujUmisteniPaneluRelace();
+    }
+  });
+
+  naplanujUmisteniPaneluRelace();
+}
+
 function setTrainerPaused(value) {
   trainerPaused = !!value;
 
@@ -699,6 +972,9 @@ function prepareWcaScramble() {
 }
 
 function setPuzzleMode(mode) {
+  if (mode !== puzzleMode) {
+    resetujStatistikyRelace();
+  }
   puzzleMode = mode;
   localStorage.setItem("puzzleMode", puzzleMode);
 
@@ -712,9 +988,20 @@ function setPuzzleMode(mode) {
 
 function setTrainingMode(mode) {
   if (mode !== "single" && mode !== "random") return;
+
+  const zmenenRezim = mode !== trainingMode;
+  if (zmenenRezim) {
+    resetujStatistikyRelace();
+  }
+
   trainingMode = mode;
   localStorage.setItem("trainingMode", trainingMode);
   updateTrainingButtons();
+
+  // Po zvolení Random se musí hned zobrazit jeden z vybraných PLL.
+  if (trainingMode === "random" && puzzleMode === "pll") {
+    pickRandomPLL();
+  }
 }
 
 function setupCompactControls() {
@@ -776,10 +1063,8 @@ function setupCompactControls() {
         const mode = btn.dataset.trainingMode;
         if (mode === "single") {
           setTrainingMode("single");
-          if (singleModeBtn) singleModeBtn.click();
         } else if (mode === "random") {
           setTrainingMode("random");
-          if (randomModeBtn) randomModeBtn.click();
         }
 
         closeCompactMenus();
@@ -794,17 +1079,19 @@ function setupCompactControls() {
 }
 
 function setupTrainingButtons() {
-  singleModeBtn.onclick = e => {
-    e.stopPropagation();
-    trainingMode = "single";
-    updateTrainingButtons();
-  };
+  if (singleModeBtn) {
+    singleModeBtn.onclick = e => {
+      e.stopPropagation();
+      setTrainingMode("single");
+    };
+  }
 
-  randomModeBtn.onclick = e => {
-    e.stopPropagation();
-    trainingMode = "random";
-    updateTrainingButtons();
-  };
+  if (randomModeBtn) {
+    randomModeBtn.onclick = e => {
+      e.stopPropagation();
+      setTrainingMode("random");
+    };
+  }
 
   updateTrainingButtons();
 }
@@ -1249,6 +1536,9 @@ function setupAlgorithmButtons() {
       selectedAlg,
       ollAlgs,
       onSelect: name => {
+        if (currentAlgorithmName !== name) {
+          resetujStatistikyRelace();
+        }
         currentAlgorithmName = name;
 
         selectedAlg.dataset.algName = name;
@@ -1289,7 +1579,11 @@ function setupAlgorithmButtons() {
       modal,
       selectedAlg,
       pllAlgs,
+      randomSelectionMode: trainingMode === "random",
       onSelect: name => {
+        if (currentAlgorithmName !== name) {
+          resetujStatistikyRelace();
+        }
         currentAlgorithmName = name;
 selectedAlg.dataset.algName = name;
 selectedAlg.dataset.algText = getActivePllAlg(name);
@@ -1620,7 +1914,20 @@ function showAchievement(title) {
 }
 
 function pickRandomPLL() {
-  const names = Object.keys(pllAlgs);
+  const vybraneNazvy = typeof window.getSelectedRandomPllNames === "function"
+    ? window.getSelectedRandomPllNames()
+    : [];
+
+  const platneVybrane = Array.isArray(vybraneNazvy)
+    ? vybraneNazvy.filter(name => Object.prototype.hasOwnProperty.call(pllAlgs, name))
+    : [];
+
+  const names = platneVybrane.length > 0
+    ? platneVybrane
+    : Object.keys(pllAlgs);
+
+  if (names.length === 0) return;
+
   const randomName = names[Math.floor(Math.random() * names.length)];
   
   currentAlgorithmName = randomName;
@@ -2487,6 +2794,14 @@ moveTimes = [];
 
   const isPB = finalTime < oldBest;
 
+  if (
+    puzzleMode !== "wca" &&
+    currentAlgorithmName &&
+    currentAlgorithmName !== "Nevybráno"
+  ) {
+    pridejPokusDoRelace(finalTime);
+  }
+
   saveSolve(finalTime, finalMoves, finalAvg);
   giveXP(10);
 
@@ -2653,6 +2968,7 @@ function initApp() {
   if (stateMsg) stateMsg.innerText = "Connect the cube";
 
   updateModeLabel();
+  vytvorPanelRelace();
 
   setupTrainingButtons();
   setupCompactControls();

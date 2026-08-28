@@ -2,6 +2,285 @@
    CUBE TRAINER – VÝBĚR PLL A OLL ALGORITMŮ
    ================================================== */
 
+const RANDOM_PLL_STORAGE_KEY = "cubeTrainer.randomPllSelection.v1";
+
+function vlozStylyVyberuPll() {
+  if (document.getElementById("pll-selection-style")) return;
+
+  const style = document.createElement("style");
+  style.id = "pll-selection-style";
+  style.textContent = `
+    .algGrid.alg-pll-selection-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      grid-auto-rows: 72px !important;
+      align-items: stretch !important;
+      gap: 12px !important;
+    }
+
+    .alg-pll-select-btn {
+      position: relative !important;
+      width: 100% !important;
+      height: 72px !important;
+      min-height: 72px !important;
+      max-height: 72px !important;
+      margin: 0 !important;
+      padding: 8px 38px 8px 14px !important;
+      box-sizing: border-box !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      overflow: hidden !important;
+      white-space: normal !important;
+      text-align: center !important;
+      text-overflow: ellipsis !important;
+      line-height: 1.08 !important;
+      font-size: clamp(16px, 4.4vw, 22px) !important;
+    }
+
+    .alg-pll-select-btn::after {
+      content: "";
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      width: 24px;
+      height: 24px;
+      transform: translateY(-50%) scale(.8);
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      background: transparent;
+      color: transparent;
+      font-size: 18px;
+      font-weight: 950;
+      line-height: 1;
+      opacity: 0;
+      transition: opacity .12s ease, transform .12s ease;
+      pointer-events: none;
+    }
+
+    .alg-pll-select-btn.is-pll-selected {
+      border-color: #00e676 !important;
+      box-shadow:
+        inset 0 0 24px rgba(0,230,118,.11),
+        0 0 12px rgba(0,230,118,.10) !important;
+    }
+
+    .alg-pll-select-btn.is-pll-selected::after {
+      content: "✓";
+      background: #00e676;
+      color: #062113;
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
+    }
+
+    .alg-pll-footer {
+      grid-column: 1 / -1;
+      position: sticky;
+      bottom: -1px;
+      z-index: 12;
+      padding-top: 10px;
+      background: linear-gradient(180deg, rgba(20,31,37,0), #141f25 34%);
+    }
+
+    .alg-pll-apply-btn {
+      width: 100% !important;
+      min-height: 58px !important;
+      height: 58px !important;
+      margin: 0 !important;
+      border-color: #00e676 !important;
+      color: #00e676 !important;
+      font-weight: 900 !important;
+    }
+
+    .alg-pll-apply-btn:disabled {
+      opacity: .38 !important;
+    }
+
+    @media (max-width: 899px) {
+      .algGrid.alg-pll-selection-grid {
+        grid-auto-rows: 64px !important;
+        gap: 10px !important;
+      }
+
+      .alg-pll-select-btn {
+        height: 64px !important;
+        min-height: 64px !important;
+        max-height: 64px !important;
+        padding: 7px 36px 7px 10px !important;
+        font-size: clamp(16px, 4.5vw, 21px) !important;
+      }
+
+      .alg-pll-select-btn::after {
+        right: 8px;
+        width: 22px;
+        height: 22px;
+        font-size: 17px;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+function nactiVyberRandomPll(nazvy) {
+  const povoleneNazvy = new Set(nazvy);
+
+  try {
+    const raw = localStorage.getItem(RANDOM_PLL_STORAGE_KEY);
+    const ulozene = raw ? JSON.parse(raw) : null;
+
+    if (Array.isArray(ulozene)) {
+      const platne = ulozene.filter(name => povoleneNazvy.has(name));
+      if (platne.length > 0) {
+        return new Set(platne);
+      }
+    }
+  } catch (error) {
+    console.warn("PLL Random: uložený výběr se nepodařilo načíst", error);
+  }
+
+  return new Set(nazvy);
+}
+
+function ziskejVyberRandomPll(nazvy) {
+  if (!(window.__cubeTrainerRandomPllSelection instanceof Set)) {
+    window.__cubeTrainerRandomPllSelection = nactiVyberRandomPll(nazvy);
+  }
+
+  return window.__cubeTrainerRandomPllSelection;
+}
+
+function ulozVyberRandomPll(vyber) {
+  window.__cubeTrainerRandomPllSelection = new Set(vyber);
+
+  try {
+    localStorage.setItem(
+      RANDOM_PLL_STORAGE_KEY,
+      JSON.stringify(Array.from(vyber))
+    );
+  } catch (error) {
+    console.warn("PLL Random: výběr se nepodařilo uložit", error);
+  }
+}
+
+window.getSelectedRandomPllNames = function() {
+  const vyber = window.__cubeTrainerRandomPllSelection;
+  return vyber instanceof Set ? Array.from(vyber) : [];
+};
+
+function otevriPllVyber({
+  algList,
+  modal,
+  selectedAlg,
+  algorithms,
+  onSelect,
+  randomSelectionMode
+}) {
+  vlozStylyVyberuPll();
+  algList.classList.add("alg-pll-selection-grid");
+
+  const nazvyAlgoritmu = Object.keys(algorithms);
+  const jeRandom = !!randomSelectionMode;
+
+  let rozpracovanyVyber;
+
+  if (jeRandom) {
+    rozpracovanyVyber = new Set(ziskejVyberRandomPll(nazvyAlgoritmu));
+  } else {
+    const aktivniNazev = selectedAlg?.dataset?.algName;
+    rozpracovanyVyber = new Set(
+      aktivniNazev && nazvyAlgoritmu.includes(aktivniNazev)
+        ? [aktivniNazev]
+        : []
+    );
+  }
+
+  const tlacitka = new Map();
+
+  const prekresliVyber = () => {
+    tlacitka.forEach((button, name) => {
+      const selected = rozpracovanyVyber.has(name);
+      button.classList.toggle("is-pll-selected", selected);
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+    });
+  };
+
+  const footer = document.createElement("div");
+  footer.className = "alg-pll-footer";
+
+  const applyBtn = document.createElement("button");
+  applyBtn.className = "alg-pll-apply-btn";
+  applyBtn.type = "button";
+  applyBtn.textContent = "VYBRAT";
+
+  Object.keys(algorithms).forEach(name => {
+    const button = document.createElement("button");
+    button.className = "algBtn alg-pll-select-btn";
+    button.type = "button";
+    button.textContent = name;
+    button.setAttribute("aria-label", jeRandom
+      ? `Zařadit ${name} do Random tréninku`
+      : `Vybrat ${name}`
+    );
+
+    button.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (jeRandom) {
+        if (rozpracovanyVyber.has(name)) {
+          rozpracovanyVyber.delete(name);
+        } else {
+          rozpracovanyVyber.add(name);
+        }
+      } else {
+        rozpracovanyVyber.clear();
+        rozpracovanyVyber.add(name);
+      }
+
+      prekresliVyber();
+      applyBtn.disabled = rozpracovanyVyber.size === 0;
+    });
+
+    tlacitka.set(name, button);
+    algList.appendChild(button);
+  });
+
+  applyBtn.disabled = rozpracovanyVyber.size === 0;
+
+  applyBtn.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (rozpracovanyVyber.size === 0) return;
+
+    if (jeRandom) {
+      ulozVyberRandomPll(rozpracovanyVyber);
+
+      window.dispatchEvent(
+        new CustomEvent("cube-trainer-random-pll-selection-changed", {
+          detail: {
+            selected: Array.from(rozpracovanyVyber)
+          }
+        })
+      );
+    } else {
+      const [name] = rozpracovanyVyber;
+      if (name && typeof onSelect === "function") {
+        onSelect(name);
+      }
+    }
+
+    modal.style.display = "none";
+  });
+
+  footer.appendChild(applyBtn);
+  algList.appendChild(footer);
+
+  prekresliVyber();
+  modal.style.display = "block";
+}
+
 function openAlgorithmMenu({
   algList,
   modal,
@@ -10,53 +289,41 @@ function openAlgorithmMenu({
   onSelect
 }) {
   if (!algList || !modal || !selectedAlg || !algorithms) {
-    console.warn(
-      "Algorithm menu: chybí prvek nebo databáze"
-    );
+    console.warn("Algorithm menu: chybí prvek nebo databáze");
     return;
   }
-  
+
   algList.innerHTML = "";
-  
-  Object.entries(algorithms).forEach(
-    ([name, value]) => {
-      const button =
-        document.createElement("button");
-      
-      button.className = "algBtn";
-      button.type = "button";
-      button.textContent = name;
-      
-      const algorithm =
-        typeof value === "string" ?
-        value :
-        (
-          value?.algorithm ||
-          value?.algorithms?.[0] ||
-          ""
-        );
-      
-      button.onclick = event => {
-        event.preventDefault();
-        event.stopPropagation();
-        
-        selectedAlg.textContent =
-          `${name}: ${algorithm}`;
-        
-        modal.style.display = "none";
-        
-        if (typeof onSelect === "function") {
-          onSelect(name);
-        }
-      };
-      
-      algList.appendChild(button);
-    }
-  );
-  
+  algList.classList.remove("alg-pll-selection-grid");
+
+  Object.entries(algorithms).forEach(([name, value]) => {
+    const button = document.createElement("button");
+    button.className = "algBtn";
+    button.type = "button";
+    button.textContent = name;
+
+    const algorithm =
+      typeof value === "string"
+        ? value
+        : (value?.algorithm || value?.algorithms?.[0] || "");
+
+    button.onclick = event => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      selectedAlg.textContent = `${name}: ${algorithm}`;
+      modal.style.display = "none";
+
+      if (typeof onSelect === "function") {
+        onSelect(name);
+      }
+    };
+
+    algList.appendChild(button);
+  });
+
   modal.style.display = "block";
 }
-
 
 /* ===== PLL ===== */
 
@@ -65,19 +332,28 @@ export function openPLLMenu({
   modal,
   selectedAlg,
   pllAlgs,
-  onSelect
+  onSelect,
+  randomSelectionMode = false
 }) {
   console.log("OPEN PLL MENU");
-  
-  openAlgorithmMenu({
+
+  if (!algList || !modal || !selectedAlg || !pllAlgs) {
+    console.warn("PLL menu: chybí prvek nebo databáze");
+    return;
+  }
+
+  algList.innerHTML = "";
+  algList.classList.remove("alg-pll-selection-grid");
+
+  otevriPllVyber({
     algList,
     modal,
     selectedAlg,
     algorithms: pllAlgs,
-    onSelect
+    onSelect,
+    randomSelectionMode
   });
 }
-
 
 /* ===== OLL ===== */
 
@@ -89,7 +365,7 @@ export function openOLLMenu({
   onSelect
 }) {
   console.log("OPEN OLL MENU");
-  
+
   openAlgorithmMenu({
     algList,
     modal,
