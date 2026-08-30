@@ -130,3 +130,21 @@
     margin: 5px auto 10px !important;
   }
 }
+
+
+/* WCA: obrázek je skrytý, ale stejné místo se zachová, aby se scramble neposunul nahoru. */
+#selectedAlg .alg-picture-wca-spacer {
+  width: 106px !important;
+  height: 45px !important;
+  margin: 0 auto 4px !important;
+  
+  visibility: hidden !important;
+  pointer-events: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#selectedAlg .alg-picture-wca-spacer::before,
+#selectedAlg .alg-picture-wca-spacer::after {
+  display: none !important;
+}

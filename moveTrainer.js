@@ -804,7 +804,9 @@ function renderAlgorithmCard(algName, displaySteps, empty = false) {
       `}
     </div>
 
-    ${empty ? "" : renderCubePlaceholder(algName)}
+    ${empty ? "" : (isWca
+      ? `<div class="alg-picture alg-picture-wca-spacer" aria-hidden="true"></div>`
+      : renderCubePlaceholder(algName))}
 
     <div class="alg-moves-row">
       ${empty ? "" : renderMoveRows(displaySteps)}
