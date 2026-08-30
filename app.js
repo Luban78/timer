@@ -1,7 +1,7 @@
 // app.js
 // Hlavní logika MG3i Traineru
 
-import { openVariantPicker, initVariantPicker } from "./variantPicker.js";
+import { openVariantPicker, initVariantPicker } from "./variantPicker.js?v=image-picker-1";
 import { adaptSliceMoveForTrainer } from "./sliceAdapter.js";
 import {
   setTrainerRotation,
@@ -52,7 +52,7 @@ import {
   checkMove,
   getExpectedMove,
   resetTrainer
-} from "./moveTrainer.js";
+} from "./moveTrainer.js?v=image-picker-1";
 
 import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";

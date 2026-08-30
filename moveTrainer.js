@@ -286,8 +286,17 @@ const ALGORITHM_IMAGE_MAP = {
   "F-perm": "alg-images/f-perm.png"
 };
 
+function getCustomAlgorithmImage(algName) {
+  try {
+    return localStorage.getItem("algorithmImage:" + algName) || "";
+  } catch {
+    return "";
+  }
+}
+
 function renderCubePlaceholder(algName) {
-  const imageSrc = ALGORITHM_IMAGE_MAP[algName];
+  // Obrázek přiřazený přes tužku má přednost před vestavěným obrázkem.
+  const imageSrc = getCustomAlgorithmImage(algName) || ALGORITHM_IMAGE_MAP[algName];
 
   if (imageSrc) {
     return `
