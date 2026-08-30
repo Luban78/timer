@@ -2613,7 +2613,7 @@ body.screen-settings #settingsCubeModeBtn::after {
   width: 66px !important;
   height: 34px !important;
   right: 20px !important;
-  border-radius: 999px !important;
+  border-radius: 9px !important;
   background: linear-gradient(90deg, #00d86f, #17f08a) !important;
   box-shadow: inset 0 0 12px rgba(255,255,255,.18), 0 0 14px rgba(0,230,118,.2) !important;
 }
@@ -3398,4 +3398,18 @@ body.training-menu-open #trainingModeBtn {
 #randomModeBtn:active {
   transform: none !important;
   filter: none !important;
+}
+#selectedAlg .alg-card-head {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+#selectedAlg .alg-title {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+  overflow: hidden !important;
 }
