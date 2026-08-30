@@ -118,9 +118,27 @@ function ensureImagePickerUi() {
   });
 
   removeBtn?.addEventListener("click", () => {
+    if (!currentName) return;
+
+    // Automaticky diagram je vychozi stav. Tohle tlacitko proto
+    // vlastni obrazek odstrani HNED - neni nutne jeste klikat na Ulozit.
+    try {
+      localStorage.removeItem(IMAGE_KEY_PREFIX + currentName);
+    } catch (error) {
+      console.error("Image remove failed:", error);
+    }
+
     pendingImageData = null;
-    removePendingImage = true;
+    removePendingImage = false;
     refreshImagePreview("");
+
+    // Okamzite prekresli aktualni algoritmus, aby se automaticky
+    // LL diagram objevil hned po stisku tlacitka.
+    if (typeof onSaveCallback === "function") {
+      onSaveCallback(getActiveAlgorithm(currentName));
+    }
+
+    closeVariantPicker();
   });
 
   input?.addEventListener("change", async () => {
