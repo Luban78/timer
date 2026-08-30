@@ -52,7 +52,7 @@ import {
   checkMove,
   getExpectedMove,
   resetTrainer
-} from "./moveTrainer.js?v=auto-diagram-5";
+} from "./moveTrainer.js?v=auto-diagram-8-8";
 
 import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";
@@ -358,6 +358,31 @@ function getColorPreset() {
   return COLOR_PRESETS.find(p => p.key === key) || COLOR_PRESETS[0];
 }
 
+function getOrientationValueClass(colorName) {
+  const map = {
+    White: "is-white",
+    Yellow: "is-yellow",
+    Green: "is-green",
+    Blue: "is-blue",
+    Red: "is-red",
+    Orange: "is-orange"
+  };
+
+  return map[colorName] || "";
+}
+
+function getOrientationHintHtml(topColor, frontColor) {
+  return `
+    <div>
+      <span class="alg-orientation-label">Top:</span>
+      <span class="alg-orientation-color-value ${getOrientationValueClass(topColor)}">${topColor}</span>
+    </div>
+    <div>
+      <span class="alg-orientation-label">Front:</span>
+      <span class="alg-orientation-color-value ${getOrientationValueClass(frontColor)}">${frontColor}</span>
+    </div>`;
+}
+
 function applyColorPreset() {
   const preset = getColorPreset();
 
@@ -373,7 +398,7 @@ if (colorPresetText) {
 
   document.querySelectorAll(".alg-orientation-hint").forEach(el => {
     const top = preset.key === "white_green" ? "White" : "Yellow";
-    el.innerHTML = `<div>Top: ${top}</div><div>Front: Green</div>`;
+    el.innerHTML = getOrientationHintHtml(top, "Green");
   });
 }
 
@@ -678,6 +703,24 @@ function setTrainerPaused(value) {
     if (selectedAlg) {
   selectedAlg.addEventListener("pointerdown", e => {
     if (e.target.closest("#editAlgVariantBtn")) return;
+
+    const klikNaNazevAlgoritmu = e.target.closest(".alg-title");
+
+    if (klikNaNazevAlgoritmu) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+
+      if (puzzleMode === "pll" && pllBtn) {
+        pllBtn.click();
+        return;
+      }
+
+      if (puzzleMode === "oll" && ollBtn) {
+        ollBtn.click();
+        return;
+      }
+    }
     
     e.preventDefault();
     e.stopPropagation();
@@ -851,6 +894,12 @@ function updateCompactControlsState() {
     "WCA 3x3";
 
   setPuzzleModeLabel(puzzleLabel);
+
+  if (puzzleModeMenu) {
+    puzzleModeMenu.querySelectorAll("[data-puzzle-mode]").forEach(btn => {
+      btn.style.display = btn.dataset.puzzleMode === puzzleMode ? "none" : "";
+    });
+  }
 
   if (puzzleMode === "wca") {
     setTrainingModeLabel("Next Scramble");
@@ -1037,6 +1086,23 @@ function setupCompactControls() {
     puzzleModeBtn.onclick = e => {
       e.preventDefault();
       e.stopPropagation();
+
+      const klikNaSipku = Boolean(e.target.closest(".compact-arrow"));
+
+      if (!klikNaSipku) {
+        if (puzzleMode === "pll" && pllBtn) {
+          closeCompactMenus();
+          pllBtn.click();
+          return;
+        }
+
+        if (puzzleMode === "oll" && ollBtn) {
+          closeCompactMenus();
+          ollBtn.click();
+          return;
+        }
+      }
+
       document.body.classList.toggle("puzzle-menu-open");
       document.body.classList.remove("training-menu-open");
     };

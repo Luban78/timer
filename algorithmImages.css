@@ -1,10 +1,13 @@
 /* =========================================================
    CUBE TRAINER – OBRÁZKY ALGORITMŮ
-   Funguje na mobilu i desktopu.
+   v8.8: návrat k přesnému LL diagramu z cubing.js,
+   žlutá nahoře, větší diagram, menší nadpis.
    ========================================================= */
 
 #selectedAlg .alg-picture-image::before,
-#selectedAlg .alg-picture-image::after {
+#selectedAlg .alg-picture-image::after,
+#selectedAlg .alg-picture-auto::before,
+#selectedAlg .alg-picture-auto::after {
   display: none !important;
 }
 
@@ -16,27 +19,114 @@
   border-radius: 10px !important;
 }
 
-
-/* Automatické PLL/OLL diagramy z cubing.js. */
-#selectedAlg .alg-picture-auto::before,
-#selectedAlg .alg-picture-auto::after {
-  display: none !important;
+/* Nadpis zmenšíme jen mírně – uvolní místo, ale zůstane dobře čitelný. */
+#selectedAlg .alg-title {
+  font-size: clamp(36px, 8.5vw, 54px) !important;
+  line-height: .98 !important;
+  margin-bottom: 5px !important;
 }
+
+/* Top:/Front: zůstává žlutě, hodnota dostane skutečnou barvu. */
+#selectedAlg .alg-orientation-hint {
+  line-height: 1.08 !important;
+  margin-bottom: 3px !important;
+}
+
+#selectedAlg .alg-orientation-label {
+  color: #ffe14a !important;
+  font-weight: 800 !important;
+  margin-right: 6px !important;
+}
+
+#selectedAlg .alg-orientation-color-value {
+  font-weight: 800 !important;
+}
+
+#selectedAlg .alg-orientation-color-value.is-white { color: #f8fafc !important; }
+#selectedAlg .alg-orientation-color-value.is-yellow { color: #f5dd42 !important; }
+#selectedAlg .alg-orientation-color-value.is-green { color: #22c55e !important; }
+#selectedAlg .alg-orientation-color-value.is-blue { color: #3b82f6 !important; }
+#selectedAlg .alg-orientation-color-value.is-red { color: #ef4444 !important; }
+#selectedAlg .alg-orientation-color-value.is-orange { color: #fb923c !important; }
+
+/* V8.6 měl 68 px. Zvětšíme ho, ale ne tolik jako nevydařená V8.7. */
+#selectedAlg .alg-picture {
+  width: 112px !important;
+  height: 112px !important;
+  margin: 4px auto 8px !important;
+}
+
 
 #selectedAlg .alg-picture-auto .alg-auto-image {
   display: block !important;
   width: 100% !important;
   height: 100% !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
+  object-fit: contain !important;
   pointer-events: none !important;
-  border-radius: 12px !important;
-  overflow: hidden !important;
+  image-rendering: auto !important;
 }
 
+#selectedAlg .alg-picture-auto .alg-auto-svg {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  pointer-events: none !important;
+}
 
 #selectedAlg .alg-picture-auto-error {
   font-size: 10px !important;
   letter-spacing: .08em !important;
   opacity: .55 !important;
+}
+
+/*
+ * Důležité UX:
+ * hlavní text PLL/OLL otevře rovnou seznam algoritmů,
+ * tato viditelná šipka otevře WCA 3x3 / OLL / PLL.
+ */
+#puzzleModeBtn {
+  position: relative !important;
+  padding-right: 52px !important;
+}
+
+#puzzleModeBtn .compact-arrow {
+  display: grid !important;
+  place-items: center !important;
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 42px !important;
+  height: 42px !important;
+  border-left: 1px solid rgba(0, 230, 118, .35) !important;
+  color: #00e676 !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+@media (max-width: 420px) {
+  #selectedAlg .alg-title {
+    font-size: clamp(34px, 8.2vw, 48px) !important;
+  }
+
+  #selectedAlg .alg-picture {
+    width: 106px !important;
+    height: 106px !important;
+  }
+}
+
+@media (min-width: 900px) {
+  body.screen-timer #selectedAlg .alg-title {
+    font-size: clamp(30px, 2.6vw, 42px) !important;
+  }
+
+  body.screen-timer #selectedAlg .alg-picture {
+    width: 122px !important;
+    height: 122px !important;
+    margin: 5px auto 10px !important;
+  }
 }

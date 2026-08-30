@@ -1,3 +1,6 @@
+import * as puzzles from "https://cdn.cubing.net/v0/js/cubing/puzzles";
+import { Alg } from "https://cdn.cubing.net/v0/js/cubing/alg";
+import { ExperimentalSVGAnimator } from "https://cdn.cubing.net/v0/js/cubing/twisty";
 import { rotateMove, isTrainerMove, stripTrainerMove } from "./orientation.js";
 import {
   pllAlgs,
@@ -322,9 +325,8 @@ function renderCubePlaceholder(algName) {
       </div>`;
   }
 
-  // Automatický PLL/OLL diagram. Obrázek se vytvoří podle aktivního algoritmu
-  // přes VisualCube. Tím obcházíme experimentální 2D renderer TwistyPlayeru,
-  // který v Android Preview zůstával prázdný i když měl správné rozměry.
+  // Automatický PLL/OLL diagram. Geometrii vytvoří cubing.js a finální barvy
+  // převedeme do stejného stylu, jako má referenční PLL/OLL aplikace.
   const automaticAlg = getAutomaticDiagramAlgorithm(algName);
   if (automaticAlg) {
     return `
@@ -369,52 +371,369 @@ function jeOllAlgoritmus(algName) {
   return Object.prototype.hasOwnProperty.call(ollAlgs, algName);
 }
 
-function vytvorUrlAutomatickehoDiagramu(algName, automaticAlg) {
-  const params = new URLSearchParams({
-    fmt: "png",
-    size: "256",
-    pzl: "3",
-    view: "plan",
-    case: automaticAlg,
-    // U=yellow, R=red, F=green, D=white, L=orange, B=blue.
-    sch: "yrgwob",
-    bg: "t"
-  });
+let dataAutomatickehoDiagramu = null;
 
-  // PLL potřebuje vidět barvy horní řady bočních stěn.
-  // OLL naopak zvýrazní hlavně orientaci poslední vrstvy.
-  if (jePllAlgoritmus(algName)) {
-    params.set("stage", "ll");
-  } else if (jeOllAlgoritmus(algName)) {
-    params.set("stage", "oll");
-  }
+async function pripravDataAutomatickehoDiagramu() {
+  if (dataAutomatickehoDiagramu) return dataAutomatickehoDiagramu;
 
-  return `https://visualcube.api.cubing.net/visualcube.php?${params.toString()}`;
+  const kpuzzle = await puzzles.cube3x3x3.kpuzzle();
+  const llSvg = await puzzles.cube3x3x3.llSVG();
+  dataAutomatickehoDiagramu = { kpuzzle, llSvg };
+  return dataAutomatickehoDiagramu;
 }
 
-function namontujAutomatickyDiagram(selectedAlg, algName) {
+
+
+function jeSkoroBila(r, g, b) {
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  return min >= 205 && (max - min) <= 28;
+}
+
+function jeBarevnySticker(r, g, b) {
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  return max >= 90 && (max - min) >= 38;
+}
+
+
+const PLL_BARVY_FACE = {
+  F: [50, 205, 50],
+  R: [254, 0, 0],
+  B: [35, 102, 255],
+  L: [255, 165, 0]
+};
+
+function vzdalBarvy(a, b) {
+  const dr = a[0] - b[0];
+  const dg = a[1] - b[1];
+  const db = a[2] - b[2];
+  return dr * dr + dg * dg + db * db;
+}
+
+function nactiBarvuZObrazku(imageData, nx, ny) {
+  const { data, width, height } = imageData;
+  const cx = Math.round(nx * (width - 1));
+  const cy = Math.round(ny * (height - 1));
+  const polomer = Math.max(3, Math.round(width * 0.012));
+  const kandidati = [];
+
+  for (let y = Math.max(0, cy - polomer); y <= Math.min(height - 1, cy + polomer); y++) {
+    for (let x = Math.max(0, cx - polomer); x <= Math.min(width - 1, cx + polomer); x++) {
+      const i = (y * width + x) * 4;
+      if (data[i + 3] < 80) continue;
+
+      const rgb = [data[i], data[i + 1], data[i + 2]];
+      const max = Math.max(...rgb);
+      const min = Math.min(...rgb);
+      if (max < 80 || max - min < 35) continue;
+      kandidati.push(rgb);
+    }
+  }
+
+  if (!kandidati.length) return null;
+
+  const prumer = [0, 0, 0];
+  kandidati.forEach(rgb => {
+    prumer[0] += rgb[0];
+    prumer[1] += rgb[1];
+    prumer[2] += rgb[2];
+  });
+  prumer[0] /= kandidati.length;
+  prumer[1] /= kandidati.length;
+  prumer[2] /= kandidati.length;
+
+  let nejblizsi = null;
+  let nejmensi = Infinity;
+  Object.entries(PLL_BARVY_FACE).forEach(([face, rgb]) => {
+    const vzdalenost = vzdalBarvy(prumer, rgb);
+    if (vzdalenost < nejmensi) {
+      nejmensi = vzdalenost;
+      nejblizsi = face;
+    }
+  });
+
+  return nejblizsi;
+}
+
+function zjistiPllPresuny(imageData) {
+  const band = {
+    topL: nactiBarvuZObrazku(imageData, 0.30, 0.07),
+    topM: nactiBarvuZObrazku(imageData, 0.50, 0.07),
+    topR: nactiBarvuZObrazku(imageData, 0.70, 0.07),
+    rightT: nactiBarvuZObrazku(imageData, 0.88, 0.30),
+    rightM: nactiBarvuZObrazku(imageData, 0.88, 0.50),
+    rightB: nactiBarvuZObrazku(imageData, 0.88, 0.70),
+    bottomL: nactiBarvuZObrazku(imageData, 0.30, 0.93),
+    bottomM: nactiBarvuZObrazku(imageData, 0.50, 0.93),
+    bottomR: nactiBarvuZObrazku(imageData, 0.70, 0.93),
+    leftT: nactiBarvuZObrazku(imageData, 0.10, 0.30),
+    leftM: nactiBarvuZObrazku(imageData, 0.10, 0.50),
+    leftB: nactiBarvuZObrazku(imageData, 0.10, 0.70)
+  };
+
+  const targetEdge = { B: "ET", R: "ER", F: "EB", L: "EL" };
+  const cornerTarget = {
+    BL: "CTL",
+    BR: "CTR",
+    FR: "CBR",
+    FL: "CBL"
+  };
+
+  const mapping = {};
+  mapping.ET = targetEdge[band.topM] || "ET";
+  mapping.ER = targetEdge[band.rightM] || "ER";
+  mapping.EB = targetEdge[band.bottomM] || "EB";
+  mapping.EL = targetEdge[band.leftM] || "EL";
+
+  function targetRohu(a, b, fallback) {
+    if (!a || !b) return fallback;
+    const klic = [a, b].sort().join("");
+    return cornerTarget[klic] || fallback;
+  }
+
+  mapping.CTL = targetRohu(band.topL, band.leftT, "CTL");
+  mapping.CTR = targetRohu(band.topR, band.rightT, "CTR");
+  mapping.CBR = targetRohu(band.bottomR, band.rightB, "CBR");
+  mapping.CBL = targetRohu(band.bottomL, band.leftB, "CBL");
+
+  return mapping;
+}
+
+function kresliSipku(ctx, od, kam, oboustranna = false) {
+  const dx = kam.x - od.x;
+  const dy = kam.y - od.y;
+  const delka = Math.hypot(dx, dy);
+  if (delka < 4) return;
+
+  const ux = dx / delka;
+  const uy = dy / delka;
+  const okraj = 18;
+  const start = { x: od.x + ux * okraj, y: od.y + uy * okraj };
+  const end = { x: kam.x - ux * okraj, y: kam.y - uy * okraj };
+
+  ctx.save();
+  ctx.strokeStyle = "rgba(72, 76, 78, 0.82)";
+  ctx.fillStyle = "rgba(72, 76, 78, 0.82)";
+  ctx.lineWidth = 9;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(start.x, start.y);
+  ctx.lineTo(end.x, end.y);
+  ctx.stroke();
+
+  function hlavicka(bod, smerX, smerY) {
+    const velikost = 18;
+    const sirka = 11;
+    const bx = bod.x - smerX * velikost;
+    const by = bod.y - smerY * velikost;
+    const px = -smerY;
+    const py = smerX;
+
+    ctx.beginPath();
+    ctx.moveTo(bod.x, bod.y);
+    ctx.lineTo(bx + px * sirka, by + py * sirka);
+    ctx.lineTo(bx - px * sirka, by - py * sirka);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  hlavicka(end, ux, uy);
+  if (oboustranna) hlavicka(start, -ux, -uy);
+  ctx.restore();
+}
+
+function dokresliPllSipky(ctx, imageData) {
+  const mapping = zjistiPllPresuny(imageData);
+  const w = ctx.canvas.width;
+  const h = ctx.canvas.height;
+  const body = {
+    CTL: { x: w * 0.31, y: h * 0.31 },
+    CTR: { x: w * 0.69, y: h * 0.31 },
+    CBR: { x: w * 0.69, y: h * 0.69 },
+    CBL: { x: w * 0.31, y: h * 0.69 },
+    ET: { x: w * 0.50, y: h * 0.31 },
+    ER: { x: w * 0.69, y: h * 0.50 },
+    EB: { x: w * 0.50, y: h * 0.69 },
+    EL: { x: w * 0.31, y: h * 0.50 }
+  };
+
+  const hotovo = new Set();
+
+  Object.entries(mapping).forEach(([od, kam]) => {
+    if (od === kam || !body[od] || !body[kam]) return;
+
+    const opacny = mapping[kam] === od;
+    const par = [od, kam].sort().join("|");
+    if (opacny && hotovo.has(par)) return;
+
+    kresliSipku(ctx, body[od], body[kam], opacny);
+    if (opacny) hotovo.add(par);
+  });
+}
+
+function prebarviPixelyDiagramu(imageData, jeOll) {
+  const data = imageData.data;
+
+  // Barvy odpovídají stylu aplikace, podle které se uživatel PLL/OLL učil.
+  const zluta = [255, 229, 0];
+  const seda = [92, 92, 92];
+
+  for (let i = 0; i < data.length; i += 4) {
+    const a = data[i + 3];
+    if (a < 16) continue;
+
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+
+    // cubing.js používá U = bílá. V našem CFOP traineru musí být U = žlutá.
+    if (jeSkoroBila(r, g, b)) {
+      data[i] = zluta[0];
+      data[i + 1] = zluta[1];
+      data[i + 2] = zluta[2];
+      continue;
+    }
+
+    // OLL obrázek má zobrazovat jen orientaci: žlutá / šedá.
+    // Skutečné boční barvy by rozpoznávání OLL zbytečně rušily.
+    if (jeOll && jeBarevnySticker(r, g, b)) {
+      data[i] = seda[0];
+      data[i + 1] = seda[1];
+      data[i + 2] = seda[2];
+    }
+  }
+
+  return imageData;
+}
+
+function nactiObrazekZUrl(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("SVG diagram se nepodařilo načíst do canvasu."));
+    image.src = url;
+  });
+}
+
+async function prevedSvgNaStylApky(svg, algName) {
+  const serializer = new XMLSerializer();
+  const clone = svg.cloneNode(true);
+
+  // SVG musí být samostatně vykreslitelné i po převodu na Blob.
+  if (!clone.getAttribute("xmlns")) {
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  }
+
+  const zdroj = serializer.serializeToString(clone);
+  const blob = new Blob([zdroj], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
+  try {
+    const image = await nactiObrazekZUrl(url);
+
+    // Vyšší interní rozlišení = ostré hrany i po zvětšení v mobilu.
+    const velikost = 512;
+    const canvas = document.createElement("canvas");
+    canvas.width = velikost;
+    canvas.height = velikost;
+
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) throw new Error("Canvas 2D není dostupný.");
+
+    ctx.clearRect(0, 0, velikost, velikost);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(image, 0, 0, velikost, velikost);
+
+    const imageData = ctx.getImageData(0, 0, velikost, velikost);
+    const puvodniData = new ImageData(
+      new Uint8ClampedArray(imageData.data),
+      imageData.width,
+      imageData.height
+    );
+
+    const jeOll = jeOllAlgoritmus(algName);
+    prebarviPixelyDiagramu(imageData, jeOll);
+    ctx.putImageData(imageData, 0, 0);
+
+    if (jePllAlgoritmus(algName)) {
+      dokresliPllSipky(ctx, puvodniData);
+    }
+
+    const vysledek = document.createElement("img");
+    vysledek.className = "alg-auto-image";
+    vysledek.alt = `Diagram ${algName}`;
+    vysledek.draggable = false;
+    vysledek.src = canvas.toDataURL("image/png");
+    return vysledek;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function namontujAutomatickyDiagram(selectedAlg, algName) {
   const wrapper = selectedAlg.querySelector(".alg-picture-auto");
   if (!wrapper) return;
 
   const automaticAlg = wrapper.dataset.autoAlg || getAutomaticDiagramAlgorithm(algName);
   if (!automaticAlg) return;
 
-  const img = document.createElement("img");
-  img.className = "alg-auto-image";
-  img.alt = `Diagram ${algName}`;
-  img.decoding = "async";
-  img.loading = "eager";
-  img.src = vytvorUrlAutomatickehoDiagramu(algName, automaticAlg);
+  // Při rychlém přepnutí algoritmu nesmí dokončený async render
+  // vložit obrázek do už neaktuální karty.
+  const renderToken = `${algName}:${automaticAlg}:${Date.now()}:${Math.random()}`;
+  wrapper.dataset.diagramRenderToken = renderToken;
+  wrapper.textContent = "";
+  wrapper.classList.remove("alg-picture-auto-error");
 
-  img.addEventListener("error", () => {
-    // Tohle necháváme jako jediný výpis: je užitečný při skutečném problému
-    // s načtením automatického obrázku (např. bez internetu).
-    console.warn(`[DIAGRAM] ${algName}: automatický obrázek se nepodařilo načíst.`);
+  try {
+    const { kpuzzle, llSvg } = await pripravDataAutomatickehoDiagramu();
+    if (!wrapper.isConnected || wrapper.dataset.diagramRenderToken !== renderToken) return;
+
+    // Vytvoříme stav, který právě vybraný algoritmus vyřeší.
+    const solved = kpuzzle.defaultPattern();
+    const casePattern = solved.applyAlg(new Alg(automaticAlg).invert());
+
+    // cubing.js nám spolehlivě dodá geometrii LL diagramu.
+    // Jeho barvy ale nepoužíváme jako finální vzhled: obrázek převedeme
+    // do stylu referenční aplikace (PLL = žlutý vršek + barevné boky,
+    // OLL = pouze žlutá + šedá).
+    const animator = new ExperimentalSVGAnimator(kpuzzle, llSvg);
+    animator.drawPattern(casePattern);
+
+    const obrazek = await prevedSvgNaStylApky(animator.svgElement, algName);
+    if (!wrapper.isConnected || wrapper.dataset.diagramRenderToken !== renderToken) return;
+
+    wrapper.replaceChildren(obrazek);
+  } catch (error) {
+    if (!wrapper.isConnected || wrapper.dataset.diagramRenderToken !== renderToken) return;
+    console.warn(`[DIAGRAM] ${algName}: diagram ve stylu PLL/OLL aplikace se nepodařilo vytvořit.`, error);
     wrapper.classList.add("alg-picture-auto-error");
     wrapper.textContent = "DIAGRAM";
-  }, { once: true });
+  }
+}
 
-  wrapper.replaceChildren(img);
+function ziskejCssTriduBarvy(nazevBarvy) {
+  const map = {
+    White: "is-white",
+    Yellow: "is-yellow",
+    Green: "is-green",
+    Blue: "is-blue",
+    Red: "is-red",
+    Orange: "is-orange"
+  };
+
+  return map[nazevBarvy] || "";
+}
+
+function vykresliRadekOrientace(label, value) {
+  return `
+    <div>
+      <span class="alg-orientation-label">${label}</span>
+      <span class="alg-orientation-color-value ${ziskejCssTriduBarvy(value)}">${value}</span>
+    </div>`;
 }
 
 function renderMove(move, index) {
@@ -479,8 +798,8 @@ function renderAlgorithmCard(algName, displaySteps, empty = false) {
       <div class="alg-title${empty ? " alg-title-empty" : ""}">${safeName}</div>
       ${empty ? "" : `
         <div class="alg-orientation-hint">
-          <div>Top: ${orientationTop}</div>
-          <div>Front: ${orientationFront}</div>
+          ${vykresliRadekOrientace("Top:", orientationTop)}
+          ${vykresliRadekOrientace("Front:", orientationFront)}
         </div>
       `}
     </div>
