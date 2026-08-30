@@ -64,33 +64,31 @@ function ensureImagePickerUi() {
     <div style="font-weight:900;color:var(--green);margin-bottom:10px">Obrázek orientace</div>
     <div style="display:grid;grid-template-columns:86px 1fr;gap:12px;align-items:center">
       <div id="variantImagePreviewWrap" style="width:86px;height:86px;border-radius:14px;border:1px solid rgba(255,255,255,.14);display:grid;place-items:center;overflow:hidden;background:rgba(0,0,0,.22)">
-        <span id="variantImageEmpty" style="opacity:.55;font-size:12px;text-align:center;padding:6px">Bez obrázku</span>
+        <span id="variantImageEmpty" style="opacity:.55;font-size:12px;text-align:center;padding:6px">Automatický</span>
         <img id="variantImagePreview" alt="Náhled orientace" style="display:none;width:100%;height:100%;object-fit:contain">
       </div>
       <div style="display:grid;gap:8px">
-        <button id="chooseVariantImageBtn" type="button" style="min-height:46px;font-size:16px">Vybrat obrázek</button>
-        <button id="removeVariantImageBtn" type="button" style="min-height:42px;font-size:15px">Odebrat obrázek</button>
+        <button id="chooseVariantImageBtn" type="button" style="min-height:44px;font-size:15px">🖼 Vybrat obrázek</button>
+        <button id="cameraVariantImageBtn" type="button" style="min-height:44px;font-size:15px">📷 Vyfotit</button>
+        <button id="pasteVariantImageBtn" type="button" style="min-height:44px;font-size:15px">📋 Vložit ze schránky</button>
+        <button id="removeVariantImageBtn" type="button" style="min-height:40px;font-size:14px">Použít automatický diagram</button>
       </div>
     </div>
+    <div style="margin-top:9px;font-size:12px;line-height:1.35;opacity:.68">Bez vlastního obrázku se PLL/OLL diagram vytvoří automaticky z algoritmu.</div>
     <input id="variantImageInput" type="file" accept="image/*" hidden>
+    <input id="variantCameraInput" type="file" accept="image/*" capture="environment" hidden>
   `;
 
   modalBox.insertBefore(panel, list);
 
   const chooseBtn = panel.querySelector("#chooseVariantImageBtn");
+  const cameraBtn = panel.querySelector("#cameraVariantImageBtn");
+  const pasteBtn = panel.querySelector("#pasteVariantImageBtn");
   const removeBtn = panel.querySelector("#removeVariantImageBtn");
   const input = panel.querySelector("#variantImageInput");
+  const cameraInput = panel.querySelector("#variantCameraInput");
 
-  chooseBtn?.addEventListener("click", () => input?.click());
-
-  removeBtn?.addEventListener("click", () => {
-    pendingImageData = null;
-    removePendingImage = true;
-    refreshImagePreview("");
-  });
-
-  input?.addEventListener("change", async () => {
-    const file = input.files?.[0];
+  async function prepareSelectedImage(file) {
     if (!file) return;
 
     try {
@@ -99,20 +97,72 @@ function ensureImagePickerUi() {
       refreshImagePreview(pendingImageData);
     } catch (error) {
       console.error("Image prepare failed:", error);
-      if (typeof window.showAppDialog === "function") {
-        window.showAppDialog({
-          title: "Obrázek se nepodařilo načíst",
-          message: "Zkus prosím jiný obrázek.",
-          type: "warning",
-          icon: "i"
-        });
-      }
-    } finally {
-      input.value = "";
+      showImageWarning("Obrázek se nepodařilo načíst", "Zkus prosím jiný obrázek.");
+    }
+  }
+
+  chooseBtn?.addEventListener("click", () => input?.click());
+  cameraBtn?.addEventListener("click", () => cameraInput?.click());
+
+  pasteBtn?.addEventListener("click", async () => {
+    try {
+      const imageBlob = await readImageFromClipboard();
+      await prepareSelectedImage(imageBlob);
+    } catch (error) {
+      console.warn("Clipboard image read failed:", error);
+      showImageWarning(
+        "Obrázek ve schránce není dostupný",
+        "Nejdřív na webu zkopíruj přímo obrázek. Pokud prohlížeč čtení obrázků ze schránky nepovolí, použij Vybrat obrázek."
+      );
     }
   });
 
+  removeBtn?.addEventListener("click", () => {
+    pendingImageData = null;
+    removePendingImage = true;
+    refreshImagePreview("");
+  });
+
+  input?.addEventListener("change", async () => {
+    await prepareSelectedImage(input.files?.[0]);
+    input.value = "";
+  });
+
+  cameraInput?.addEventListener("change", async () => {
+    await prepareSelectedImage(cameraInput.files?.[0]);
+    cameraInput.value = "";
+  });
+
   return panel;
+}
+
+function showImageWarning(title, message) {
+  if (typeof window.showAppDialog === "function") {
+    window.showAppDialog({
+      title,
+      message,
+      type: "warning",
+      icon: "i"
+    });
+    return;
+  }
+
+  alert(message);
+}
+
+async function readImageFromClipboard() {
+  if (!navigator.clipboard || typeof navigator.clipboard.read !== "function") {
+    throw new Error("Clipboard image API není dostupné");
+  }
+
+  const items = await navigator.clipboard.read();
+  for (const item of items) {
+    const imageType = item.types.find((type) => type.startsWith("image/"));
+    if (!imageType) continue;
+    return item.getType(imageType);
+  }
+
+  throw new Error("Ve schránce není obrázek");
 }
 
 function refreshImagePreview(src) {

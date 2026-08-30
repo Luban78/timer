@@ -15,3 +15,21 @@
   object-fit: contain !important;
   border-radius: 10px !important;
 }
+
+
+/* Automatické PLL/OLL diagramy z cubing.js. */
+#selectedAlg .alg-picture-auto::before,
+#selectedAlg .alg-picture-auto::after {
+  display: none !important;
+}
+
+#selectedAlg .alg-picture-auto twisty-player {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  pointer-events: none !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}

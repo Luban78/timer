@@ -1,4 +1,11 @@
 import { rotateMove, isTrainerMove, stripTrainerMove } from "./orientation.js";
+import {
+  pllAlgs,
+  ollAlgs,
+  getActivePllAlg,
+  getActiveOllAlg
+} from "./algorithms.js";
+import "https://cdn.cubing.net/v0/js/cubing/twisty";
 
 /* =========================================================
    STAV TRAINERU
@@ -294,14 +301,53 @@ function getCustomAlgorithmImage(algName) {
   }
 }
 
-function renderCubePlaceholder(algName) {
-  // Obrázek přiřazený přes tužku má přednost před vestavěným obrázkem.
-  const imageSrc = getCustomAlgorithmImage(algName) || ALGORITHM_IMAGE_MAP[algName];
+function getAutomaticDiagramAlgorithm(algName) {
+  if (Object.prototype.hasOwnProperty.call(pllAlgs, algName)) {
+    return getActivePllAlg(algName) || "";
+  }
 
-  if (imageSrc) {
+  if (Object.prototype.hasOwnProperty.call(ollAlgs, algName)) {
+    return getActiveOllAlg(algName) || "";
+  }
+
+  return "";
+}
+
+function renderCubePlaceholder(algName) {
+  // Vlastní obrázek přiřazený přes tužku má vždy nejvyšší prioritu.
+  const customImage = getCustomAlgorithmImage(algName);
+
+  if (customImage) {
+    return `
+      <div class="alg-picture alg-picture-image" data-alg="${escapeHtml(algName)}" aria-label="Vlastní náhled algoritmu ${escapeHtml(algName)}">
+        <img src="${escapeHtml(customImage)}" alt="Náhled ${escapeHtml(algName)}">
+      </div>`;
+  }
+
+  // Pro všechny PLL a OLL umí cubing.js vytvořit LL diagram automaticky
+  // přímo z právě aktivní varianty algoritmu. Nic se nemusí stahovat ani ukládat.
+  const automaticAlg = getAutomaticDiagramAlgorithm(algName);
+  if (automaticAlg) {
+    return `
+      <div class="alg-picture alg-picture-auto" data-alg="${escapeHtml(algName)}" aria-label="Automatický diagram ${escapeHtml(algName)}">
+        <twisty-player
+          puzzle="3x3x3"
+          alg="${escapeHtml(automaticAlg)}"
+          experimental-setup-anchor="end"
+          visualization="experimental-2D-LL"
+          background="none"
+          control-panel="none"
+          hint-facelets="none"
+        ></twisty-player>
+      </div>`;
+  }
+
+  // Starší obrázek přímo v projektu necháváme už jen jako nouzovou zálohu.
+  const builtInImage = ALGORITHM_IMAGE_MAP[algName];
+  if (builtInImage) {
     return `
       <div class="alg-picture alg-picture-image" data-alg="${escapeHtml(algName)}" aria-label="Náhled algoritmu ${escapeHtml(algName)}">
-        <img src="${escapeHtml(imageSrc)}" alt="Náhled ${escapeHtml(algName)}">
+        <img src="${escapeHtml(builtInImage)}" alt="Náhled ${escapeHtml(algName)}">
       </div>`;
   }
 
