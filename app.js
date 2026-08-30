@@ -1003,6 +1003,12 @@ function setPuzzleMode(mode) {
   if (puzzleMode === "wca") {
     closeCompactMenus();
     prepareWcaScramble();
+  } else {
+    // PLL / OLL se vždy trénují se žlutou nahoře a zelenou vpředu.
+    // Tohle je důležité hlavně při návratu z WCA, kde je nahoře bílá.
+    setTrainerTop("yellow");
+    setTrainerFrontColor("green");
+    wcaSolvedConfirmations = 0;
   }
 
   updateCompactControlsState();
@@ -1951,6 +1957,12 @@ function pickRandomPLL() {
   if (names.length === 0) return;
 
   const randomName = names[Math.floor(Math.random() * names.length)];
+
+  // Random PLL může přijít bez klasického onSelect callbacku z menu.
+  // Proto orientaci nastavíme i tady, jinak po WCA zůstane bílá nahoře
+  // a správný fyzický tah U se vyhodnotí jako chyba.
+  setTrainerTop("yellow");
+  setTrainerFrontColor("green");
   
   currentAlgorithmName = randomName;
 selectedAlg.dataset.algName = randomName;
@@ -2703,8 +2715,8 @@ function updateUI() {
   
   const elapsed = (now - startTime) / 1000;
   
-  // Velké číslo uprostřed = čas
-  tpsDiv.innerText = elapsed.toFixed(2);
+  // Velké číslo uprostřed = čas. Nad 60 s přepneme na M:SS.xx.
+  tpsDiv.innerText = formatCasRelace(elapsed);
   
   // Malý levý box = aktuální TPS
 timeVal.innerText = currentTPS.toFixed(1);
@@ -2817,10 +2829,12 @@ function finishSolve(stopTime, manual) {
 
   const finalAvg = finalTime > 0 ? finalMoves / finalTime : 0;
 
-  timeVal.innerText = finalTime.toFixed(2);
+  // timeVal je aktuální TPS, ne čas solve – po zastavení necháme poslední
+  // naměřenou hodnotu. Average TPS se dopočítá z celého solve.
   avgVal.innerText = finalAvg.toFixed(1);
 
-  tpsDiv.innerText = finalTime.toFixed(2);
+  // Finální čas používá stejný formát jako běžící timer.
+  tpsDiv.innerText = formatCasRelace(finalTime);
 moveTimes = [];
 
   stateMsg.innerText = manual ? "ZASTAVENO" : "HOTOVO";
@@ -2833,10 +2847,11 @@ moveTimes = [];
   const isPB = finalTime < oldBest;
 
   if (
-    puzzleMode !== "wca" &&
     currentAlgorithmName &&
     currentAlgorithmName !== "Nevybráno"
   ) {
+    // Panel relace funguje i pro WCA: počet solve, průměr a rekord.
+    // Při Next Scramble se nerestartuje; resetne se až při změně režimu.
     pridejPokusDoRelace(finalTime);
   }
 
