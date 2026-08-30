@@ -23,7 +23,7 @@
   display: none !important;
 }
 
-#selectedAlg .alg-picture-auto twisty-player {
+#selectedAlg .alg-picture-auto .alg-auto-image {
   display: block !important;
   width: 100% !important;
   height: 100% !important;
@@ -32,4 +32,11 @@
   pointer-events: none !important;
   border-radius: 12px !important;
   overflow: hidden !important;
+}
+
+
+#selectedAlg .alg-picture-auto-error {
+  font-size: 10px !important;
+  letter-spacing: .08em !important;
+  opacity: .55 !important;
 }

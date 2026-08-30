@@ -434,8 +434,6 @@ export function openPLLMenu({
   onSelect,
   randomSelectionMode = false
 }) {
-  console.log("OPEN PLL MENU");
-
   if (!algList || !modal || !selectedAlg || !pllAlgs) {
     console.warn("PLL menu: chybí prvek nebo databáze");
     return;
@@ -463,8 +461,6 @@ export function openOLLMenu({
   ollAlgs,
   onSelect
 }) {
-  console.log("OPEN OLL MENU");
-
   const modalTitle = modal?.querySelector("#modalTitle");
   if (modalTitle) {
     modalTitle.classList.remove("pll-selection-title");

@@ -5,7 +5,6 @@ import {
   getActivePllAlg,
   getActiveOllAlg
 } from "./algorithms.js";
-import "https://cdn.cubing.net/v0/js/cubing/twisty";
 
 /* =========================================================
    STAV TRAINERU
@@ -132,7 +131,6 @@ if (move === "z2") {
   virtualZ = (virtualZ + 2) % 4;
 }
   window.__lastSkippedRotation = move;
-  console.log("SKIP ROTATION:", move, "virtualY:", virtualY, "virtualX:", virtualX, "virtualZ:", virtualZ);
 }
 
 function applyVirtualXToExpectedMove(move) {
@@ -324,22 +322,18 @@ function renderCubePlaceholder(algName) {
       </div>`;
   }
 
-  // Pro všechny PLL a OLL umí cubing.js vytvořit LL diagram automaticky
-  // přímo z právě aktivní varianty algoritmu. Nic se nemusí stahovat ani ukládat.
+  // Automatický PLL/OLL diagram. Obrázek se vytvoří podle aktivního algoritmu
+  // přes VisualCube. Tím obcházíme experimentální 2D renderer TwistyPlayeru,
+  // který v Android Preview zůstával prázdný i když měl správné rozměry.
   const automaticAlg = getAutomaticDiagramAlgorithm(algName);
   if (automaticAlg) {
     return `
-      <div class="alg-picture alg-picture-auto" data-alg="${escapeHtml(algName)}" aria-label="Automatický diagram ${escapeHtml(algName)}">
-        <twisty-player
-          puzzle="3x3x3"
-          alg="${escapeHtml(automaticAlg)}"
-          experimental-setup-anchor="end"
-          visualization="experimental-2D-LL"
-          background="none"
-          control-panel="none"
-          hint-facelets="none"
-        ></twisty-player>
-      </div>`;
+      <div
+        class="alg-picture alg-picture-auto"
+        data-alg="${escapeHtml(algName)}"
+        data-auto-alg="${escapeHtml(automaticAlg)}"
+        aria-label="Automatický diagram ${escapeHtml(algName)}"
+      ></div>`;
   }
 
   // Starší obrázek přímo v projektu necháváme už jen jako nouzovou zálohu.
@@ -365,6 +359,62 @@ function renderCubePlaceholder(algName) {
         <span class="cube-cell is-corner"></span>
       </div>
     </div>`;
+}
+
+function jePllAlgoritmus(algName) {
+  return Object.prototype.hasOwnProperty.call(pllAlgs, algName);
+}
+
+function jeOllAlgoritmus(algName) {
+  return Object.prototype.hasOwnProperty.call(ollAlgs, algName);
+}
+
+function vytvorUrlAutomatickehoDiagramu(algName, automaticAlg) {
+  const params = new URLSearchParams({
+    fmt: "png",
+    size: "256",
+    pzl: "3",
+    view: "plan",
+    case: automaticAlg,
+    // U=yellow, R=red, F=green, D=white, L=orange, B=blue.
+    sch: "yrgwob",
+    bg: "t"
+  });
+
+  // PLL potřebuje vidět barvy horní řady bočních stěn.
+  // OLL naopak zvýrazní hlavně orientaci poslední vrstvy.
+  if (jePllAlgoritmus(algName)) {
+    params.set("stage", "ll");
+  } else if (jeOllAlgoritmus(algName)) {
+    params.set("stage", "oll");
+  }
+
+  return `https://visualcube.api.cubing.net/visualcube.php?${params.toString()}`;
+}
+
+function namontujAutomatickyDiagram(selectedAlg, algName) {
+  const wrapper = selectedAlg.querySelector(".alg-picture-auto");
+  if (!wrapper) return;
+
+  const automaticAlg = wrapper.dataset.autoAlg || getAutomaticDiagramAlgorithm(algName);
+  if (!automaticAlg) return;
+
+  const img = document.createElement("img");
+  img.className = "alg-auto-image";
+  img.alt = `Diagram ${algName}`;
+  img.decoding = "async";
+  img.loading = "eager";
+  img.src = vytvorUrlAutomatickehoDiagramu(algName, automaticAlg);
+
+  img.addEventListener("error", () => {
+    // Tohle necháváme jako jediný výpis: je užitečný při skutečném problému
+    // s načtením automatického obrázku (např. bez internetu).
+    console.warn(`[DIAGRAM] ${algName}: automatický obrázek se nepodařilo načíst.`);
+    wrapper.classList.add("alg-picture-auto-error");
+    wrapper.textContent = "DIAGRAM";
+  }, { once: true });
+
+  wrapper.replaceChildren(img);
 }
 
 function renderMove(move, index) {
@@ -448,6 +498,7 @@ export function renderTrainer(selectedAlg) {
   const displaySteps = buildDisplaySteps(displayMoves);
 
   selectedAlg.innerHTML = renderAlgorithmCard(algName, displaySteps, false);
+  namontujAutomatickyDiagram(selectedAlg, algName);
 }
 
 /* =========================================================
@@ -498,15 +549,6 @@ export function checkMove(move, selectedAlg) {
     applyVirtualZToExpectedMove(expected.move)
   )
 );
-
-  console.log("MOVE CHECK:", {
-  real: move,
-  expectedOriginal: expected.move,
-  expectedAfterRotation: expectedMove,
-  virtualY,
-  virtualX,
-  virtualZ
-});
 
   if (move !== expectedMove) {
     wrongDisplayIndex = getGroupedDisplayIndex(expected.displayIndex);

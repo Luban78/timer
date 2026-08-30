@@ -1,6 +1,6 @@
-import * as puzzles from "https://cdn.cubing.net/js/cubing/puzzles";
-import { Alg } from "https://cdn.cubing.net/js/cubing/alg";
-import { KPattern } from "https://cdn.cubing.net/js/cubing/kpuzzle";
+import * as puzzles from "https://cdn.cubing.net/v0/js/cubing/puzzles";
+import { Alg } from "https://cdn.cubing.net/v0/js/cubing/alg";
+import { KPattern } from "https://cdn.cubing.net/v0/js/cubing/kpuzzle";
 
 let kpuzzle = null;
 

@@ -165,5 +165,4 @@ document.addEventListener("DOMContentLoaded", function() {
     addClick(button, closeStatsSubview);
   });
   
-  console.log("statsNavigation.js načten");
 });

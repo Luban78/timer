@@ -265,5 +265,4 @@ document.addEventListener("DOMContentLoaded", function() {
       setActiveFilter(activeFilter);
     }
   );
-  console.log("statsHistory.js načten");
 });

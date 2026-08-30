@@ -34,7 +34,7 @@ import {
   isPatternSolved,
   createPatternFromGanState,
   patternsIdentical
-} from "./cubeEngine.js";
+} from "./cubeEngine.js?v=diag-1";
 
 import {
   setCurrentFacelets,
@@ -45,14 +45,14 @@ import {
   getCurrentCubeState,
   saveBaseCubeState,
   getBaseCubeState
-} from "./cubeState.js";
+} from "./cubeState.js?v=diag-1";
 
 import {
   renderAlgorithmPreview,
   checkMove,
   getExpectedMove,
   resetTrainer
-} from "./moveTrainer.js?v=auto-diagram-1";
+} from "./moveTrainer.js?v=auto-diagram-5";
 
 import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";
@@ -78,7 +78,7 @@ import {
 
 import { getAlgorithmStats } from "./algorithmStats.js";
 import { drawDetailGraph } from "./detailGraph.js";
-import { openPLLMenu, openOLLMenu } from "./algMenu.js";
+import { openPLLMenu, openOLLMenu } from "./algMenu.js?v=diag-1";
 import {
   generateWcaScramble,
   beginWcaScramble,
@@ -761,10 +761,8 @@ document.addEventListener("pointerdown", e => {
 }, true);
 */
 
-initCubeEngine().then(() => {
-  const solved = createSolvedPattern();
-  const afterM = applyAlgorithm(solved, "M M'");
-  console.log("CubeEngine M test:", isPatternSolved(afterM));
+initCubeEngine().catch((error) => {
+  console.warn("CubeEngine init selhal:", error);
 });
 
 function updateModeLabel() {
@@ -1575,7 +1573,6 @@ function setupAlgorithmButtons() {
           "Algoritmus: " + selectedAlg.dataset.algText;
 
         prepareNext();
-        renderAlgorithmPreview(selectedAlg);
         setTrainerPaused(false);
 
         const editBtn = document.getElementById("editAlgVariantBtn");
@@ -1618,7 +1615,6 @@ selectedAlg.dataset.algText = getActivePllAlg(name);
 selectedAlg.innerText = "Algoritmus: " + selectedAlg.dataset.algText;
 
 prepareNext();
-renderAlgorithmPreview(selectedAlg);
 setTrainerPaused(false);
 const editBtn = document.getElementById("editAlgVariantBtn");
 if (editBtn) editBtn.classList.remove("hidden");
