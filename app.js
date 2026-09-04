@@ -2039,50 +2039,56 @@ function jeTestovaciPllNazev(name) {
 }
 
 function najdiNavratovyPll(puvodniNazev, puvodniAlgoritmus) {
-  const fallbackAlg = invertujAlgoritmusProNavrat(puvodniAlgoritmus);
-  const fallback = {
-    name: puvodniNazev,
-    algorithm: fallbackAlg || puvodniAlgoritmus,
-    namedMatch: false
+  const protiklady = {
+    "Ua-perm": "Ub-perm",
+    "Ub-perm": "Ua-perm",
+    "Aa-perm": "Ab-perm",
+    "Ab-perm": "Aa-perm",
+    "Ra-perm": "Rb-perm",
+    "Rb-perm": "Ra-perm",
+    "Ga-perm": "Gb-perm",
+    "Gb-perm": "Ga-perm",
+    "Gc-perm": "Gd-perm",
+    "Gd-perm": "Gc-perm"
   };
 
-  try {
-    const solved = createSolvedPattern();
-    if (!solved || !puvodniAlgoritmus) return fallback;
+  const protikladNazev = protiklady[puvodniNazev];
 
-    const poPrvnim = applyAlgorithm(solved, puvodniAlgoritmus);
-    if (!poPrvnim) return fallback;
-
-    const vsechnyNazvy = Object.keys(pllAlgs);
-    const kandidati = [
-      puvodniNazev,
-      ...vsechnyNazvy.filter(name => name !== puvodniNazev && !jeTestovaciPllNazev(name)),
-      ...vsechnyNazvy.filter(name => name !== puvodniNazev && jeTestovaciPllNazev(name))
-    ];
-
-    const pouzite = new Set();
-
-    for (const name of kandidati) {
-      if (!name || pouzite.has(name)) continue;
-      pouzite.add(name);
-
-      const candidateAlg = getActivePllAlg(name);
-      if (!candidateAlg) continue;
-
-      const poNavratu = applyAlgorithm(poPrvnim, candidateAlg);
-      if (poNavratu && isPatternSolved(poNavratu)) {
-        return {
-          name,
-          algorithm: candidateAlg,
-          namedMatch: true
-        };
-      }
-    }
-  } catch (error) {
-    console.warn("PLL Random: nepodařilo se určit návratový PLL", error);
+  // U PLL, které jsou samy sobě inverzní, se opakuje přesně
+  // stejná právě zvolená varianta. To je důležité pro svalovou paměť:
+  // uživatel vidí stejný algoritmus a jede ho podruhé úplně stejně.
+  if (!protikladNazev && !jeTestovaciPllNazev(puvodniNazev)) {
+    return {
+      name: puvodniNazev,
+      algorithm: puvodniAlgoritmus,
+      namedMatch: true,
+      stejnaVarianta: true
+    };
   }
 
-  return fallback;
+  // U případů, které mají skutečný protiklad, nabídneme pojmenovaný
+  // protikus a jeho aktuálně vybranou variantu.
+  if (protikladNazev && Object.prototype.hasOwnProperty.call(pllAlgs, protikladNazev)) {
+    const protikladAlg = getActivePllAlg(protikladNazev);
+    if (protikladAlg) {
+      return {
+        name: protikladNazev,
+        algorithm: protikladAlg,
+        namedMatch: true,
+        stejnaVarianta: false
+      };
+    }
+  }
+
+  // Jen pro testovací / neznámé položky necháváme bezpečný fallback
+  // přes přesnou inverzi sekvence.
+  const fallbackAlg = invertujAlgoritmusProNavrat(puvodniAlgoritmus);
+  return {
+    name: puvodniNazev,
+    algorithm: fallbackAlg || puvodniAlgoritmus,
+    namedMatch: false,
+    stejnaVarianta: false
+  };
 }
 
 function nastavPllProTrenink(name, algorithm, { navrat = false } = {}) {
