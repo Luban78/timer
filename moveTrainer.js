@@ -314,7 +314,7 @@ function getAutomaticDiagramAlgorithm(algName) {
   return "";
 }
 
-function renderCubePlaceholder(algName) {
+function renderCubePlaceholder(algName, algorithmOverride = "") {
   // Vlastní obrázek přiřazený přes tužku má vždy nejvyšší prioritu.
   const customImage = getCustomAlgorithmImage(algName);
 
@@ -327,7 +327,7 @@ function renderCubePlaceholder(algName) {
 
   // Automatický PLL/OLL diagram. Geometrii vytvoří cubing.js a finální barvy
   // převedeme do stejného stylu, jako má referenční PLL/OLL aplikace.
-  const automaticAlg = getAutomaticDiagramAlgorithm(algName);
+  const automaticAlg = String(algorithmOverride || "").trim() || getAutomaticDiagramAlgorithm(algName);
   if (automaticAlg) {
     return `
       <div
@@ -779,7 +779,7 @@ function renderMoveRows(displaySteps) {
   return rows.join("");
 }
 
-function renderAlgorithmCard(algName, displaySteps, empty = false) {
+function renderAlgorithmCard(algName, displaySteps, empty = false, algorithmOverride = "") {
   const safeName = escapeHtml(algName || "Nevybráno");
   
   const presetKey = localStorage.getItem("trainerColorPreset") || "yellow_green";
@@ -806,7 +806,7 @@ function renderAlgorithmCard(algName, displaySteps, empty = false) {
 
     ${empty ? "" : (isWca
       ? `<div class="alg-picture alg-picture-wca-spacer" aria-hidden="true"></div>`
-      : renderCubePlaceholder(algName))}
+      : renderCubePlaceholder(algName, algorithmOverride))}
 
     <div class="alg-moves-row">
       ${empty ? "" : renderMoveRows(displaySteps)}
@@ -818,7 +818,12 @@ export function renderTrainer(selectedAlg) {
   const algName = selectedAlg.dataset.algName || "Algoritmus";
   const displaySteps = buildDisplaySteps(displayMoves);
 
-  selectedAlg.innerHTML = renderAlgorithmCard(algName, displaySteps, false);
+  selectedAlg.innerHTML = renderAlgorithmCard(
+    algName,
+    displaySteps,
+    false,
+    selectedAlg.dataset.algText || ""
+  );
   namontujAutomatickyDiagram(selectedAlg, algName);
 }
 

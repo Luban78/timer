@@ -52,7 +52,7 @@ import {
   checkMove,
   getExpectedMove,
   resetTrainer
-} from "./moveTrainer.js?v=auto-diagram-8-8";
+} from "./moveTrainer.js?v=return-solved-1";
 
 import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";
@@ -78,7 +78,7 @@ import {
 
 import { getAlgorithmStats } from "./algorithmStats.js";
 import { drawDetailGraph } from "./detailGraph.js";
-import { openPLLMenu, openOLLMenu } from "./algMenu.js?v=diag-1";
+import { openPLLMenu, openOLLMenu } from "./algMenu.js?v=return-solved-1";
 import {
   generateWcaScramble,
   beginWcaScramble,
@@ -268,6 +268,7 @@ let activeScreen = "timer";
 let cubeMode = localStorage.getItem("cubeMode") || "smart";
 let trainingMode = localStorage.getItem("trainingMode") || "single";
 let puzzleMode = localStorage.getItem("puzzleMode") || "wca";
+let randomPllFazeNavratu = false;
 let algorithmStatsFilter = "pll";
 let lastStateSignature = "";
 let faceletCount = 0;
@@ -687,6 +688,7 @@ function vytvorPanelRelace() {
 
   window.addEventListener("cube-trainer-random-pll-selection-changed", () => {
     if (trainingMode === "random" && puzzleMode === "pll") {
+      randomPllFazeNavratu = false;
       resetujStatistikyRelace();
       pickRandomPLL();
       naplanujUmisteniPaneluRelace();
@@ -1042,6 +1044,7 @@ function prepareWcaScramble() {
 
 function setPuzzleMode(mode) {
   if (mode !== puzzleMode) {
+    randomPllFazeNavratu = false;
     resetujStatistikyRelace();
   }
   puzzleMode = mode;
@@ -1066,6 +1069,7 @@ function setTrainingMode(mode) {
 
   const zmenenRezim = mode !== trainingMode;
   if (zmenenRezim) {
+    randomPllFazeNavratu = false;
     resetujStatistikyRelace();
   }
 
@@ -2003,6 +2007,108 @@ function showAchievement(title) {
   }, 2200);
 }
 
+function jeRandomPllNavratDoSlozeneZapnuty() {
+  return (
+    puzzleMode === "pll" &&
+    trainingMode === "random" &&
+    typeof window.getRandomPllReturnToSolvedEnabled === "function" &&
+    window.getRandomPllReturnToSolvedEnabled()
+  );
+}
+
+function invertujTahProNavrat(tah) {
+  const value = String(tah || "").trim();
+  if (!value) return "";
+  if (value.endsWith("2")) return value;
+  if (value.endsWith("'")) return value.slice(0, -1);
+  return value + "'";
+}
+
+function invertujAlgoritmusProNavrat(algoritmus) {
+  return String(algoritmus || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .reverse()
+    .map(invertujTahProNavrat)
+    .join(" ");
+}
+
+function jeTestovaciPllNazev(name) {
+  return /test/i.test(String(name || ""));
+}
+
+function najdiNavratovyPll(puvodniNazev, puvodniAlgoritmus) {
+  const fallbackAlg = invertujAlgoritmusProNavrat(puvodniAlgoritmus);
+  const fallback = {
+    name: puvodniNazev,
+    algorithm: fallbackAlg || puvodniAlgoritmus,
+    namedMatch: false
+  };
+
+  try {
+    const solved = createSolvedPattern();
+    if (!solved || !puvodniAlgoritmus) return fallback;
+
+    const poPrvnim = applyAlgorithm(solved, puvodniAlgoritmus);
+    if (!poPrvnim) return fallback;
+
+    const vsechnyNazvy = Object.keys(pllAlgs);
+    const kandidati = [
+      puvodniNazev,
+      ...vsechnyNazvy.filter(name => name !== puvodniNazev && !jeTestovaciPllNazev(name)),
+      ...vsechnyNazvy.filter(name => name !== puvodniNazev && jeTestovaciPllNazev(name))
+    ];
+
+    const pouzite = new Set();
+
+    for (const name of kandidati) {
+      if (!name || pouzite.has(name)) continue;
+      pouzite.add(name);
+
+      const candidateAlg = getActivePllAlg(name);
+      if (!candidateAlg) continue;
+
+      const poNavratu = applyAlgorithm(poPrvnim, candidateAlg);
+      if (poNavratu && isPatternSolved(poNavratu)) {
+        return {
+          name,
+          algorithm: candidateAlg,
+          namedMatch: true
+        };
+      }
+    }
+  } catch (error) {
+    console.warn("PLL Random: nepodařilo se určit návratový PLL", error);
+  }
+
+  return fallback;
+}
+
+function nastavPllProTrenink(name, algorithm, { navrat = false } = {}) {
+  if (!name || !algorithm) return false;
+
+  // Random PLL se vždy trénuje se žlutou nahoře a zelenou vpředu.
+  setTrainerTop("yellow");
+  setTrainerFrontColor("green");
+
+  currentAlgorithmName = name;
+  selectedAlg.dataset.algName = name;
+  selectedAlg.dataset.algText = algorithm;
+  selectedAlg.innerText = "Algoritmus: " + algorithm;
+
+  prepareNext();
+  renderAlgorithmPreview(selectedAlg);
+  setTrainerPaused(false);
+
+  if (navrat && stateMsg) {
+    stateMsg.innerText = "NÁVRAT DO SLOŽENÉ";
+    stateMsg.style.color = "yellow";
+  }
+
+  return true;
+}
+
 function pickRandomPLL() {
   const vybraneNazvy = typeof window.getSelectedRandomPllNames === "function"
     ? window.getSelectedRandomPllNames(Object.keys(pllAlgs))
@@ -2019,46 +2125,61 @@ function pickRandomPLL() {
   if (names.length === 0) return;
 
   const randomName = names[Math.floor(Math.random() * names.length)];
+  const randomAlg = getActivePllAlg(randomName);
 
-  // Random PLL může přijít bez klasického onSelect callbacku z menu.
-  // Proto orientaci nastavíme i tady, jinak po WCA zůstane bílá nahoře
-  // a správný fyzický tah U se vyhodnotí jako chyba.
-  setTrainerTop("yellow");
-  setTrainerFrontColor("green");
-  
-  currentAlgorithmName = randomName;
-selectedAlg.dataset.algName = randomName;
-selectedAlg.dataset.algText = getActivePllAlg(randomName);
-selectedAlg.innerText = "Algoritmus: " + selectedAlg.dataset.algText;
-  
-  prepareNext();
-  renderAlgorithmPreview(selectedAlg);
-  setTrainerPaused(false);
-  
+  randomPllFazeNavratu = false;
+  nastavPllProTrenink(randomName, randomAlg, { navrat: false });
 }
 
+function pripravNavratDoSlozene() {
+  const puvodniNazev = currentAlgorithmName;
+  const puvodniAlgoritmus = selectedAlg?.dataset?.algText || getActivePllAlg(puvodniNazev);
+  if (!puvodniNazev || !puvodniAlgoritmus) return false;
 
+  const navratovy = najdiNavratovyPll(puvodniNazev, puvodniAlgoritmus);
+  if (!navratovy?.algorithm) return false;
 
+  randomPllFazeNavratu = true;
+  return nastavPllProTrenink(
+    navratovy.name || puvodniNazev,
+    navratovy.algorithm,
+    { navrat: true }
+  );
+}
 
 function prepareNextTrainerRun() {
   if (trainingMode === "random") {
+    if (jeRandomPllNavratDoSlozeneZapnuty()) {
+      if (!randomPllFazeNavratu) {
+        if (pripravNavratDoSlozene()) return;
+      } else {
+        randomPllFazeNavratu = false;
+      }
+    }
+
     pickRandomPLL();
     return;
   }
 
+  randomPllFazeNavratu = false;
   resetTrainer(selectedAlg);
   prepareNext();
 }
 
 /*
  * Po chybě necháváme stejný algoritmus.
- * Random vybere nový PLL až po ÚSPĚŠNÉM dokončení, ne po chybě.
+ * Platí to i pro návratovou fázi – chyba nikdy nepřeskočí na nový Random PLL.
  */
 function restartCurrentTrainerRun() {
   resetTrainer(selectedAlg);
   prepareNext();
   renderAlgorithmPreview(selectedAlg);
   setTrainerPaused(false);
+
+  if (randomPllFazeNavratu && stateMsg) {
+    stateMsg.innerText = "NÁVRAT DO SLOŽENÉ";
+    stateMsg.style.color = "yellow";
+  }
 }
 
 function prepareNext() {

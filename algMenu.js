@@ -3,6 +3,7 @@
    ================================================== */
 
 const RANDOM_PLL_STORAGE_KEY = "cubeTrainer.randomPllSelection.v1";
+const RANDOM_PLL_RETURN_SOLVED_KEY = "cubeTrainer.randomPllReturnSolved.v1";
 
 function vlozStylyVyberuPll() {
   if (document.getElementById("pll-selection-style")) return;
@@ -100,14 +101,23 @@ function vlozStylyVyberuPll() {
       display: flex !important;
       align-items: center !important;
       justify-content: space-between !important;
-      gap: 12px !important;
+      gap: 10px !important;
     }
 
+    .pll-random-options {
+      margin-left: auto !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: flex-end !important;
+      gap: 12px !important;
+      min-width: 0 !important;
+    }
+
+    .pll-random-option-label,
     .pll-select-all-label {
       display: inline-flex !important;
       align-items: center !important;
-      gap: 8px !important;
-      margin-left: auto !important;
+      gap: 7px !important;
       color: #dfe8e4 !important;
       font-size: 14px !important;
       font-weight: 750 !important;
@@ -117,6 +127,7 @@ function vlozStylyVyberuPll() {
       user-select: none !important;
     }
 
+    .pll-random-option-label input,
     .pll-select-all-label input {
       width: 22px !important;
       height: 22px !important;
@@ -146,11 +157,17 @@ function vlozStylyVyberuPll() {
         font-size: 17px;
       }
 
-      .pll-select-all-label {
-        font-size: 13px !important;
-        gap: 6px !important;
+      .pll-random-options {
+        gap: 8px !important;
       }
 
+      .pll-random-option-label,
+      .pll-select-all-label {
+        font-size: 12px !important;
+        gap: 5px !important;
+      }
+
+      .pll-random-option-label input,
       .pll-select-all-label input {
         width: 20px !important;
         height: 20px !important;
@@ -160,6 +177,33 @@ function vlozStylyVyberuPll() {
 
   document.head.appendChild(style);
 }
+
+function nactiNavratDoSlozene() {
+  try {
+    return localStorage.getItem(RANDOM_PLL_RETURN_SOLVED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function ulozNavratDoSlozene(enabled) {
+  const hodnota = !!enabled;
+  window.__cubeTrainerRandomPllReturnSolved = hodnota;
+
+  try {
+    localStorage.setItem(RANDOM_PLL_RETURN_SOLVED_KEY, hodnota ? "1" : "0");
+  } catch (error) {
+    console.warn("PLL Random: nastavení návratu do složené se nepodařilo uložit", error);
+  }
+}
+
+window.getRandomPllReturnToSolvedEnabled = function() {
+  if (typeof window.__cubeTrainerRandomPllReturnSolved !== "boolean") {
+    window.__cubeTrainerRandomPllReturnSolved = nactiNavratDoSlozene();
+  }
+
+  return window.__cubeTrainerRandomPllReturnSolved;
+};
 
 function nactiVyberRandomPll(nazvy) {
   const povoleneNazvy = new Set(nazvy);
@@ -244,6 +288,7 @@ function otevriPllVyber({
 
   const tlacitka = new Map();
   let vybratVseCheckbox = null;
+  let navratDoSlozeneCheckbox = null;
 
   const prekresliVyber = () => {
     tlacitka.forEach((button, name) => {
@@ -280,6 +325,27 @@ function otevriPllVyber({
       const titleText = document.createElement("span");
       titleText.textContent = "PLL";
 
+      const options = document.createElement("span");
+      options.className = "pll-random-options";
+
+      const navratLabel = document.createElement("label");
+      navratLabel.className = "pll-random-option-label";
+      navratLabel.setAttribute(
+        "aria-label",
+        "Po každém Random PLL nabídnout návratový PLL, aby kostka skončila znovu složená"
+      );
+      navratLabel.title = "Návrat do složené";
+
+      navratDoSlozeneCheckbox = document.createElement("input");
+      navratDoSlozeneCheckbox.type = "checkbox";
+      navratDoSlozeneCheckbox.checked = typeof window.getRandomPllReturnToSolvedEnabled === "function"
+        ? window.getRandomPllReturnToSolvedEnabled()
+        : false;
+
+      const navratText = document.createElement("span");
+      navratText.textContent = "Návrat";
+      navratLabel.append(navratDoSlozeneCheckbox, navratText);
+
       const label = document.createElement("label");
       label.className = "pll-select-all-label";
       label.setAttribute("aria-label", "Vybrat nebo odznačit všechny PLL");
@@ -291,9 +357,18 @@ function otevriPllVyber({
       labelText.textContent = "Vybrat všechny";
 
       label.append(vybratVseCheckbox, labelText);
-      modalTitle.replaceChildren(titleText, label);
+      options.append(navratLabel, label);
+      modalTitle.replaceChildren(titleText, options);
+
+      navratLabel.addEventListener("click", event => {
+        event.stopPropagation();
+      });
 
       label.addEventListener("click", event => {
+        event.stopPropagation();
+      });
+
+      navratDoSlozeneCheckbox.addEventListener("change", event => {
         event.stopPropagation();
       });
 
@@ -355,11 +430,13 @@ function otevriPllVyber({
 
     if (jeRandom) {
       ulozVyberRandomPll(rozpracovanyVyber);
+      ulozNavratDoSlozene(navratDoSlozeneCheckbox?.checked);
 
       window.dispatchEvent(
         new CustomEvent("cube-trainer-random-pll-selection-changed", {
           detail: {
-            selected: Array.from(rozpracovanyVyber)
+            selected: Array.from(rozpracovanyVyber),
+            returnToSolved: !!navratDoSlozeneCheckbox?.checked
           }
         })
       );
