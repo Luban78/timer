@@ -314,7 +314,7 @@ function getAutomaticDiagramAlgorithm(algName) {
   return "";
 }
 
-function renderCubePlaceholder(algName, algorithmOverride = "") {
+function renderCubePlaceholder(algName) {
   // Vlastní obrázek přiřazený přes tužku má vždy nejvyšší prioritu.
   const customImage = getCustomAlgorithmImage(algName);
 
@@ -327,7 +327,7 @@ function renderCubePlaceholder(algName, algorithmOverride = "") {
 
   // Automatický PLL/OLL diagram. Geometrii vytvoří cubing.js a finální barvy
   // převedeme do stejného stylu, jako má referenční PLL/OLL aplikace.
-  const automaticAlg = String(algorithmOverride || "").trim() || getAutomaticDiagramAlgorithm(algName);
+  const automaticAlg = getAutomaticDiagramAlgorithm(algName);
   if (automaticAlg) {
     return `
       <div
@@ -457,19 +457,22 @@ function nactiBarvuZObrazku(imageData, nx, ny) {
 }
 
 function zjistiPllPresuny(imageData) {
+  // Středy bočních stickerů v LL SVG nejsou na 30/70 %, ale blíž 18/82 %.
+  // Staré souřadnice často sáhly do sousedního stickeru a u R/G permů
+  // vytvořily falešné přesuny rohů -> "chomáč" šipek uprostřed.
   const band = {
-    topL: nactiBarvuZObrazku(imageData, 0.30, 0.07),
+    topL: nactiBarvuZObrazku(imageData, 0.18, 0.07),
     topM: nactiBarvuZObrazku(imageData, 0.50, 0.07),
-    topR: nactiBarvuZObrazku(imageData, 0.70, 0.07),
-    rightT: nactiBarvuZObrazku(imageData, 0.88, 0.30),
-    rightM: nactiBarvuZObrazku(imageData, 0.88, 0.50),
-    rightB: nactiBarvuZObrazku(imageData, 0.88, 0.70),
-    bottomL: nactiBarvuZObrazku(imageData, 0.30, 0.93),
+    topR: nactiBarvuZObrazku(imageData, 0.82, 0.07),
+    rightT: nactiBarvuZObrazku(imageData, 0.93, 0.18),
+    rightM: nactiBarvuZObrazku(imageData, 0.93, 0.50),
+    rightB: nactiBarvuZObrazku(imageData, 0.93, 0.82),
+    bottomL: nactiBarvuZObrazku(imageData, 0.18, 0.93),
     bottomM: nactiBarvuZObrazku(imageData, 0.50, 0.93),
-    bottomR: nactiBarvuZObrazku(imageData, 0.70, 0.93),
-    leftT: nactiBarvuZObrazku(imageData, 0.10, 0.30),
-    leftM: nactiBarvuZObrazku(imageData, 0.10, 0.50),
-    leftB: nactiBarvuZObrazku(imageData, 0.10, 0.70)
+    bottomR: nactiBarvuZObrazku(imageData, 0.82, 0.93),
+    leftT: nactiBarvuZObrazku(imageData, 0.07, 0.18),
+    leftM: nactiBarvuZObrazku(imageData, 0.07, 0.50),
+    leftB: nactiBarvuZObrazku(imageData, 0.07, 0.82)
   };
 
   const targetEdge = { B: "ET", R: "ER", F: "EB", L: "EL" };
@@ -500,55 +503,207 @@ function zjistiPllPresuny(imageData) {
   return mapping;
 }
 
-function kresliSipku(ctx, od, kam, oboustranna = false) {
+function zkratBodNaUsecce(od, kam, vzdalenost) {
+  const dx = kam.x - od.x;
+  const dy = kam.y - od.y;
+  const delka = Math.hypot(dx, dy) || 1;
+  return {
+    x: od.x + (dx / delka) * vzdalenost,
+    y: od.y + (dy / delka) * vzdalenost
+  };
+}
+
+function hlavickaSipky(ctx, bod, smerX, smerY, barva) {
+  const delka = Math.hypot(smerX, smerY) || 1;
+  const ux = smerX / delka;
+  const uy = smerY / delka;
+  const velikost = 13;
+  const sirka = 7;
+  const bx = bod.x - ux * velikost;
+  const by = bod.y - uy * velikost;
+  const px = -uy;
+  const py = ux;
+
+  ctx.fillStyle = barva;
+  ctx.beginPath();
+  ctx.moveTo(bod.x, bod.y);
+  ctx.lineTo(bx + px * sirka, by + py * sirka);
+  ctx.lineTo(bx - px * sirka, by - py * sirka);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/*
+ * PLL sipky – V2
+ * Puvodni verze kreslila kazdy presun jako rovnou silnou caru pres stred.
+ * U R/G permu se tak vsechny sipky prekryvaly a obrazek byl necitelny.
+ * Tady zachovavame stejne mapovani dilku, ale kreslime jednotlive cykly
+ * oddelene a rohy vedeme mirne obloukem po obvodu.
+ */
+function kresliSipku(ctx, od, kam, options = {}) {
+  const {
+    oboustranna = false,
+    zakriveni = 0,
+    barva = "rgba(52, 56, 58, 0.88)",
+    tloustka = 5
+  } = options;
+
   const dx = kam.x - od.x;
   const dy = kam.y - od.y;
   const delka = Math.hypot(dx, dy);
   if (delka < 4) return;
 
-  const ux = dx / delka;
-  const uy = dy / delka;
-  const okraj = 18;
-  const start = { x: od.x + ux * okraj, y: od.y + uy * okraj };
-  const end = { x: kam.x - ux * okraj, y: kam.y - uy * okraj };
+  const start = zkratBodNaUsecce(od, kam, 15);
+  const end = zkratBodNaUsecce(kam, od, 15);
+
+  let control = null;
+  if (Math.abs(zakriveni) > 0.1) {
+    const ux = dx / delka;
+    const uy = dy / delka;
+    const nx = -uy;
+    const ny = ux;
+    const mx = (start.x + end.x) / 2;
+    const my = (start.y + end.y) / 2;
+    control = {
+      x: mx + nx * zakriveni,
+      y: my + ny * zakriveni
+    };
+  }
 
   ctx.save();
-  ctx.strokeStyle = "rgba(72, 76, 78, 0.82)";
-  ctx.fillStyle = "rgba(72, 76, 78, 0.82)";
-  ctx.lineWidth = 9;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
+  // Jemny svetly lem pomuze sipce zustat citelne pres zlute dilky.
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.34)";
+  ctx.lineWidth = tloustka + 3;
   ctx.beginPath();
   ctx.moveTo(start.x, start.y);
-  ctx.lineTo(end.x, end.y);
+  if (control) ctx.quadraticCurveTo(control.x, control.y, end.x, end.y);
+  else ctx.lineTo(end.x, end.y);
   ctx.stroke();
 
-  function hlavicka(bod, smerX, smerY) {
-    const velikost = 18;
-    const sirka = 11;
-    const bx = bod.x - smerX * velikost;
-    const by = bod.y - smerY * velikost;
-    const px = -smerY;
-    const py = smerX;
+  ctx.strokeStyle = barva;
+  ctx.lineWidth = tloustka;
+  ctx.beginPath();
+  ctx.moveTo(start.x, start.y);
+  if (control) ctx.quadraticCurveTo(control.x, control.y, end.x, end.y);
+  else ctx.lineTo(end.x, end.y);
+  ctx.stroke();
 
-    ctx.beginPath();
-    ctx.moveTo(bod.x, bod.y);
-    ctx.lineTo(bx + px * sirka, by + py * sirka);
-    ctx.lineTo(bx - px * sirka, by - py * sirka);
-    ctx.closePath();
-    ctx.fill();
+  const smerKonce = control
+    ? { x: end.x - control.x, y: end.y - control.y }
+    : { x: end.x - start.x, y: end.y - start.y };
+  hlavickaSipky(ctx, end, smerKonce.x, smerKonce.y, barva);
+
+  if (oboustranna) {
+    const smerStartu = control
+      ? { x: start.x - control.x, y: start.y - control.y }
+      : { x: start.x - end.x, y: start.y - end.y };
+    hlavickaSipky(ctx, start, smerStartu.x, smerStartu.y, barva);
   }
 
-  hlavicka(end, ux, uy);
-  if (oboustranna) hlavicka(start, -ux, -uy);
   ctx.restore();
+}
+
+function najdiCyklyPll(mapping, povolenePozice) {
+  const povolene = new Set(povolenePozice);
+  const navstivene = new Set();
+  const cykly = [];
+
+  povolenePozice.forEach(start => {
+    if (navstivene.has(start)) return;
+    if (!mapping[start] || mapping[start] === start) {
+      navstivene.add(start);
+      return;
+    }
+
+    const cyklus = [];
+    let aktualni = start;
+    const lokalni = new Set();
+
+    while (
+      aktualni &&
+      povolene.has(aktualni) &&
+      !lokalni.has(aktualni) &&
+      mapping[aktualni]
+    ) {
+      lokalni.add(aktualni);
+      navstivene.add(aktualni);
+      cyklus.push(aktualni);
+      aktualni = mapping[aktualni];
+    }
+
+    if (aktualni === start && cyklus.length > 1) {
+      cykly.push(cyklus);
+    }
+  });
+
+  return cykly;
+}
+
+function smerZakriveniVen(od, kam, stred, sila) {
+  const dx = kam.x - od.x;
+  const dy = kam.y - od.y;
+  const delka = Math.hypot(dx, dy) || 1;
+  let nx = -dy / delka;
+  let ny = dx / delka;
+  const mx = (od.x + kam.x) / 2;
+  const my = (od.y + kam.y) / 2;
+  const vx = mx - stred.x;
+  const vy = my - stred.y;
+
+  if (nx * vx + ny * vy < 0) {
+    nx *= -1;
+    ny *= -1;
+  }
+
+  // kresliSipku bere pouze skalarní zakriveni; znaménko zvolíme podle normaly
+  const puvodniNx = -dy / delka;
+  const puvodniNy = dx / delka;
+  return (puvodniNx * nx + puvodniNy * ny >= 0 ? 1 : -1) * sila;
+}
+
+function vykresliPllCyklus(ctx, cyklus, body, typ) {
+  const stred = { x: ctx.canvas.width / 2, y: ctx.canvas.height / 2 };
+  const jeRoh = typ === "rohy";
+  const barva = jeRoh
+    ? "rgba(42, 46, 48, 0.90)"
+    : "rgba(78, 82, 84, 0.92)";
+
+  if (cyklus.length === 2) {
+    const od = body[cyklus[0]];
+    const kam = body[cyklus[1]];
+    const zakriveni = jeRoh ? smerZakriveniVen(od, kam, stred, 28) : 0;
+    kresliSipku(ctx, od, kam, {
+      oboustranna: true,
+      zakriveni,
+      barva,
+      tloustka: jeRoh ? 5 : 4.5
+    });
+    return;
+  }
+
+  for (let i = 0; i < cyklus.length; i++) {
+    const od = body[cyklus[i]];
+    const kam = body[cyklus[(i + 1) % cyklus.length]];
+    if (!od || !kam) continue;
+
+    const sila = jeRoh ? 24 : 12;
+    const zakriveni = smerZakriveniVen(od, kam, stred, sila);
+    kresliSipku(ctx, od, kam, {
+      zakriveni,
+      barva,
+      tloustka: jeRoh ? 5 : 4.5
+    });
+  }
 }
 
 function dokresliPllSipky(ctx, imageData) {
   const mapping = zjistiPllPresuny(imageData);
   const w = ctx.canvas.width;
   const h = ctx.canvas.height;
+
   const body = {
     CTL: { x: w * 0.31, y: h * 0.31 },
     CTR: { x: w * 0.69, y: h * 0.31 },
@@ -560,18 +715,13 @@ function dokresliPllSipky(ctx, imageData) {
     EL: { x: w * 0.31, y: h * 0.50 }
   };
 
-  const hotovo = new Set();
+  const rohoveCykly = najdiCyklyPll(mapping, ["CTL", "CTR", "CBR", "CBL"]);
+  const hranoveCykly = najdiCyklyPll(mapping, ["ET", "ER", "EB", "EL"]);
 
-  Object.entries(mapping).forEach(([od, kam]) => {
-    if (od === kam || !body[od] || !body[kam]) return;
-
-    const opacny = mapping[kam] === od;
-    const par = [od, kam].sort().join("|");
-    if (opacny && hotovo.has(par)) return;
-
-    kresliSipku(ctx, body[od], body[kam], opacny);
-    if (opacny) hotovo.add(par);
-  });
+  // Rohy jsou vedené po vnějším oblouku, hrany blíž středu.
+  // Tím se u R/G permů jednotlivé cykly nekříží v jednom bodě.
+  rohoveCykly.forEach(cyklus => vykresliPllCyklus(ctx, cyklus, body, "rohy"));
+  hranoveCykly.forEach(cyklus => vykresliPllCyklus(ctx, cyklus, body, "hrany"));
 }
 
 function prebarviPixelyDiagramu(imageData, jeOll) {
@@ -674,6 +824,65 @@ async function prevedSvgNaStylApky(svg, algName) {
   }
 }
 
+
+function zavriDiagramZoom() {
+  const existujici = document.getElementById("alg-diagram-zoom-overlay");
+  if (existujici) existujici.remove();
+}
+
+function otevriDiagramZoom(obrazek, algName) {
+  if (!obrazek?.src) return;
+
+  zavriDiagramZoom();
+
+  const overlay = document.createElement("div");
+  overlay.id = "alg-diagram-zoom-overlay";
+  overlay.className = "alg-diagram-zoom-overlay";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-label", `Zvětšený diagram ${algName}`);
+
+  const card = document.createElement("div");
+  card.className = "alg-diagram-zoom-card";
+
+  const title = document.createElement("div");
+  title.className = "alg-diagram-zoom-title";
+  title.textContent = algName;
+
+  const img = document.createElement("img");
+  img.src = obrazek.src;
+  img.alt = `Zvětšený diagram ${algName}`;
+  img.draggable = false;
+
+  const hint = document.createElement("div");
+  hint.className = "alg-diagram-zoom-hint";
+  hint.textContent = "Klepnutím zavřít";
+
+  card.append(title, img, hint);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener("click", zavriDiagramZoom, { once: true });
+}
+
+function aktivujZoomDiagramu(wrapper, obrazek, algName) {
+  wrapper.classList.add("alg-picture-zoomable");
+  wrapper.setAttribute("role", "button");
+  wrapper.setAttribute("tabindex", "0");
+  wrapper.setAttribute("aria-label", `Zvětšit diagram ${algName}`);
+
+  const otevri = event => {
+    event.preventDefault();
+    event.stopPropagation();
+    otevriDiagramZoom(obrazek, algName);
+  };
+
+  wrapper.onclick = otevri;
+  wrapper.onkeydown = event => {
+    if (event.key === "Enter" || event.key === " ") otevri(event);
+  };
+}
+
 async function namontujAutomatickyDiagram(selectedAlg, algName) {
   const wrapper = selectedAlg.querySelector(".alg-picture-auto");
   if (!wrapper) return;
@@ -707,6 +916,7 @@ async function namontujAutomatickyDiagram(selectedAlg, algName) {
     if (!wrapper.isConnected || wrapper.dataset.diagramRenderToken !== renderToken) return;
 
     wrapper.replaceChildren(obrazek);
+    aktivujZoomDiagramu(wrapper, obrazek, algName);
   } catch (error) {
     if (!wrapper.isConnected || wrapper.dataset.diagramRenderToken !== renderToken) return;
     console.warn(`[DIAGRAM] ${algName}: diagram ve stylu PLL/OLL aplikace se nepodařilo vytvořit.`, error);
@@ -779,7 +989,7 @@ function renderMoveRows(displaySteps) {
   return rows.join("");
 }
 
-function renderAlgorithmCard(algName, displaySteps, empty = false, algorithmOverride = "") {
+function renderAlgorithmCard(algName, displaySteps, empty = false) {
   const safeName = escapeHtml(algName || "Nevybráno");
   
   const presetKey = localStorage.getItem("trainerColorPreset") || "yellow_green";
@@ -806,7 +1016,7 @@ function renderAlgorithmCard(algName, displaySteps, empty = false, algorithmOver
 
     ${empty ? "" : (isWca
       ? `<div class="alg-picture alg-picture-wca-spacer" aria-hidden="true"></div>`
-      : renderCubePlaceholder(algName, algorithmOverride))}
+      : renderCubePlaceholder(algName))}
 
     <div class="alg-moves-row">
       ${empty ? "" : renderMoveRows(displaySteps)}
@@ -818,12 +1028,7 @@ export function renderTrainer(selectedAlg) {
   const algName = selectedAlg.dataset.algName || "Algoritmus";
   const displaySteps = buildDisplaySteps(displayMoves);
 
-  selectedAlg.innerHTML = renderAlgorithmCard(
-    algName,
-    displaySteps,
-    false,
-    selectedAlg.dataset.algText || ""
-  );
+  selectedAlg.innerHTML = renderAlgorithmCard(algName, displaySteps, false);
   namontujAutomatickyDiagram(selectedAlg, algName);
 }
 

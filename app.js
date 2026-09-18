@@ -52,7 +52,7 @@ import {
   checkMove,
   getExpectedMove,
   resetTrainer
-} from "./moveTrainer.js?v=return-solved-1";
+} from "./moveTrainer.js?v=pll-arrows-2";
 
 import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";
