@@ -52,7 +52,7 @@ import {
   checkMove,
   getExpectedMove,
   resetTrainer
-} from "./moveTrainer.js?v=pll-arrows-2";
+} from "./moveTrainer.js?v=pll-orientation-1";
 
 import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";
@@ -2091,24 +2091,70 @@ function najdiNavratovyPll(puvodniNazev, puvodniAlgoritmus) {
   };
 }
 
-function nastavPllProTrenink(name, algorithm, { navrat = false } = {}) {
+function invertujSetupRotaci(rotace) {
+  if (rotace === "y") return "y'";
+  if (rotace === "y'") return "y";
+  if (rotace === "y2") return "y2";
+  return "";
+}
+
+async function najdiSetupRotaciProNavrat(puvodniAlgoritmus, navratovyAlgoritmus) {
+  const puvodni = String(puvodniAlgoritmus || "").trim();
+  const navratovy = String(navratovyAlgoritmus || "").trim();
+  if (!puvodni || !navratovy) return "";
+
+  try {
+    await initCubeEngine();
+    const solved = createSolvedPattern();
+    if (!solved) return "";
+
+    // Hledame takovou fyzickou reorientaci kostky kolem osy y,
+    // po ktere lze navratovy PLL jet PRESNE ve variante zobrazene na obrazku.
+    // Testujeme konjugaci: A + y + B + y' = solved.
+    const kandidati = ["", "y", "y2", "y'"];
+
+    for (const setupRotace of kandidati) {
+      const zpet = invertujSetupRotaci(setupRotace);
+      const casti = [puvodni, setupRotace, navratovy, zpet].filter(Boolean);
+      const vysledek = applyAlgorithm(solved, casti.join(" "));
+
+      if (vysledek && patternsIdentical(vysledek, solved)) {
+        return setupRotace;
+      }
+    }
+  } catch (error) {
+    console.warn("PLL setup rotaci se nepodarilo spocitat:", error);
+  }
+
+  return "";
+}
+
+function nastavPllProTrenink(name, algorithm, { navrat = false, setupRotace = "" } = {}) {
   if (!name || !algorithm) return false;
 
-  // Random PLL se vždy trénuje se žlutou nahoře a zelenou vpředu.
+  // PLL obrazek je kresleny pro zluty vrsek. Setup y/y2/y' je soucasti
+  // treninku a moveTrainer ho pouzije jako virtualni reorientaci kostky.
   setTrainerTop("yellow");
   setTrainerFrontColor("green");
 
+  const zakladniAlgoritmus = String(algorithm || "").trim();
+  const rotace = String(setupRotace || "").trim();
+  const algoritmusProTrainer = [rotace, zakladniAlgoritmus].filter(Boolean).join(" ");
+
   currentAlgorithmName = name;
   selectedAlg.dataset.algName = name;
-  selectedAlg.dataset.algText = algorithm;
-  selectedAlg.innerText = "Algoritmus: " + algorithm;
+  selectedAlg.dataset.algText = algoritmusProTrainer;
+  selectedAlg.dataset.pllSetupRotation = rotace;
+  selectedAlg.innerText = "Algoritmus: " + algoritmusProTrainer;
 
   prepareNext();
   renderAlgorithmPreview(selectedAlg);
   setTrainerPaused(false);
 
   if (navrat && stateMsg) {
-    stateMsg.innerText = "NÁVRAT DO SLOŽENÉ";
+    stateMsg.innerText = rotace
+      ? `OTOČ ${rotace} • NÁVRAT DO SLOŽENÉ`
+      : "NÁVRAT DO SLOŽENÉ";
     stateMsg.style.color = "yellow";
   }
 
@@ -2137,27 +2183,38 @@ function pickRandomPLL() {
   nastavPllProTrenink(randomName, randomAlg, { navrat: false });
 }
 
-function pripravNavratDoSlozene() {
+async function pripravNavratDoSlozene() {
   const puvodniNazev = currentAlgorithmName;
   const puvodniAlgoritmus = selectedAlg?.dataset?.algText || getActivePllAlg(puvodniNazev);
   if (!puvodniNazev || !puvodniAlgoritmus) return false;
 
-  const navratovy = najdiNavratovyPll(puvodniNazev, puvodniAlgoritmus);
+  // Pokud predchozi navrat obsahoval setup rotaci, pro vypocet noveho stavu
+  // potrebujeme cisty PLL bez uvodniho y/y2/y'.
+  const puvodniBezSetupu = String(puvodniAlgoritmus)
+    .trim()
+    .replace(/^(y2|y'|y)\s+/, "");
+
+  const navratovy = najdiNavratovyPll(puvodniNazev, puvodniBezSetupu);
   if (!navratovy?.algorithm) return false;
+
+  const setupRotace = await najdiSetupRotaciProNavrat(
+    puvodniBezSetupu,
+    navratovy.algorithm
+  );
 
   randomPllFazeNavratu = true;
   return nastavPllProTrenink(
     navratovy.name || puvodniNazev,
     navratovy.algorithm,
-    { navrat: true }
+    { navrat: true, setupRotace }
   );
 }
 
-function prepareNextTrainerRun() {
+async function prepareNextTrainerRun() {
   if (trainingMode === "random") {
     if (jeRandomPllNavratDoSlozeneZapnuty()) {
       if (!randomPllFazeNavratu) {
-        if (pripravNavratDoSlozene()) return;
+        if (await pripravNavratDoSlozene()) return;
       } else {
         randomPllFazeNavratu = false;
       }
@@ -2877,8 +2934,8 @@ showMoveDebug({
 
     finishSolve(performance.now(), false);
 
-    setTimeout(() => {
-      prepareNextTrainerRun();
+    setTimeout(async () => {
+      await prepareNextTrainerRun();
       trainerLocked = false;
     }, 1200);
 
