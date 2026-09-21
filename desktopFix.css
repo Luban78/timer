@@ -911,3 +911,100 @@ body:not(.screen-timer) #screen-menu-dropdown {
     min-height: 62px !important;
   }
 }
+
+/* =========================================================
+   PATCH – větší PLL/OLL diagram na desktopu + layout 3 sloupce
+   U obrázkových algoritmů: vlevo název/orientace, uprostřed velký diagram,
+   vpravo notace. WCA režim zůstává bez prázdného prostředního sloupce.
+   ========================================================= */
+body.screen-timer #selectedAlg:has(.alg-picture-auto),
+body.screen-timer #selectedAlg:has(.alg-picture-image) {
+  grid-template-columns: minmax(150px, 220px) clamp(180px, 22vw, 280px) minmax(0, 1fr) !important;
+  grid-template-rows: minmax(0, 1fr) !important;
+  column-gap: clamp(18px, 2vw, 28px) !important;
+  align-items: center !important;
+  height: clamp(300px, 38vh, 380px) !important;
+  min-height: 300px !important;
+  max-height: 380px !important;
+}
+
+body.screen-timer #selectedAlg:has(.alg-picture-auto) .alg-card-head,
+body.screen-timer #selectedAlg:has(.alg-picture-image) .alg-card-head {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  align-self: start !important;
+  justify-self: stretch !important;
+  gap: 6px !important;
+}
+
+body.screen-timer #selectedAlg:has(.alg-picture-auto) .alg-picture,
+body.screen-timer #selectedAlg:has(.alg-picture-image) .alg-picture {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  align-self: center !important;
+  justify-self: center !important;
+  width: clamp(170px, 20vw, 250px) !important;
+  height: clamp(170px, 20vw, 250px) !important;
+  margin: 0 !important;
+}
+
+body.screen-timer #selectedAlg:has(.alg-picture-auto) .alg-picture .alg-auto-image,
+body.screen-timer #selectedAlg:has(.alg-picture-image) .alg-picture img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+body.screen-timer #selectedAlg:has(.alg-picture-auto) .alg-moves-row,
+body.screen-timer #selectedAlg:has(.alg-picture-image) .alg-moves-row {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  align-self: center !important;
+  justify-self: stretch !important;
+}
+
+body.screen-timer #selectedAlg:has(.alg-picture-auto) .alg-move-line,
+body.screen-timer #selectedAlg:has(.alg-picture-image) .alg-move-line {
+  min-height: 40px !important;
+  gap: clamp(6px, 0.75vw, 14px) !important;
+}
+
+body.screen-timer #selectedAlg:has(.alg-picture-auto) .alg-move,
+body.screen-timer #selectedAlg:has(.alg-picture-auto) .next-move,
+body.screen-timer #selectedAlg:has(.alg-picture-auto) .done-move,
+body.screen-timer #selectedAlg:has(.alg-picture-auto) .wrong-move,
+body.screen-timer #selectedAlg:has(.alg-picture-image) .alg-move,
+body.screen-timer #selectedAlg:has(.alg-picture-image) .next-move,
+body.screen-timer #selectedAlg:has(.alg-picture-image) .done-move,
+body.screen-timer #selectedAlg:has(.alg-picture-image) .wrong-move {
+  font-size: clamp(18px, 1.45vw, 28px) !important;
+}
+
+/* WCA musí zůstat dvousloupcové bez mrtvého prostoru uprostřed. */
+body.screen-timer #selectedAlg:has(.alg-picture-wca-spacer) {
+  grid-template-columns: clamp(150px, 16vw, 205px) minmax(0, 1fr) !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  height: clamp(280px, 35vh, 345px) !important;
+  min-height: 280px !important;
+  max-height: 345px !important;
+}
+
+body.screen-timer #selectedAlg:has(.alg-picture-wca-spacer) .alg-card-head {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+
+body.screen-timer #selectedAlg:has(.alg-picture-wca-spacer) .alg-picture-wca-spacer {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+}
+
+body.screen-timer #selectedAlg:has(.alg-picture-wca-spacer) .alg-moves-row {
+  grid-column: 2 !important;
+  grid-row: 1 / 3 !important;
+}
