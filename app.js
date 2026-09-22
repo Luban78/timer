@@ -705,11 +705,79 @@ function vytvorPanelRelace() {
 
 let trainerPauseTapBound = false;
 
+function jeTrainerVeStavuProNouzovyReset() {
+  if (!isSolving) return false;
+
+  const stav = stateMsg?.dataset?.trainerState || "";
+  return [
+    "wrong",
+    "undoing",
+    "wrong-auf",
+    "undoing-auf",
+    "wrong-pre-auf",
+    "pre-auf",
+    "auf",
+    "partial-double"
+  ].includes(stav);
+}
+
+function resetujAktualniTrainerPokus() {
+  // Nouzový reset pouze aktuálního pokusu. Nic se neukládá do historie/statistik,
+  // Smart Cube zůstává připojená a uživatel nemusí restartovat aplikaci.
+  clearPendingMove();
+  clearSliceMoveBuffer();
+  clearGuidedOuterBuffer();
+  resetSliceCenter();
+
+  clearInterval(uiTimer);
+  clearTimeout(stopTimer);
+  setWcaStopFallbackEnabled(false);
+
+  isSolving = false;
+  trainerLocked = false;
+  trainerCekaNaPllAuf = false;
+  trainerOcekavanyPllAuf = "";
+  cekajiciPllNavratPoPredAuf = null;
+  chybyPredAuf = [];
+  chybyPostAuf = [];
+  currentMoves = [];
+  startTime = 0;
+  lastMoveTime = 0;
+
+  // U Random + Návrat se vždy vracíme na začátek celého cyklu.
+  // Pokud už je fyzická kostka solved, nesmíme po resetu pokračovat v návratové
+  // fázi, protože její PLL případ už na kostce neexistuje.
+  if (trainingMode === "random" && puzzleMode === "pll") {
+    randomPllFazeNavratu = false;
+    pickRandomPLL();
+  } else {
+    randomPllFazeNavratu = false;
+    restartCurrentTrainerRun();
+  }
+
+  if (stateMsg) {
+    stateMsg.innerText = "PŘIPRAVEN • RESET";
+    stateMsg.dataset.trainerState = "ready";
+    stateMsg.style.color = "#00e676";
+  }
+}
+
 function bindTrainerPauseTapOnce() {
   if (!selectedAlg || trainerPauseTapBound) return;
 
   selectedAlg.addEventListener("pointerdown", e => {
     if (e.target.closest("#editAlgVariantBtn")) return;
+
+    // Když se korekce/AUF/dvojtah dostane do slepé uličky, klepnutí na kartu
+    // zahodí jen aktuální pokus a vrátí trainer do čistého výchozího stavu.
+    // Připojení Smart Cube ani session statistiky se tím nerestartují.
+    if (jeTrainerVeStavuProNouzovyReset()) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      resetujAktualniTrainerPokus();
+      return;
+    }
 
     const klikNaNazevAlgoritmu = e.target.closest(".alg-title");
 
