@@ -330,6 +330,12 @@ let pendingSliceRaw = null;
 let pendingSliceTimer = null;
 let pendingGuidedOuter = null;
 let pendingGuidedOuterTimer = null;
+
+// AUF má vlastní dvojtahový buffer. Nesmí sdílet stav s běžným U2/R2
+// uvnitř algoritmu, jinak se může starý partial-double přelít přes hranici fáze.
+let pendingPllAufHalf = null;
+let pendingPllAufHalfTimer = null;
+
 let sliceCenter = [0, 1, 2, 3, 4, 5];
 const SLICE_CENTER_ROT = [
   [0, 2, 4, 3, 5, 1], // E / y'
@@ -729,9 +735,15 @@ function jeTrainerVeStavuProNouzovyReset() {
 function resetujAktualniTrainerPokus() {
   // Nouzový reset pouze aktuálního pokusu. Nic se neukládá do historie/statistik,
   // Smart Cube zůstává připojená a uživatel nemusí restartovat aplikaci.
+  // U Random PLL si před vyčištěním zapamatujeme přesně případ + aktivní variantu,
+  // aby reset nevylosoval jiný algoritmus.
+  const resetPllName = currentAlgorithmName;
+  const resetPllAlg = selectedAlg?.dataset?.algText || "";
+
   clearPendingMove();
   clearSliceMoveBuffer();
   clearGuidedOuterBuffer();
+  clearPllAufBuffer();
   resetSliceCenter();
 
   clearInterval(uiTimer);
@@ -750,12 +762,21 @@ function resetujAktualniTrainerPokus() {
   startTime = 0;
   lastMoveTime = 0;
 
-  // U Random + Návrat se vždy vracíme na začátek celého cyklu.
-  // Pokud už je fyzická kostka solved, nesmíme po resetu pokračovat v návratové
-  // fázi, protože její PLL případ už na kostce neexistuje.
+  // U Random + Návrat se vracíme na začátek cyklu, ale NELOSujeme nový PLL.
+  // Po ručním složení kostky tak může uživatel okamžitě zopakovat přesně případ,
+  // na kterém se nouzový reset použil.
   if (trainingMode === "random" && puzzleMode === "pll") {
     randomPllFazeNavratu = false;
-    pickRandomPLL();
+
+    if (
+      resetPllName &&
+      resetPllAlg &&
+      Object.prototype.hasOwnProperty.call(pllAlgs, resetPllName)
+    ) {
+      nastavPllProTrenink(resetPllName, resetPllAlg, { navrat: false });
+    } else {
+      pickRandomPLL();
+    }
   } else {
     randomPllFazeNavratu = false;
     restartCurrentTrainerRun();
@@ -2243,6 +2264,7 @@ function dokonciPredAufANastavNavrat() {
 
   cekajiciPllNavratPoPredAuf = null;
   chybyPredAuf = [];
+  clearPllAufBuffer();
 
   return nastavPllProTrenink(
     navrat.name,
@@ -2378,6 +2400,7 @@ function pripravNavratDoSlozene() {
 
   if (navratovy.predAuf) {
     prepareNext();
+    clearPllAufBuffer();
     cekajiciPllNavratPoPredAuf = { ...navratovy };
     chybyPredAuf = [];
 
@@ -2446,6 +2469,7 @@ function prepareNext() {
   clearPendingMove();
   clearSliceMoveBuffer();
   clearGuidedOuterBuffer();
+  clearPllAufBuffer();
   resetSliceCenter();
 
   seq = [];
@@ -2551,6 +2575,14 @@ function clearGuidedOuterBuffer() {
     pendingGuidedOuterTimer = null;
   }
   pendingGuidedOuter = null;
+}
+
+function clearPllAufBuffer() {
+  if (pendingPllAufHalfTimer) {
+    clearTimeout(pendingPllAufHalfTimer);
+    pendingPllAufHalfTimer = null;
+  }
+  pendingPllAufHalf = null;
 }
 
 function getMoveSuffix(move) {
@@ -2808,6 +2840,81 @@ box.style.whiteSpace = "pre-line";
 
 
 
+function zpracujSmartAufDvojtah(rawMove, expectedMove) {
+  rawMove = normalizeMove(rawMove);
+  expectedMove = normalizeMove(expectedMove);
+  if (!rawMove || !expectedMove || !expectedMove.endsWith("2")) return false;
+
+  const now = performance.now();
+  const logicalMove = normalizeMove(logicalOuterMove(rawMove));
+  const expectedGroup = moveAxisGroup(expectedMove);
+  const rawGroup = moveAxisGroup(rawMove);
+  const logicalGroup = moveAxisGroup(logicalMove);
+
+  // AUF je samostatná fáze: zahodíme případný starý dvojtah z algoritmu.
+  clearGuidedOuterBuffer();
+  clearPendingMove();
+
+  // Některé Smart Cube pošlou celý U2/D2 rovnou jako jeden event.
+  if (getMoveSuffix(rawMove) === "2") {
+    clearPllAufBuffer();
+    commitMove("=" + expectedMove, now);
+    return true;
+  }
+
+  // Jiná osa není část AUF U2. Pokud už byla rozdělaná první půlka,
+  // pošleme ji i aktuální tah do AUF korekce ve správném pořadí.
+  if (expectedGroup < 0 || (rawGroup !== expectedGroup && logicalGroup !== expectedGroup)) {
+    const prvni = pendingPllAufHalf;
+    clearPllAufBuffer();
+
+    if (prvni?.logicalMove) {
+      commitMove(prvni.logicalMove, prvni.time);
+    }
+    commitMove(logicalMove || rawMove, now);
+    return true;
+  }
+
+  if (pendingPllAufHalf) {
+    const prvni = pendingPllAufHalf;
+    clearPllAufBuffer();
+
+    const stejnaFyzickaStena = baseFace(prvni.rawMove) === baseFace(rawMove);
+    const stejnySmer = getMoveSuffix(prvni.rawMove) === getMoveSuffix(rawMove);
+
+    if (stejnaFyzickaStena && stejnySmer) {
+      commitMove("=" + expectedMove, now);
+      return true;
+    }
+
+    // Např. U + U' není U2. Oba tahy zpracuje AUF correction stack.
+    commitMove(prvni.logicalMove || prvni.rawMove, prvni.time);
+    commitMove(logicalMove || rawMove, now);
+    return true;
+  }
+
+  pendingPllAufHalf = {
+    rawMove,
+    logicalMove: logicalMove || rawMove,
+    expectedMove,
+    time: now
+  };
+
+  // Žádný hard timeout: text je jen nápověda, první čtvrtotáčka zůstává uložená.
+  pendingPllAufHalfTimer = setTimeout(() => {
+    pendingPllAufHalfTimer = null;
+    if (!pendingPllAufHalf || pendingPllAufHalf.expectedMove !== expectedMove) return;
+
+    if (stateMsg && !trainerPaused) {
+      stateMsg.innerText = `AUF ${expectedMove} • 1/2 – DOKONČI`;
+      stateMsg.dataset.trainerState = "partial-double";
+      stateMsg.style.color = "#ffe928";
+    }
+  }, DOUBLE_MOVE_WINDOW);
+
+  return true;
+}
+
 function zpracujSmartAufTah(rawMove, expectedMove) {
   rawMove = normalizeMove(rawMove);
   expectedMove = normalizeMove(expectedMove);
@@ -2828,6 +2935,11 @@ function zpracujSmartAufTah(rawMove, expectedMove) {
   }
 
   if (!expectedMove.endsWith("2")) {
+    // Jednootáčkový AUF nesmí zdědit žádný rozdělaný U2/R2 buffer.
+    clearPllAufBuffer();
+    clearGuidedOuterBuffer();
+    clearPendingMove();
+
     const expectedSuffix = getMoveSuffix(expectedMove);
     const rawSuffix = getMoveSuffix(rawMove);
     const logicalSuffix = getMoveSuffix(logicalMove);
@@ -2842,9 +2954,8 @@ function zpracujSmartAufTah(rawMove, expectedMove) {
     return true;
   }
 
-  // U2 může Smart Cube poslat přímo jako U2/D2 nebo jako dva rychlé čtvrttahy.
-  handleGuidedOuterMove(rawMove, expectedMove);
-  return true;
+  // AUF U2 má vlastní buffer oddělený od běžných dvojtahů algoritmu.
+  return zpracujSmartAufDvojtah(rawMove, expectedMove);
 }
 
 function invertujTrainerRawTah(move) {
@@ -3436,6 +3547,7 @@ function commitMove(move, now) {
       // dokončíme.
       trainerOcekavanyPllAuf = "";
       chybyPostAuf = [];
+      clearPllAufBuffer();
 
       // Správný známý POST-AUF je poslední tah matematického návratu.
       // Dokončíme solve vždy – nespoléháme na randomPllFazeNavratu ani FACELETS,
@@ -3563,6 +3675,7 @@ showMoveDebug({
       if (trainerOcekavanyPllAuf) {
         trainerCekaNaPllAuf = true;
         chybyPostAuf = [];
+        clearPllAufBuffer();
 
         if (stateMsg) {
           stateMsg.innerText = `AUF ${trainerOcekavanyPllAuf} – DOKONČI`;
