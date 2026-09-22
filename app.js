@@ -2182,6 +2182,79 @@ function cenaAuf(tah) {
   return String(tah).includes("2") ? 2 : 1;
 }
 
+/*
+ * Matematika návratu musí počítat STEJNÝ fyzický stav jako Smart Cube trainer.
+ * moveTrainer.js celé rotace x/y/z nepovažuje za tah stickerů: pouze si je
+ * zapamatuje jako virtuální osu a následující tahy přemapuje. Kdybychom zde
+ * poslali např. Ja = "y R' ..." přímo do cubing.js, vyjde jiný stav a chybný
+ * PRE/POST-AUF (u Ja typicky U2 místo skutečného U').
+ *
+ * Tato čistá funkce zrcadlí přesně pořadí mapování v moveTrainer.js:
+ * Z -> X -> Y. Rotace samy ze sekvence odstraní.
+ */
+function prevedAlgoritmusNaFyzickeTahyTraineru(algorithm) {
+  const moves = String(algorithm || "").trim().split(/\s+/).filter(Boolean);
+  let virtualX = 0;
+  let virtualY = 0;
+  let virtualZ = 0;
+
+  const xMaps = [
+    { U: "U", D: "D", F: "F", B: "B", R: "R", L: "L" },
+    { U: "F", D: "B", F: "D", B: "U", R: "R", L: "L" },
+    { U: "D", D: "U", F: "B", B: "F", R: "R", L: "L" },
+    { U: "B", D: "F", F: "U", B: "D", R: "R", L: "L" }
+  ];
+
+  const yMaps = [
+    { F: "F", R: "R", B: "B", L: "L" },
+    { F: "L", R: "F", B: "R", L: "B" },
+    { F: "B", R: "L", B: "F", L: "R" },
+    { F: "R", R: "B", B: "L", L: "F" }
+  ];
+
+  const zMaps = [
+    { U: "U", D: "D", R: "R", L: "L", F: "F", B: "B" },
+    { U: "R", R: "D", D: "L", L: "U", F: "F", B: "B" },
+    { U: "D", D: "U", R: "L", L: "R", F: "F", B: "B" },
+    { U: "L", L: "D", D: "R", R: "U", F: "F", B: "B" }
+  ];
+
+  function aplikujMapu(move, map) {
+    if (!move) return move;
+    const face = move[0];
+    const suffix = move.slice(1);
+    return map[face] ? map[face] + suffix : move;
+  }
+
+  const vysledek = [];
+
+  for (const move of moves) {
+    if (/^[xyz](?:2|')?$/.test(move)) {
+      const base = move[0];
+      const suffix = move.slice(1);
+      const krok = suffix === "2" ? 2 : suffix === "'" ? 3 : 1;
+
+      if (base === "x") virtualX = (virtualX + krok) % 4;
+      if (base === "y") virtualY = (virtualY + krok) % 4;
+
+      // moveTrainer má pro z opačný směr čítače než pro x/y.
+      if (base === "z") {
+        const zKrok = suffix === "2" ? 2 : suffix === "'" ? 1 : 3;
+        virtualZ = (virtualZ + zKrok) % 4;
+      }
+      continue;
+    }
+
+    let physicalMove = move;
+    physicalMove = aplikujMapu(physicalMove, zMaps[virtualZ]);
+    physicalMove = aplikujMapu(physicalMove, xMaps[virtualX]);
+    physicalMove = aplikujMapu(physicalMove, yMaps[virtualY]);
+    vysledek.push(physicalMove);
+  }
+
+  return vysledek.join(" ");
+}
+
 function ziskejPreferovanePllProNavrat() {
   const vybrane = typeof window.getSelectedRandomPllNames === "function"
     ? window.getSelectedRandomPllNames(Object.keys(pllAlgs))
@@ -2212,7 +2285,8 @@ function najdiNavratovyPllMatematicky(puvodniNazev, puvodniAlgoritmus) {
   let stavPoPrvnim;
 
   try {
-    stavPoPrvnim = applyAlgorithm(solved, puvodniAlgoritmus);
+    const fyzickyPuvodniAlgoritmus = prevedAlgoritmusNaFyzickeTahyTraineru(puvodniAlgoritmus);
+    stavPoPrvnim = applyAlgorithm(solved, fyzickyPuvodniAlgoritmus);
   } catch (error) {
     console.warn("PLL návrat: nepodařilo se vytvořit stav po algoritmu.", error);
     return null;
@@ -2229,7 +2303,8 @@ function najdiNavratovyPllMatematicky(puvodniNazev, puvodniAlgoritmus) {
     for (const predAuf of aufs) {
       for (const postAuf of aufs) {
         try {
-          const sekvence = normalizujAlgSekvenci(predAuf, algorithm, postAuf);
+          const fyzickyAlgorithm = prevedAlgoritmusNaFyzickeTahyTraineru(algorithm);
+          const sekvence = normalizujAlgSekvenci(predAuf, fyzickyAlgorithm, postAuf);
           const vysledek = applyAlgorithm(stavPoPrvnim, sekvence);
 
           if (!isPatternSolved(vysledek)) continue;
@@ -2269,7 +2344,8 @@ function najdiNavratovyPllMatematicky(puvodniNazev, puvodniAlgoritmus) {
     to: vybrany.name,
     predAuf: vybrany.predAuf || "-",
     postAuf: vybrany.postAuf || "-",
-    algorithm: vybrany.algorithm
+    algorithm: vybrany.algorithm,
+    fyzickyAlgorithm: prevedAlgoritmusNaFyzickeTahyTraineru(vybrany.algorithm)
   });
 
   return vybrany;
