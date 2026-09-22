@@ -78,7 +78,7 @@ import {
 
 import { getAlgorithmStats } from "./algorithmStats.js";
 import { drawDetailGraph } from "./detailGraph.js";
-import { openPLLMenu, openOLLMenu } from "./algMenu.js?v=pll-picker-v13";
+import { openPLLMenu, openOLLMenu } from "./algMenu.js?v=pll-picker-v14";
 import {
   generateWcaScramble,
   beginWcaScramble,

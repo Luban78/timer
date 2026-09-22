@@ -102,7 +102,7 @@ function vlozStylyVyberuPll() {
       display: flex !important;
       align-items: center !important;
       justify-content: space-between !important;
-      gap: 10px !important;
+      gap: 18px !important;
     }
 
     .pll-random-options {
@@ -111,8 +111,19 @@ function vlozStylyVyberuPll() {
       align-items: center !important;
       justify-content: flex-end !important;
       flex-wrap: wrap !important;
-      gap: 10px 12px !important;
+      gap: 8px !important;
       min-width: 0 !important;
+    }
+
+    .pll-random-option-label,
+    .pll-select-all-label,
+    .pll-error-repeat-option {
+      min-height: 38px !important;
+      padding: 0 10px !important;
+      border: 1px solid rgba(0,230,118,.26) !important;
+      border-radius: 11px !important;
+      background: rgba(5,16,20,.42) !important;
+      box-sizing: border-box !important;
     }
 
     .pll-random-option-label,
@@ -156,9 +167,18 @@ function vlozStylyVyberuPll() {
       min-height: 30px !important;
       margin: 0 !important;
       padding: 0 !important;
+      border: 1px solid rgba(0,230,118,.55) !important;
       border-radius: 9px !important;
+      background: linear-gradient(180deg, rgba(25,43,51,.98), rgba(18,27,32,.98)) !important;
+      color: #f2f7f5 !important;
       font-size: 20px !important;
+      font-weight: 900 !important;
       line-height: 1 !important;
+      box-shadow: none !important;
+    }
+
+    .pll-error-repeat-option button:disabled {
+      opacity: .35 !important;
     }
 
     .pll-error-repeat-option strong {
@@ -189,8 +209,17 @@ function vlozStylyVyberuPll() {
         font-size: 17px;
       }
 
+      #modalTitle.pll-selection-title {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+      }
+
       .pll-random-options {
-        gap: 8px !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+        justify-content: flex-start !important;
+        gap: 7px !important;
       }
 
       .pll-random-option-label,
@@ -484,7 +513,7 @@ function otevriPllVyber({
       labelText.textContent = "Vybrat všechny";
 
       label.append(vybratVseCheckbox, labelText);
-      options.append(navratLabel, repeatControl, label);
+      options.append(repeatControl, navratLabel, label);
       modalTitle.replaceChildren(titleText, options);
 
       navratLabel.addEventListener("click", event => {
