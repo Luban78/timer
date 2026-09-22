@@ -179,6 +179,8 @@ const settingsImportBtn = document.getElementById("settings-import-btn");
 const settingsClearBtn = document.getElementById("settings-clear-btn");
 const settingsResetProfileBtn = document.getElementById("settings-reset-profile-btn");
 const settingsCubeModeBtn = document.getElementById("settingsCubeModeBtn");
+const settingsLowTpsSoundBtn = document.getElementById("settingsLowTpsSoundBtn");
+const settingsLowTpsSoundText = document.getElementById("settingsLowTpsSoundText");
 
 const statsBest = document.getElementById("stats-best");
 const statsBestTPS = document.getElementById("stats-best-tps");
@@ -268,6 +270,8 @@ let activeScreen = "timer";
 let cubeMode = localStorage.getItem("cubeMode") || "smart";
 let trainingMode = localStorage.getItem("trainingMode") || "single";
 let puzzleMode = localStorage.getItem("puzzleMode") || "wca";
+let lowTpsSoundEnabled = localStorage.getItem("lowTpsSoundEnabled") !== "0";
+let lastFaceletsAt = 0;
 let randomPllFazeNavratu = false;
 let algorithmStatsFilter = "pll";
 let lastStateSignature = "";
@@ -956,6 +960,15 @@ if (settingsCubeModeText) {
 }
   settingsCubeModeBtn.dataset.targetCubeMode = cubeMode === "normal" ? "smart" : "normal";
 }
+
+function updateLowTpsSoundSetting() {
+  if (!settingsLowTpsSoundBtn || !settingsLowTpsSoundText) return;
+
+  settingsLowTpsSoundText.textContent =
+    `Zvuk nízkého TPS: ${lowTpsSoundEnabled ? "Zapnuto" : "Vypnuto"}`;
+  settingsLowTpsSoundBtn.setAttribute("aria-pressed", lowTpsSoundEnabled ? "true" : "false");
+}
+
 
 function switchToNormalCubeMode() {
   cubeMode = "normal";
@@ -1651,21 +1664,25 @@ function setupCubeButtons() {
 
         onFacelets: event => {
           faceletCount++;
+          lastFaceletsAt = performance.now();
 
           if (event.facelets) setCurrentFacelets(event.facelets);
           if (event.state) setCurrentCubeState(event.state);
 
-          // PLL: po dokončení předepsané sekvence ještě může zbývat AUF
-          // (U / U' / U2). Ten není chyba. Čekáme, dokud je kostka skutečně solved.
-          if (
+          // PLL AUF: fyzicky složená Smart Cube je autorita.
+          // Pokud matematika čeká např. U2, ale kostka je už po první čtvrtotáčce
+          // skutečně solved (Ja je typický případ), nesmíme nutit druhou polovinu U2.
+          const pllAufJeSlozeny =
             trainerCekaNaPllAuf &&
-            !trainerOcekavanyPllAuf &&
             chybyPostAuf.length === 0 &&
             puzzleMode === "pll" &&
             cubeMode === "smart" &&
             isSolving &&
-            jePllPoAufSlozeny(event.facelets, event.state)
-          ) {
+            jePllPoAufSlozeny(event.facelets, event.state);
+
+          if (pllAufJeSlozeny && (pendingPllAufHalf || !trainerOcekavanyPllAuf)) {
+            trainerOcekavanyPllAuf = "";
+            clearPllAufBuffer();
             dokonciPllPoAuf(performance.now());
           }
 
@@ -2900,6 +2917,20 @@ function zpracujSmartAufDvojtah(rawMove, expectedMove) {
     time: now
   };
 
+  // Když Smart Cube už po první čtvrtotáčce hlásí solved, je skutečný stav
+  // důležitější než předpočítané U2. Kontrolujeme jen čerstvý FACELETS/state,
+  // aby starý solved packet z minulého pokusu nemohl solve ukončit omylem.
+  setTimeout(() => {
+    if (!pendingPllAufHalf || pendingPllAufHalf.expectedMove !== expectedMove) return;
+
+    const faceletsJsouCerstve = lastFaceletsAt >= now - 120;
+    if (faceletsJsouCerstve && jePllPoAufSlozeny()) {
+      trainerOcekavanyPllAuf = "";
+      clearPllAufBuffer();
+      dokonciPllPoAuf(performance.now());
+    }
+  }, 90);
+
   // Žádný hard timeout: text je jen nápověda, první čtvrtotáčka zůstává uložená.
   pendingPllAufHalfTimer = setTimeout(() => {
     pendingPllAufHalfTimer = null;
@@ -3356,6 +3387,7 @@ function dokonciPllPoAuf(now = performance.now()) {
   clearPendingMove();
   clearSliceMoveBuffer();
   clearGuidedOuterBuffer();
+  clearPllAufBuffer();
 
   finishSolve(now, false);
 
@@ -3768,6 +3800,7 @@ timeVal.innerText = currentTPS.toFixed(1);
       stateMsg?.dataset?.trainerState === "partial-double";
 
     if (
+      lowTpsSoundEnabled &&
       !trainerVKlidoveFazi &&
       totalMoves > 8 &&
       currentTPS < avg * .65 &&
@@ -4111,6 +4144,19 @@ if (settingsCubeModeBtn) {
     }
 
     updateSettingsCubeModeButton();
+  };
+}
+
+updateLowTpsSoundSetting();
+
+if (settingsLowTpsSoundBtn) {
+  settingsLowTpsSoundBtn.onclick = e => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    lowTpsSoundEnabled = !lowTpsSoundEnabled;
+    localStorage.setItem("lowTpsSoundEnabled", lowTpsSoundEnabled ? "1" : "0");
+    updateLowTpsSoundSetting();
   };
 }
 
