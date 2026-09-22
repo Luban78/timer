@@ -52,7 +52,7 @@ import {
   checkMove,
   getExpectedMove,
   resetTrainer
-} from "./moveTrainer.js?v=pll-orientation-auto-3";
+} from "./moveTrainer.js?v=trainer-correction-1";
 
 import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";
@@ -2839,36 +2839,44 @@ showMoveDebug({
   }
 
   if (trainerResult === "wrong") {
-  trainerLocked = true;
-  
-  clearPendingMove();
-  clearSliceMoveBuffer();
-  clearGuidedOuterBuffer();
-  
-  // Po chybě si hned vyžádáme nové facelets,
-  // aby další výběr PLL pracoval s aktuálním stavem kostky.
-  if (typeof requestFacelets === "function") {
-    setTimeout(requestFacelets, 150);
-    setTimeout(requestFacelets, 500);
+    // Stejně jako u WCA scramblu: algoritmus se NERESETUJE.
+    // Očekávaný tah zůstane na místě a čekáme, až uživatel chybu vrátí.
+    clearPendingMove();
+    clearSliceMoveBuffer();
+    clearGuidedOuterBuffer();
+
+    stateMsg.innerText = "CHYBA – VRAŤ TAH";
+    stateMsg.dataset.trainerState = "wrong";
+    stateMsg.style.color = "red";
+    playErrorSound();
+    return;
   }
-  
-  playErrorSound();
-  failSolve();
-  
-  setTimeout(() => {
-    // CHYBA = zkusit znovu STEJNÝ algoritmus.
-    // V Random režimu se nový PLL losuje až po správném dokončení.
-    restartCurrentTrainerRun();
-    trainerLocked = false;
-    
-    // Ještě jedna pojistka po resetu traineru
-    if (typeof requestFacelets === "function") {
-      requestFacelets();
-    }
-  }, 1800);
-  
-  return;
-}
+
+  if (trainerResult === "undoing") {
+    // Uživatel správně vrací chybu, ale v zásobníku je ještě další chybný tah.
+    stateMsg.innerText = "VRACEJ CHYBU";
+    stateMsg.dataset.trainerState = "undoing";
+    stateMsg.style.color = "#ffe928";
+    return;
+  }
+
+  if (trainerResult === "corrected") {
+    // Chyba je kompletně vrácena. Pokračujeme přesně u stejného očekávaného tahu.
+    stateMsg.innerText = "OPRAVENO";
+    stateMsg.dataset.trainerState = "corrected";
+    stateMsg.style.color = "#00e676";
+    beep(523, .05);
+
+    setTimeout(() => {
+      if (stateMsg.dataset.trainerState === "corrected") {
+        stateMsg.innerText = isSolving ? "SKLÁDÁŠ.." : "PŘIPRAVEN";
+        stateMsg.style.color = "#00e676";
+        stateMsg.dataset.trainerState = "running";
+      }
+    }, 450);
+
+    return;
+  }
   if (trainerResult === "finished") {
     trainerLocked = true;
     clearPendingMove();

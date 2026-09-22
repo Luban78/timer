@@ -25,6 +25,7 @@ let checkMoves = [];
 let displayIndex = 0;
 let checkIndex = 0;
 let wrongDisplayIndex = -1;
+let correctionStack = [];
 
 // Zatím řešíme bezpečně jen rotaci y.
 // x / z zatím pouze přeskočíme.
@@ -104,6 +105,60 @@ function getGroupedDisplayIndex(originalIndex) {
   return stepIndex;
 }
 
+
+/* =========================================================
+   OPRAVA CHYBNÉHO TAHU BEZ RESETU ALGORITMU
+   ========================================================= */
+
+function normalizeCorrectionMove(move) {
+  return String(move || "")
+    .trim()
+    .replace(/’/g, "'")
+    .replace(/\s+/g, "");
+}
+
+function areInverseCorrectionMoves(a, b) {
+  a = normalizeCorrectionMove(a);
+  b = normalizeCorrectionMove(b);
+  if (!a || !b) return false;
+
+  // Dvojtah je sám sobě inverzní.
+  if (a.endsWith("2") || b.endsWith("2")) {
+    return a === b && a.endsWith("2");
+  }
+
+  const baseA = a.endsWith("'") ? a.slice(0, -1) : a;
+  const baseB = b.endsWith("'") ? b.slice(0, -1) : b;
+  if (baseA !== baseB) return false;
+
+  return a.endsWith("'") !== b.endsWith("'");
+}
+
+function processCorrectionMove(move, selectedAlg) {
+  const normalized = normalizeCorrectionMove(move);
+  if (!normalized) return "correction";
+
+  const last = correctionStack[correctionStack.length - 1];
+
+  // Správné vrácení posledního chybného tahu.
+  if (last && areInverseCorrectionMoves(last, normalized)) {
+    correctionStack.pop();
+
+    if (correctionStack.length === 0) {
+      wrongDisplayIndex = -1;
+      renderTrainer(selectedAlg);
+      return "corrected";
+    }
+
+    renderTrainer(selectedAlg);
+    return "undoing";
+  }
+
+  // Když při opravě udělá uživatel další chybu, musí ji nejdřív vrátit.
+  correctionStack.push(normalized);
+  renderTrainer(selectedAlg);
+  return "wrong";
+}
 
 /* =========================================================
    VIRTUÁLNÍ ROTACE Y
@@ -267,6 +322,7 @@ export function renderAlgorithmPreview(selectedAlg) {
     displayIndex = 0;
     checkIndex = 0;
     wrongDisplayIndex = -1;
+    correctionStack = [];
     virtualY = 0;
     virtualX = 0;
     virtualZ = 0;
@@ -282,6 +338,7 @@ export function renderAlgorithmPreview(selectedAlg) {
   displayIndex = 0;
   checkIndex = 0;
   wrongDisplayIndex = -1;
+  correctionStack = [];
   virtualY = 0;
   virtualX = 0;
   virtualZ = 0;
@@ -1138,6 +1195,18 @@ export function checkMove(move, selectedAlg) {
   )
 );
 
+  // Pokud už opravujeme chybu, očekávaný algoritmus se neposouvá.
+  // Čekáme, dokud uživatel nevrátí chybné tahy přesně v opačném pořadí.
+  if (correctionStack.length > 0) {
+    if (isTrainerMove(move)) {
+      move = stripTrainerMove(move);
+    } else {
+      move = rotateMove(move);
+    }
+
+    return processCorrectionMove(move, selectedAlg);
+  }
+
   // DŮLEŽITÉ: nic nepřidáváme před Ra/Rb ani jiný PLL. Pokud uživatel
   // fyzicky otočil celou kostku tak, aby pattern vypadal jako na obrázku,
   // první boční tah pouze zamkne správnou osu Smart Cube.
@@ -1151,6 +1220,7 @@ export function checkMove(move, selectedAlg) {
 
   if (move !== expectedMove) {
     wrongDisplayIndex = getGroupedDisplayIndex(expected.displayIndex);
+    correctionStack.push(normalizeCorrectionMove(move));
     renderTrainer(selectedAlg);
     return "wrong";
   }
@@ -1207,6 +1277,7 @@ export function resetTrainer(selectedAlg) {
   displayIndex = 0;
   checkIndex = 0;
   wrongDisplayIndex = -1;
+  correctionStack = [];
   virtualY = 0;
   virtualX = 0;
   virtualZ = 0;
