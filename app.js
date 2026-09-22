@@ -279,6 +279,11 @@ let cekajiciPllNavratPoPredAuf = null;
 let chybyPredAuf = [];
 let chybyPostAuf = [];
 
+// Zrcadlo korekčního zásobníku moveTraineru v RAW/fyzické notaci.
+// Potřebujeme ho jen proto, abychom poznali, zda se právě vrací celý U2/R2/...
+// a nespletli jeho dvě čtvrtotáčky s novými chybami.
+let trainerCorrectionRawStack = [];
+
 let seq = [];
 let moveTimes = [];
 let tpsHistory = [];
@@ -740,6 +745,7 @@ function resetujAktualniTrainerPokus() {
   cekajiciPllNavratPoPredAuf = null;
   chybyPredAuf = [];
   chybyPostAuf = [];
+  trainerCorrectionRawStack = [];
   currentMoves = [];
   startTime = 0;
   lastMoveTime = 0;
@@ -2436,6 +2442,7 @@ function prepareNext() {
   trainerCekaNaPllAuf = false;
   trainerOcekavanyPllAuf = "";
   chybyPostAuf = [];
+  trainerCorrectionRawStack = [];
   clearPendingMove();
   clearSliceMoveBuffer();
   clearGuidedOuterBuffer();
@@ -2840,6 +2847,87 @@ function zpracujSmartAufTah(rawMove, expectedMove) {
   return true;
 }
 
+function invertujTrainerRawTah(move) {
+  move = normalizeMove(move).replace(/^=/, "");
+  if (!move) return "";
+  if (move.endsWith("2")) return move;
+  if (move.endsWith("'")) return move.slice(0, -1);
+  return move + "'";
+}
+
+function zpracujTrainerDvojtahBezLimitu(rawMove, labelMove = "") {
+  rawMove = normalizeMove(rawMove);
+  if (!rawMove) return;
+
+  const now = performance.now();
+  clearPendingMove();
+
+  // Některé kostky pošlou celý dvojtah rovnou jako R2/U2/...
+  if (getMoveSuffix(rawMove) === "2") {
+    clearGuidedOuterBuffer();
+    if (stateMsg?.dataset?.trainerState === "partial-double") {
+      stateMsg.innerText = "SKLÁDÁŠ..";
+      stateMsg.dataset.trainerState = "running";
+      stateMsg.style.color = "#00e676";
+    }
+    commitMove(rawMove, now);
+    return;
+  }
+
+  if (pendingGuidedOuter) {
+    const prvni = pendingGuidedOuter;
+    clearGuidedOuterBuffer();
+
+    const stejnaStena = baseFace(prvni.rawMove) === baseFace(rawMove);
+    const stejnySmer = getMoveSuffix(prvni.rawMove) === getMoveSuffix(rawMove);
+
+    if (stejnaStena && stejnySmer) {
+      // ŽÁDNÝ časový limit: U + U je U2 i když mezi tahy byla delší pauza.
+      if (stateMsg?.dataset?.trainerState === "partial-double") {
+        stateMsg.innerText = "SKLÁDÁŠ..";
+        stateMsg.dataset.trainerState = "running";
+        stateMsg.style.color = "#00e676";
+      }
+      commitMove(makeDoubleMove(rawMove), now);
+      return;
+    }
+
+    if (stateMsg?.dataset?.trainerState === "partial-double") {
+      stateMsg.innerText = "SKLÁDÁŠ..";
+      stateMsg.dataset.trainerState = "running";
+      stateMsg.style.color = "#00e676";
+    }
+
+    // Dvě různé čtvrtotáčky nejsou dvojtah. Obě pošleme do traineru přesně
+    // v pořadí, v jakém fyzicky proběhly. První může vytvořit chybu a druhá ji
+    // může hned vrátit (např. U + U').
+    commitMove(prvni.rawMove, prvni.time);
+    commitMove(rawMove, now);
+    return;
+  }
+
+  // První polovina dvojtahu čeká BEZ timeoutu na druhou polovinu.
+  pendingGuidedOuter = {
+    mode: "trainer-double",
+    expected: labelMove,
+    rawMove,
+    time: now
+  };
+
+  // Timer pouze zobrazí nápovědu. Tah se po jeho vypršení NESMÍ commitnout
+  // jako samostatná chyba – právě to dříve rozbíjelo pomalejší U2/R2.
+  pendingGuidedOuterTimer = setTimeout(() => {
+    pendingGuidedOuterTimer = null;
+    if (!pendingGuidedOuter || pendingGuidedOuter.mode !== "trainer-double") return;
+
+    if (stateMsg && !trainerPaused) {
+      stateMsg.innerText = "DOKONČI " + (labelMove || "DVOJTAH");
+      stateMsg.dataset.trainerState = "partial-double";
+      stateMsg.style.color = "#ffe928";
+    }
+  }, DOUBLE_MOVE_WINDOW);
+}
+
 function handleSmartRawMove(move) {
     if (trainerPaused) {
     return;
@@ -2880,11 +2968,45 @@ if (mDebug) {
 // a rozhodí orientaci nebo pending tahy.
 if (!selectedAlgorithmUsesSlice()) {
   clearSliceMoveBuffer();
-  clearGuidedOuterBuffer();
   resetSliceCenter();
 
   window.__lastRawDebug = move;
 
+  const stavTraineru = stateMsg?.dataset?.trainerState || "";
+  const opravujemeTrainer =
+    trainerCorrectionRawStack.length > 0 &&
+    (stavTraineru === "wrong" || stavTraineru === "undoing");
+
+  if (opravujemeTrainer) {
+    const posledniChybaRaw = trainerCorrectionRawStack[trainerCorrectionRawStack.length - 1];
+    const ocekavanyNavratRaw = invertujTrainerRawTah(posledniChybaRaw);
+
+    // Pokud vracíme chybný R2/U2/..., musí se i oprava skládat jako dvojtah
+    // bez časového limitu. Jinak by první R/U bylo samo přidáno jako další chyba.
+    if (ocekavanyNavratRaw.endsWith("2")) {
+      zpracujTrainerDvojtahBezLimitu(move, ocekavanyNavratRaw);
+      return;
+    }
+
+    // U běžné jednootáčkové opravy nic nebufferujeme. Tah musí jít okamžitě
+    // do correctionStacku v moveTraineru.
+    clearGuidedOuterBuffer();
+    clearPendingMove();
+    commitMove(move, performance.now());
+    return;
+  }
+
+  const expectedOuter = normalizeMove(getExpectedMove());
+
+  // Ra/Rb a další algoritmy bez M/E/S dříve používaly starý 450ms double-buffer.
+  // Proto pomalejší U2/R2 falešně vzniklo jako chyba. Dvojtahy nyní čekají na
+  // druhou polovinu bez časového limitu.
+  if (expectedOuter && expectedOuter.endsWith("2")) {
+    zpracujTrainerDvojtahBezLimitu(move, expectedOuter);
+    return;
+  }
+
+  clearGuidedOuterBuffer();
   handleRawMove(move);
   return;
 }
@@ -3333,6 +3455,7 @@ function commitMove(move, now) {
   }
 
 const expectedBeforeMove = getExpectedMove();
+  const tahProKorekcniZrcadlo = normalizeMove(move).replace(/^=/, "");
   const trainerResult = checkMove(move, selectedAlg);
 showMoveDebug({
   expected: expectedBeforeMove,
@@ -3348,6 +3471,12 @@ showMoveDebug({
   }
 
   if (trainerResult === "wrong") {
+    // moveTrainer právě přidal tento fyzický tah na svůj correctionStack.
+    // Držíme si jeho malé RAW zrcadlo jen kvůli správnému skládání oprav U2/R2.
+    if (tahProKorekcniZrcadlo) {
+      trainerCorrectionRawStack.push(tahProKorekcniZrcadlo);
+    }
+
     // Stejně jako u WCA scramblu: algoritmus se NERESETUJE.
     // Očekávaný tah zůstane na místě a čekáme, až uživatel chybu vrátí.
     clearPendingMove();
@@ -3362,6 +3491,9 @@ showMoveDebug({
   }
 
   if (trainerResult === "undoing") {
+    // moveTrainer odstranil poslední chybu, ale v zásobníku ještě něco zbývá.
+    trainerCorrectionRawStack.pop();
+
     // Uživatel správně vrací chybu, ale v zásobníku je ještě další chybný tah.
     stateMsg.innerText = "VRACEJ CHYBU";
     stateMsg.dataset.trainerState = "undoing";
@@ -3370,6 +3502,10 @@ showMoveDebug({
   }
 
   if (trainerResult === "corrected") {
+    // Chyba je kompletně vrácena. Lokální zrcadlo musí být také prázdné.
+    trainerCorrectionRawStack = [];
+    clearGuidedOuterBuffer();
+
     // Chyba je kompletně vrácena. Pokračujeme přesně u stejného očekávaného tahu.
     stateMsg.innerText = "OPRAVENO";
     stateMsg.dataset.trainerState = "corrected";
@@ -3387,6 +3523,7 @@ showMoveDebug({
     return;
   }
   if (trainerResult === "finished") {
+    trainerCorrectionRawStack = [];
     clearPendingMove();
     clearSliceMoveBuffer();
     clearGuidedOuterBuffer();
