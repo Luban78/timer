@@ -4,6 +4,7 @@
 
 const RANDOM_PLL_STORAGE_KEY = "cubeTrainer.randomPllSelection.v1";
 const RANDOM_PLL_RETURN_SOLVED_KEY = "cubeTrainer.randomPllReturnSolved.v1";
+const PLL_ERROR_REPEAT_KEY = "pllErrorRepeatCount";
 
 function vlozStylyVyberuPll() {
   if (document.getElementById("pll-selection-style")) return;
@@ -109,7 +110,8 @@ function vlozStylyVyberuPll() {
       display: inline-flex !important;
       align-items: center !important;
       justify-content: flex-end !important;
-      gap: 12px !important;
+      flex-wrap: wrap !important;
+      gap: 10px 12px !important;
       min-width: 0 !important;
     }
 
@@ -134,6 +136,36 @@ function vlozStylyVyberuPll() {
       margin: 0 !important;
       accent-color: #00e676 !important;
       flex: 0 0 auto !important;
+    }
+
+    .pll-error-repeat-option {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      color: #dfe8e4 !important;
+      font-size: 14px !important;
+      font-weight: 750 !important;
+      white-space: nowrap !important;
+      user-select: none !important;
+    }
+
+    .pll-error-repeat-option button {
+      width: 30px !important;
+      min-width: 30px !important;
+      height: 30px !important;
+      min-height: 30px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 9px !important;
+      font-size: 20px !important;
+      line-height: 1 !important;
+    }
+
+    .pll-error-repeat-option strong {
+      min-width: 31px;
+      color: #00e676;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
     }
 
     @media (max-width: 899px) {
@@ -172,6 +204,19 @@ function vlozStylyVyberuPll() {
         width: 20px !important;
         height: 20px !important;
       }
+
+      .pll-error-repeat-option {
+        font-size: 12px !important;
+        gap: 4px !important;
+      }
+
+      .pll-error-repeat-option button {
+        width: 28px !important;
+        min-width: 28px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+        font-size: 18px !important;
+      }
     }
   `;
 
@@ -205,6 +250,32 @@ window.getRandomPllReturnToSolvedEnabled = function() {
   return window.__cubeTrainerRandomPllReturnSolved;
 };
 
+function nactiPocetOpakovaniPoChybe() {
+  if (typeof window.getPllErrorRepeatCount === "function") {
+    return Math.max(0, Math.min(10, Number(window.getPllErrorRepeatCount()) || 0));
+  }
+
+  try {
+    return Math.max(0, Math.min(10, Number(localStorage.getItem(PLL_ERROR_REPEAT_KEY)) || 0));
+  } catch {
+    return 0;
+  }
+}
+
+function ulozPocetOpakovaniPoChybe(value) {
+  const next = Math.max(0, Math.min(10, Number(value) || 0));
+
+  if (typeof window.setPllErrorRepeatCount === "function") {
+    return window.setPllErrorRepeatCount(next);
+  }
+
+  try {
+    localStorage.setItem(PLL_ERROR_REPEAT_KEY, String(next));
+  } catch {}
+
+  return next;
+}
+
 function nactiVyberRandomPll(nazvy) {
   const povoleneNazvy = new Set(nazvy);
 
@@ -229,6 +300,18 @@ function ziskejVyberRandomPll(nazvy) {
   if (!(window.__cubeTrainerRandomPllSelection instanceof Set)) {
     window.__cubeTrainerRandomPllSelection = nactiVyberRandomPll(nazvy);
   }
+
+  const povolene = new Set(nazvy);
+  const platne = new Set(
+    Array.from(window.__cubeTrainerRandomPllSelection)
+      .filter(name => povolene.has(name))
+  );
+
+  // Když byl jediný vybraný testovací PLL právě smazán,
+  // necháme Random bezpečně pokračovat z aktuálního viditelného seznamu.
+  window.__cubeTrainerRandomPllSelection = platne.size > 0
+    ? platne
+    : new Set(nazvy);
 
   return window.__cubeTrainerRandomPllSelection;
 }
@@ -289,6 +372,7 @@ function otevriPllVyber({
   const tlacitka = new Map();
   let vybratVseCheckbox = null;
   let navratDoSlozeneCheckbox = null;
+  let opakovaniPoChybe = nactiPocetOpakovaniPoChybe();
 
   const prekresliVyber = () => {
     tlacitka.forEach((button, name) => {
@@ -346,6 +430,49 @@ function otevriPllVyber({
       navratText.textContent = "Návrat";
       navratLabel.append(navratDoSlozeneCheckbox, navratText);
 
+      const repeatControl = document.createElement("span");
+      repeatControl.className = "pll-error-repeat-option";
+      repeatControl.setAttribute("aria-label", "Kolikrát zopakovat stejné PLL po chybě");
+      repeatControl.title = "Po chybě zopakovat stejné PLL";
+
+      const repeatText = document.createElement("span");
+      repeatText.textContent = "Po chybě";
+
+      const repeatMinus = document.createElement("button");
+      repeatMinus.type = "button";
+      repeatMinus.textContent = "−";
+      repeatMinus.setAttribute("aria-label", "Snížit počet opakování po chybě");
+
+      const repeatValue = document.createElement("strong");
+
+      const repeatPlus = document.createElement("button");
+      repeatPlus.type = "button";
+      repeatPlus.textContent = "+";
+      repeatPlus.setAttribute("aria-label", "Zvýšit počet opakování po chybě");
+
+      const prekresliOpakovani = () => {
+        repeatValue.textContent = `${opakovaniPoChybe}×`;
+        repeatMinus.disabled = opakovaniPoChybe <= 0;
+        repeatPlus.disabled = opakovaniPoChybe >= 10;
+      };
+
+      repeatMinus.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        opakovaniPoChybe = ulozPocetOpakovaniPoChybe(opakovaniPoChybe - 1);
+        prekresliOpakovani();
+      });
+
+      repeatPlus.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        opakovaniPoChybe = ulozPocetOpakovaniPoChybe(opakovaniPoChybe + 1);
+        prekresliOpakovani();
+      });
+
+      repeatControl.append(repeatText, repeatMinus, repeatValue, repeatPlus);
+      prekresliOpakovani();
+
       const label = document.createElement("label");
       label.className = "pll-select-all-label";
       label.setAttribute("aria-label", "Vybrat nebo odznačit všechny PLL");
@@ -357,7 +484,7 @@ function otevriPllVyber({
       labelText.textContent = "Vybrat všechny";
 
       label.append(vybratVseCheckbox, labelText);
-      options.append(navratLabel, label);
+      options.append(navratLabel, repeatControl, label);
       modalTitle.replaceChildren(titleText, options);
 
       navratLabel.addEventListener("click", event => {

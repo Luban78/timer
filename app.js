@@ -78,7 +78,7 @@ import {
 
 import { getAlgorithmStats } from "./algorithmStats.js";
 import { drawDetailGraph } from "./detailGraph.js";
-import { openPLLMenu, openOLLMenu } from "./algMenu.js?v=return-solved-1";
+import { openPLLMenu, openOLLMenu } from "./algMenu.js?v=pll-picker-v13";
 import {
   generateWcaScramble,
   beginWcaScramble,
@@ -181,9 +181,6 @@ const settingsResetProfileBtn = document.getElementById("settings-reset-profile-
 const settingsCubeModeBtn = document.getElementById("settingsCubeModeBtn");
 const settingsLowTpsSoundBtn = document.getElementById("settingsLowTpsSoundBtn");
 const settingsLowTpsSoundText = document.getElementById("settingsLowTpsSoundText");
-const settingsPllErrorRepeatMinusBtn = document.getElementById("settingsPllErrorRepeatMinusBtn");
-const settingsPllErrorRepeatPlusBtn = document.getElementById("settingsPllErrorRepeatPlusBtn");
-const settingsPllErrorRepeatValue = document.getElementById("settingsPllErrorRepeatValue");
 const deleteAlgorithmBtn = document.getElementById("deleteAlgorithmBtn");
 
 const statsBest = document.getElementById("stats-best");
@@ -981,17 +978,6 @@ function updateLowTpsSoundSetting() {
   settingsLowTpsSoundBtn.setAttribute("aria-pressed", lowTpsSoundEnabled ? "true" : "false");
 }
 
-function updatePllErrorRepeatSetting() {
-  if (!settingsPllErrorRepeatValue) return;
-  settingsPllErrorRepeatValue.textContent = `${pllErrorRepeatCount}×`;
-  if (settingsPllErrorRepeatMinusBtn) {
-    settingsPllErrorRepeatMinusBtn.disabled = pllErrorRepeatCount <= 0;
-  }
-  if (settingsPllErrorRepeatPlusBtn) {
-    settingsPllErrorRepeatPlusBtn.disabled = pllErrorRepeatCount >= 10;
-  }
-}
-
 function setPllErrorRepeatCount(nextValue) {
   pllErrorRepeatCount = Math.max(0, Math.min(10, Number(nextValue) || 0));
   localStorage.setItem(PLL_ERROR_REPEAT_KEY, String(pllErrorRepeatCount));
@@ -1003,8 +989,13 @@ function setPllErrorRepeatCount(nextValue) {
     pllErrorRepeatRemaining = pllErrorRepeatCount;
   }
 
-  updatePllErrorRepeatSetting();
+  return pllErrorRepeatCount;
 }
+
+// Random PLL picker si hodnotu čte a mění přes tyto dvě funkce.
+// Nastavení už tuto volbu nezobrazuje.
+window.getPllErrorRepeatCount = () => pllErrorRepeatCount;
+window.setPllErrorRepeatCount = value => setPllErrorRepeatCount(value);
 
 function resetPllErrorRepeatQueue() {
   pllErrorRepeatTarget = "";
@@ -1067,19 +1058,22 @@ function vratAkceVyberuAlgoritmuZPaticky() {
   const footer = document.getElementById("pllPickerStickyActions");
   if (!modalContent || !footer) return;
 
-  [...footer.querySelectorAll("button")].forEach(button => {
-    modalContent.appendChild(button);
-  });
+  const closeButton = footer.querySelector("#closeModal");
+  if (closeButton) modalContent.appendChild(closeButton);
+
+  // Staré VYBRAT patří k předchozímu otevření PLL pickeru.
+  footer.querySelectorAll(".alg-pll-apply-btn").forEach(button => button.remove());
   footer.remove();
-  modalContent.classList.remove("pll-picker-v12");
+  modalContent.classList.remove("pll-picker-v13");
 }
 
 function upravPllVyberModalu() {
   const modalContent = document.getElementById("modalContent");
   const list = document.getElementById("algList");
-  if (!modalContent || !list) return;
+  const closeButton = document.getElementById("closeModal");
+  if (!modalContent || !list || !closeButton) return;
 
-  modalContent.classList.add("pll-picker-v12");
+  modalContent.classList.add("pll-picker-v13");
 
   let footer = document.getElementById("pllPickerStickyActions");
   if (!footer) {
@@ -1088,19 +1082,14 @@ function upravPllVyberModalu() {
     modalContent.appendChild(footer);
   }
 
-  const actionButtons = [...modalContent.querySelectorAll("button")].filter(button => {
-    if (button.closest("#algList")) return false;
-    const label = String(button.textContent || "").trim().toUpperCase();
-    return label === "VYBRAT" || label === "ZAVŘÍT";
-  });
+  const applyButton = list.querySelector(".alg-pll-apply-btn");
+  if (applyButton) footer.appendChild(applyButton);
+  footer.appendChild(closeButton);
 
-  actionButtons
-    .sort((a, b) => {
-      const aLabel = String(a.textContent || "").trim().toUpperCase();
-      const bLabel = String(b.textContent || "").trim().toUpperCase();
-      return (aLabel === "VYBRAT" ? 0 : 1) - (bLabel === "VYBRAT" ? 0 : 1);
-    })
-    .forEach(button => footer.appendChild(button));
+  // Původní wrapper VYBRAT z algMenu už po přesunu nepotřebujeme.
+  list.querySelectorAll(".alg-pll-footer").forEach(oldFooter => {
+    if (!oldFooter.children.length) oldFooter.remove();
+  });
 }
 
 function naplanujUpravuPllVyberu() {
@@ -4410,24 +4399,6 @@ if (settingsLowTpsSoundBtn) {
     lowTpsSoundEnabled = !lowTpsSoundEnabled;
     localStorage.setItem("lowTpsSoundEnabled", lowTpsSoundEnabled ? "1" : "0");
     updateLowTpsSoundSetting();
-  };
-}
-
-updatePllErrorRepeatSetting();
-
-if (settingsPllErrorRepeatMinusBtn) {
-  settingsPllErrorRepeatMinusBtn.onclick = e => {
-    e.preventDefault();
-    e.stopPropagation();
-    setPllErrorRepeatCount(pllErrorRepeatCount - 1);
-  };
-}
-
-if (settingsPllErrorRepeatPlusBtn) {
-  settingsPllErrorRepeatPlusBtn.onclick = e => {
-    e.preventDefault();
-    e.stopPropagation();
-    setPllErrorRepeatCount(pllErrorRepeatCount + 1);
   };
 }
 
