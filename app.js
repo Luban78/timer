@@ -3332,13 +3332,16 @@ showMoveDebug({
       jeRandomPllNavratDoSlozeneZapnuty() &&
       !randomPllFazeNavratu
     ) {
+      // Random + Návrat: po prvním PLL nesmí vzniknout mrtvé časové okno.
+      // Speedcuber může udělat PRE-AUF okamžitě po posledním tahu ještě dřív,
+      // než prohlížeč stihne překreslit výzvu. Původní 700ms lock takový tah
+      // zahodil a fyzická kostka se rozešla se stavem traineru.
+      // Návratovou fázi proto připravíme synchronně; další Smart Cube event už
+      // uvidí správný PRE-AUF / návratový algoritmus a nic se neztratí.
       trainerLocked = true;
       finishSolve(performance.now(), false);
-
-      setTimeout(() => {
-        prepareNextTrainerRun();
-        trainerLocked = false;
-      }, 700);
+      prepareNextTrainerRun();
+      trainerLocked = false;
 
       return;
     }
