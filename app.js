@@ -3100,8 +3100,17 @@ function commitMove(move, now) {
         return;
       }
 
+      // Matematický návrat už přesně ví, že tento post-AUF je poslední
+      // krok celé sekvence. Po jeho správném provedení tedy nečekáme na
+      // FACELETS packet (může přijít pozdě nebo vůbec), ale solve rovnou
+      // dokončíme.
       trainerOcekavanyPllAuf = "";
       chybyPostAuf = [];
+
+      if (randomPllFazeNavratu) {
+        dokonciPllPoAuf(now);
+        return;
+      }
     }
 
     if (stateMsg) {
@@ -3193,22 +3202,30 @@ showMoveDebug({
       return;
     }
 
-    // Návratová fáze může mít přesně známý finální AUF.
+    // Návratová fáze je matematicky známá celá:
+    // - má-li finální AUF, čekáme přesně na něj;
+    // - nemá-li finální AUF, návratový PLL algoritmus právě skončil ve solved.
+    // V obou případech není potřeba čekat na FACELETS paket.
     if (
       puzzleMode === "pll" &&
       cubeMode === "smart" &&
-      randomPllFazeNavratu &&
-      trainerOcekavanyPllAuf
+      randomPllFazeNavratu
     ) {
-      trainerCekaNaPllAuf = true;
-      chybyPostAuf = [];
+      if (trainerOcekavanyPllAuf) {
+        trainerCekaNaPllAuf = true;
+        chybyPostAuf = [];
 
-      if (stateMsg) {
-        stateMsg.innerText = `AUF ${trainerOcekavanyPllAuf} – DOKONČI`;
-        stateMsg.dataset.trainerState = "auf";
-        stateMsg.style.color = "#ffe928";
+        if (stateMsg) {
+          stateMsg.innerText = `AUF ${trainerOcekavanyPllAuf} – DOKONČI`;
+          stateMsg.dataset.trainerState = "auf";
+          stateMsg.style.color = "#ffe928";
+        }
+
+        return;
       }
 
+      trainerCekaNaPllAuf = true;
+      dokonciPllPoAuf(performance.now());
       return;
     }
 
