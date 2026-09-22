@@ -517,8 +517,8 @@ function hlavickaSipky(ctx, bod, smerX, smerY, barva) {
   const delka = Math.hypot(smerX, smerY) || 1;
   const ux = smerX / delka;
   const uy = smerY / delka;
-  const velikost = 13;
-  const sirka = 7;
+  const velikost = 15;
+  const sirka = 8;
   const bx = bod.x - ux * velikost;
   const by = bod.y - uy * velikost;
   const px = -uy;
@@ -544,8 +544,8 @@ function kresliSipku(ctx, od, kam, options = {}) {
   const {
     oboustranna = false,
     zakriveni = 0,
-    barva = "rgba(52, 56, 58, 0.88)",
-    tloustka = 5
+    barva = "rgba(36, 40, 42, 0.94)",
+    tloustka = 4.5
   } = options;
 
   const dx = kam.x - od.x;
@@ -575,8 +575,8 @@ function kresliSipku(ctx, od, kam, options = {}) {
   ctx.lineJoin = "round";
 
   // Jemny svetly lem pomuze sipce zustat citelne pres zlute dilky.
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.34)";
-  ctx.lineWidth = tloustka + 3;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.66)";
+  ctx.lineWidth = tloustka + 4;
   ctx.beginPath();
   ctx.moveTo(start.x, start.y);
   if (control) ctx.quadraticCurveTo(control.x, control.y, end.x, end.y);
@@ -668,18 +668,20 @@ function vykresliPllCyklus(ctx, cyklus, body, typ) {
   const stred = { x: ctx.canvas.width / 2, y: ctx.canvas.height / 2 };
   const jeRoh = typ === "rohy";
   const barva = jeRoh
-    ? "rgba(42, 46, 48, 0.90)"
-    : "rgba(78, 82, 84, 0.92)";
+    ? "rgba(24, 27, 29, 0.96)"
+    : "rgba(70, 74, 77, 0.96)";
 
   if (cyklus.length === 2) {
     const od = body[cyklus[0]];
     const kam = body[cyklus[1]];
-    const zakriveni = jeRoh ? smerZakriveniVen(od, kam, stred, 28) : 0;
+    const zakriveni = jeRoh
+      ? smerZakriveniVen(od, kam, stred, 54)
+      : -smerZakriveniVen(od, kam, stred, 18);
     kresliSipku(ctx, od, kam, {
       oboustranna: true,
       zakriveni,
       barva,
-      tloustka: jeRoh ? 5 : 4.5
+      tloustka: jeRoh ? 4.5 : 3.5
     });
     return;
   }
@@ -689,12 +691,15 @@ function vykresliPllCyklus(ctx, cyklus, body, typ) {
     const kam = body[cyklus[(i + 1) % cyklus.length]];
     if (!od || !kam) continue;
 
-    const sila = jeRoh ? 24 : 12;
-    const zakriveni = smerZakriveniVen(od, kam, stred, sila);
+    // Rohove cykly vedeme vyrazne VEN po obvodu, hranove naopak
+    // lehce DOVNITR. Dve skupiny se tak u R/G permu nesrazi v jednom stredu.
+    const zakriveni = jeRoh
+      ? smerZakriveniVen(od, kam, stred, 62)
+      : -smerZakriveniVen(od, kam, stred, 22);
     kresliSipku(ctx, od, kam, {
       zakriveni,
       barva,
-      tloustka: jeRoh ? 5 : 4.5
+      tloustka: jeRoh ? 4.5 : 3.5
     });
   }
 }
@@ -705,14 +710,14 @@ function dokresliPllSipky(ctx, imageData) {
   const h = ctx.canvas.height;
 
   const body = {
-    CTL: { x: w * 0.31, y: h * 0.31 },
-    CTR: { x: w * 0.69, y: h * 0.31 },
-    CBR: { x: w * 0.69, y: h * 0.69 },
-    CBL: { x: w * 0.31, y: h * 0.69 },
-    ET: { x: w * 0.50, y: h * 0.31 },
-    ER: { x: w * 0.69, y: h * 0.50 },
-    EB: { x: w * 0.50, y: h * 0.69 },
-    EL: { x: w * 0.31, y: h * 0.50 }
+    CTL: { x: w * 0.25, y: h * 0.25 },
+    CTR: { x: w * 0.75, y: h * 0.25 },
+    CBR: { x: w * 0.75, y: h * 0.75 },
+    CBL: { x: w * 0.25, y: h * 0.75 },
+    ET: { x: w * 0.50, y: h * 0.36 },
+    ER: { x: w * 0.64, y: h * 0.50 },
+    EB: { x: w * 0.50, y: h * 0.64 },
+    EL: { x: w * 0.36, y: h * 0.50 }
   };
 
   const rohoveCykly = najdiCyklyPll(mapping, ["CTL", "CTR", "CBR", "CBL"]);

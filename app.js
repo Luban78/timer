@@ -52,7 +52,7 @@ import {
   checkMove,
   getExpectedMove,
   resetTrainer
-} from "./moveTrainer.js?v=pll-orientation-1";
+} from "./moveTrainer.js?v=pll-orientation-2";
 
 import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";
@@ -2038,59 +2038,6 @@ function jeTestovaciPllNazev(name) {
   return /test/i.test(String(name || ""));
 }
 
-function najdiNavratovyPll(puvodniNazev, puvodniAlgoritmus) {
-  const protiklady = {
-    "Ua-perm": "Ub-perm",
-    "Ub-perm": "Ua-perm",
-    "Aa-perm": "Ab-perm",
-    "Ab-perm": "Aa-perm",
-    "Ra-perm": "Rb-perm",
-    "Rb-perm": "Ra-perm",
-    "Ga-perm": "Gb-perm",
-    "Gb-perm": "Ga-perm",
-    "Gc-perm": "Gd-perm",
-    "Gd-perm": "Gc-perm"
-  };
-
-  const protikladNazev = protiklady[puvodniNazev];
-
-  // U PLL, které jsou samy sobě inverzní, se opakuje přesně
-  // stejná právě zvolená varianta. To je důležité pro svalovou paměť:
-  // uživatel vidí stejný algoritmus a jede ho podruhé úplně stejně.
-  if (!protikladNazev && !jeTestovaciPllNazev(puvodniNazev)) {
-    return {
-      name: puvodniNazev,
-      algorithm: puvodniAlgoritmus,
-      namedMatch: true,
-      stejnaVarianta: true
-    };
-  }
-
-  // U případů, které mají skutečný protiklad, nabídneme pojmenovaný
-  // protikus a jeho aktuálně vybranou variantu.
-  if (protikladNazev && Object.prototype.hasOwnProperty.call(pllAlgs, protikladNazev)) {
-    const protikladAlg = getActivePllAlg(protikladNazev);
-    if (protikladAlg) {
-      return {
-        name: protikladNazev,
-        algorithm: protikladAlg,
-        namedMatch: true,
-        stejnaVarianta: false
-      };
-    }
-  }
-
-  // Jen pro testovací / neznámé položky necháváme bezpečný fallback
-  // přes přesnou inverzi sekvence.
-  const fallbackAlg = invertujAlgoritmusProNavrat(puvodniAlgoritmus);
-  return {
-    name: puvodniNazev,
-    algorithm: fallbackAlg || puvodniAlgoritmus,
-    namedMatch: false,
-    stejnaVarianta: false
-  };
-}
-
 function invertujSetupRotaci(rotace) {
   if (rotace === "y") return "y'";
   if (rotace === "y'") return "y";
@@ -2098,52 +2045,139 @@ function invertujSetupRotaci(rotace) {
   return "";
 }
 
-async function najdiSetupRotaciProNavrat(puvodniAlgoritmus, navratovyAlgoritmus) {
+const PLL_NAVRAT_PROTIKLADY = {
+  "Ua-perm": "Ub-perm",
+  "Ub-perm": "Ua-perm",
+  "Aa-perm": "Ab-perm",
+  "Ab-perm": "Aa-perm",
+  "Ra-perm": "Rb-perm",
+  "Rb-perm": "Ra-perm",
+  "Ga-perm": "Gb-perm",
+  "Gb-perm": "Ga-perm",
+  "Gc-perm": "Gd-perm",
+  "Gd-perm": "Gc-perm"
+};
+
+async function najdiSetupProNavrat(puvodniAlgoritmus, navratovyAlgoritmus) {
   const puvodni = String(puvodniAlgoritmus || "").trim();
   const navratovy = String(navratovyAlgoritmus || "").trim();
-  if (!puvodni || !navratovy) return "";
+  if (!puvodni || !navratovy) return null;
 
   try {
     await initCubeEngine();
     const solved = createSolvedPattern();
-    if (!solved) return "";
+    if (!solved) return null;
 
-    // Hledame takovou fyzickou reorientaci kostky kolem osy y,
-    // po ktere lze navratovy PLL jet PRESNE ve variante zobrazene na obrazku.
-    // Testujeme konjugaci: A + y + B + y' = solved.
-    const kandidati = ["", "y", "y2", "y'"];
+    /*
+     * DULEZITE:
+     * Ra/Rb a nektere dalsi PLL nejsou pri konkretnich zvolenych variantach
+     * vzdy navzajem presny navrat ve stejnem AUF / stejne orientaci kostky.
+     *
+     * Proto hledame dve veci nezavisle:
+     *   1) AUF = skutecny tah horni vrstvy: "", U, U2, U'
+     *   2) reorientace cele kostky kolem y: "", y, y2, y'
+     *
+     * AUF Smart Cube normalne posle a trainer ho tedy musi opravdu zkontrolovat.
+     * Fyzickou y rotaci Smart Cube neposila, proto ji moveTrainer preskoci a
+     * pouzije jako virtualni mapovani nasledujicich R/F/L/B tahu.
+     *
+     * Testujeme presny navrat:
+     *   A + AUF + y + B + y^-1 = solved
+     *
+     * Tim je B provedene PRESNE ve stejne variante/orientaci, pro kterou je
+     * nakreslen jeho diagram.
+     */
+    const aufKandidati = ["", "U", "U2", "U'"];
+    const rotaceKandidati = ["", "y", "y2", "y'"];
 
-    for (const setupRotace of kandidati) {
-      const zpet = invertujSetupRotaci(setupRotace);
-      const casti = [puvodni, setupRotace, navratovy, zpet].filter(Boolean);
-      const vysledek = applyAlgorithm(solved, casti.join(" "));
+    for (const auf of aufKandidati) {
+      for (const rotace of rotaceKandidati) {
+        const zpet = invertujSetupRotaci(rotace);
+        const casti = [puvodni, auf, rotace, navratovy, zpet].filter(Boolean);
+        const vysledek = applyAlgorithm(solved, casti.join(" "));
 
-      if (vysledek && patternsIdentical(vysledek, solved)) {
-        return setupRotace;
+        if (vysledek && patternsIdentical(vysledek, solved)) {
+          return { auf, rotace };
+        }
       }
     }
   } catch (error) {
-    console.warn("PLL setup rotaci se nepodarilo spocitat:", error);
+    console.warn("PLL setup pro navrat se nepodarilo spocitat:", error);
   }
 
-  return "";
+  return null;
 }
 
-function nastavPllProTrenink(name, algorithm, { navrat = false, setupRotace = "" } = {}) {
+async function najdiNavratovyPllSPresnymSetupem(puvodniNazev, puvodniAlgoritmus) {
+  const puvodni = String(puvodniAlgoritmus || "").trim();
+  if (!puvodniNazev || !puvodni) return null;
+
+  const preferovanyNazev = PLL_NAVRAT_PROTIKLADY[puvodniNazev] || puvodniNazev;
+
+  // Nejdriv zkousime logicky protiklad (nebo stejny algoritmus u self-inverse PLL).
+  // Kdyby konkretni uzivatelem zvolena varianta mela jinou vazbu, dohledame
+  // presny pojmenovany PLL mezi ostatnimi aktivnimi variantami.
+  const kandidati = [
+    preferovanyNazev,
+    ...Object.keys(pllAlgs).filter(name =>
+      name !== preferovanyNazev &&
+      !jeTestovaciPllNazev(name)
+    )
+  ];
+
+  for (const name of kandidati) {
+    const algorithm = getActivePllAlg(name);
+    if (!algorithm) continue;
+
+    const setup = await najdiSetupProNavrat(puvodni, algorithm);
+    if (!setup) continue;
+
+    return {
+      name,
+      algorithm,
+      setupAuf: setup.auf || "",
+      setupRotace: setup.rotace || "",
+      namedMatch: true
+    };
+  }
+
+  // Bezpecny posledni fallback: presna inverze sekvence. Tady neni zaruceno,
+  // ze bude odpovidat pojmenovanemu diagramu, proto to zretelne oznacime.
+  const fallbackAlg = invertujAlgoritmusProNavrat(puvodni);
+  return {
+    name: puvodniNazev,
+    algorithm: fallbackAlg || puvodni,
+    setupAuf: "",
+    setupRotace: "",
+    namedMatch: false
+  };
+}
+
+function nastavPllProTrenink(
+  name,
+  algorithm,
+  { navrat = false, setupAuf = "", setupRotace = "", namedMatch = true } = {}
+) {
   if (!name || !algorithm) return false;
 
-  // PLL obrazek je kresleny pro zluty vrsek. Setup y/y2/y' je soucasti
-  // treninku a moveTrainer ho pouzije jako virtualni reorientaci kostky.
   setTrainerTop("yellow");
   setTrainerFrontColor("green");
 
   const zakladniAlgoritmus = String(algorithm || "").trim();
+  const auf = String(setupAuf || "").trim();
   const rotace = String(setupRotace || "").trim();
-  const algoritmusProTrainer = [rotace, zakladniAlgoritmus].filter(Boolean).join(" ");
+
+  // AUF je skutecny tah kostky a musi se odjet.
+  // y/y2/y' je fyzicka reorientace cele kostky; moveTrainer ji pouzije
+  // jako virtualni mapovani pro nasledujici tahy.
+  const algoritmusProTrainer = [auf, rotace, zakladniAlgoritmus]
+    .filter(Boolean)
+    .join(" ");
 
   currentAlgorithmName = name;
   selectedAlg.dataset.algName = name;
   selectedAlg.dataset.algText = algoritmusProTrainer;
+  selectedAlg.dataset.pllSetupAuf = auf;
   selectedAlg.dataset.pllSetupRotation = rotace;
   selectedAlg.innerText = "Algoritmus: " + algoritmusProTrainer;
 
@@ -2152,9 +2186,12 @@ function nastavPllProTrenink(name, algorithm, { navrat = false, setupRotace = ""
   setTrainerPaused(false);
 
   if (navrat && stateMsg) {
-    stateMsg.innerText = rotace
-      ? `OTOČ ${rotace} • NÁVRAT DO SLOŽENÉ`
-      : "NÁVRAT DO SLOŽENÉ";
+    const pokyny = [];
+    if (auf) pokyny.push(`SETUP ${auf}`);
+    if (rotace) pokyny.push(`OTOČ KOSTKU ${rotace}`);
+    pokyny.push(namedMatch ? "NÁVRAT DO SLOŽENÉ" : "NÁVRAT – PŘESNÁ INVERZE");
+
+    stateMsg.innerText = pokyny.join(" • ");
     stateMsg.style.color = "yellow";
   }
 
@@ -2188,25 +2225,45 @@ async function pripravNavratDoSlozene() {
   const puvodniAlgoritmus = selectedAlg?.dataset?.algText || getActivePllAlg(puvodniNazev);
   if (!puvodniNazev || !puvodniAlgoritmus) return false;
 
-  // Pokud predchozi navrat obsahoval setup rotaci, pro vypocet noveho stavu
-  // potrebujeme cisty PLL bez uvodniho y/y2/y'.
-  const puvodniBezSetupu = String(puvodniAlgoritmus)
-    .trim()
-    .replace(/^(y2|y'|y)\s+/, "");
+  // Predchozi navrat mohl mit vlastni SETUP U/y. Pro hledani nove vazby
+  // potrebujeme samotny PLL algoritmus bez techto pomocnych kroku.
+  let puvodniBezSetupu = String(puvodniAlgoritmus).trim();
+  const predchoziAuf = String(selectedAlg?.dataset?.pllSetupAuf || "").trim();
+  const predchoziRotace = String(selectedAlg?.dataset?.pllSetupRotation || "").trim();
 
-  const navratovy = najdiNavratovyPll(puvodniNazev, puvodniBezSetupu);
+  if (predchoziAuf && puvodniBezSetupu.startsWith(predchoziAuf + " ")) {
+    puvodniBezSetupu = puvodniBezSetupu.slice(predchoziAuf.length).trim();
+  }
+  if (predchoziRotace && puvodniBezSetupu.startsWith(predchoziRotace + " ")) {
+    puvodniBezSetupu = puvodniBezSetupu.slice(predchoziRotace.length).trim();
+  }
+
+  const navratovy = await najdiNavratovyPllSPresnymSetupem(
+    puvodniNazev,
+    puvodniBezSetupu
+  );
   if (!navratovy?.algorithm) return false;
 
-  const setupRotace = await najdiSetupRotaciProNavrat(
-    puvodniBezSetupu,
-    navratovy.algorithm
+  console.info(
+    "[PLL RETURN]",
+    puvodniNazev,
+    "→",
+    navratovy.name,
+    "AUF:", navratovy.setupAuf || "-",
+    "ROT:", navratovy.setupRotace || "-",
+    "MATCH:", navratovy.namedMatch
   );
 
   randomPllFazeNavratu = true;
   return nastavPllProTrenink(
     navratovy.name || puvodniNazev,
     navratovy.algorithm,
-    { navrat: true, setupRotace }
+    {
+      navrat: true,
+      setupAuf: navratovy.setupAuf,
+      setupRotace: navratovy.setupRotace,
+      namedMatch: navratovy.namedMatch
+    }
   );
 }
 
