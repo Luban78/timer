@@ -28,6 +28,123 @@
   <link rel="stylesheet" href="debugDesktopGenerated.css?v=1">
 
 
+  <style id="cube-trainer-v12-ui">
+    #settings-screen #settingsPllErrorRepeatRow {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) auto !important;
+      align-items: center !important;
+      gap: 12px !important;
+      padding-left: 72px !important;
+    }
+    #settings-screen #settingsPllErrorRepeatRow > .pll-error-repeat-label {
+      width: auto !important;
+      max-width: none !important;
+      text-align: left !important;
+      justify-self: start !important;
+    }
+    #settings-screen #settingsPllErrorRepeatRow > .pll-error-repeat-control {
+      display: grid !important;
+      grid-template-columns: 42px 48px 42px !important;
+      align-items: center !important;
+      gap: 7px !important;
+      width: auto !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      justify-self: end !important;
+      text-align: initial !important;
+    }
+    #settings-screen .pll-repeat-step {
+      width: 42px;
+      min-height: 40px !important;
+      height: 40px;
+      padding: 0;
+      border-radius: 12px;
+      font-size: 25px;
+      line-height: 1;
+    }
+    #settingsPllErrorRepeatValue {
+      color: var(--green);
+      text-align: center;
+      font-size: 20px;
+      font-variant-numeric: tabular-nums;
+    }
+    #settings-screen .pll-repeat-step:disabled {
+      opacity: .28;
+      cursor: default;
+    }
+    #deleteAlgorithmBtn.variant-delete-alg {
+      grid-column: 1 / -1;
+      border-color: rgba(255, 23, 68, .82) !important;
+      background: rgba(255, 23, 68, .12) !important;
+      color: #ff6b86 !important;
+    }
+
+    #modalContent.pll-picker-v12 {
+      overflow: hidden !important;
+      display: flex;
+      flex-direction: column;
+    }
+    #modalContent.pll-picker-v12 #modalTitle {
+      flex: 0 0 auto;
+    }
+    #modalContent.pll-picker-v12 #algList {
+      min-height: 0;
+      overflow-y: auto;
+      padding-bottom: 4px;
+    }
+    #pllPickerStickyActions {
+      flex: 0 0 auto;
+      position: sticky;
+      bottom: 0;
+      z-index: 4;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 14px -2px -2px;
+      padding: 12px 2px 2px;
+      background: linear-gradient(180deg, rgba(20,31,37,0), #141f25 24%, #141f25 100%);
+    }
+    #pllPickerStickyActions > button {
+      width: 100% !important;
+      margin: 0 !important;
+    }
+    #pllPickerStickyActions > button:only-child {
+      grid-column: 1 / -1;
+    }
+
+    @media (min-width: 900px) {
+      #modalContent.pll-picker-v12 {
+        width: min(92vw, 920px) !important;
+        max-height: 88dvh !important;
+        padding: 22px !important;
+      }
+      #modalContent.pll-picker-v12 #algList.algGrid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+      }
+    }
+
+    @media (max-width: 899px) {
+      #settings-screen #settingsPllErrorRepeatRow {
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        gap: 8px !important;
+      }
+      #settings-screen #settingsPllErrorRepeatRow > .pll-error-repeat-label {
+        font-size: 16px !important;
+      }
+      #settings-screen #settingsPllErrorRepeatRow > .pll-error-repeat-control {
+        grid-template-columns: 38px 42px 38px !important;
+        gap: 5px !important;
+      }
+      #settings-screen #settingsPllErrorRepeatRow .pll-repeat-step {
+        width: 38px !important;
+        height: 38px !important;
+        min-height: 38px !important;
+      }
+    }
+  </style>
+
   <title>Cube Trainer</title>
 </head>
 
@@ -853,6 +970,23 @@
   <span id="settingsLowTpsSoundText" class="settings-label">Zvuk nízkého TPS: Zapnuto</span>
 </button>
 
+<div id="settingsPllErrorRepeatRow" class="settings-row pll-error-repeat-row">
+  <span class="settings-icon">
+    <svg class="neon-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M20 7v5h-5"></path>
+      <path d="M4 17v-5h5"></path>
+      <path d="M6.5 8.5A7 7 0 0 1 18 7l2 5"></path>
+      <path d="M17.5 15.5A7 7 0 0 1 6 17l-2-5"></path>
+    </svg>
+  </span>
+  <span class="settings-label pll-error-repeat-label">Po chybě zopakovat PLL</span>
+  <span class="pll-error-repeat-control" role="group" aria-label="Počet opakování PLL po chybě">
+    <button id="settingsPllErrorRepeatMinusBtn" class="pll-repeat-step" type="button" aria-label="Snížit počet opakování">−</button>
+    <strong id="settingsPllErrorRepeatValue">0×</strong>
+    <button id="settingsPllErrorRepeatPlusBtn" class="pll-repeat-step" type="button" aria-label="Zvýšit počet opakování">+</button>
+  </span>
+</div>
+
 
 
  <button id="settings-export-btn" class="settings-row" type="button">
@@ -970,11 +1104,12 @@
     <div class="variant-modal-actions">
       <button id="cancelVariantBtn" type="button">Zrušit</button>
       <button id="saveVariantBtn" type="button">Uložit</button>
+      <button id="deleteAlgorithmBtn" class="variant-delete-alg" type="button" hidden>Smazat testovací PLL</button>
     </div>
   </div>
 </div>
 <script src="appDialog.js?v=1"></script>
-<script type="module" src="./app.js?v=return-math-postauf-11-virtual-rotation-math"></script>
+<script type="module" src="./app.js?v=trainer-v12-repeat-delete-pll-picker"></script>
 <script src="statsNavigation.js?v=32"></script>
 <script src="statsHistory.js?v=3"></script>
 <script src="screenHeaders.js?v=clean-1"></script>

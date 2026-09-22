@@ -181,6 +181,10 @@ const settingsResetProfileBtn = document.getElementById("settings-reset-profile-
 const settingsCubeModeBtn = document.getElementById("settingsCubeModeBtn");
 const settingsLowTpsSoundBtn = document.getElementById("settingsLowTpsSoundBtn");
 const settingsLowTpsSoundText = document.getElementById("settingsLowTpsSoundText");
+const settingsPllErrorRepeatMinusBtn = document.getElementById("settingsPllErrorRepeatMinusBtn");
+const settingsPllErrorRepeatPlusBtn = document.getElementById("settingsPllErrorRepeatPlusBtn");
+const settingsPllErrorRepeatValue = document.getElementById("settingsPllErrorRepeatValue");
+const deleteAlgorithmBtn = document.getElementById("deleteAlgorithmBtn");
 
 const statsBest = document.getElementById("stats-best");
 const statsBestTPS = document.getElementById("stats-best-tps");
@@ -271,6 +275,13 @@ let cubeMode = localStorage.getItem("cubeMode") || "smart";
 let trainingMode = localStorage.getItem("trainingMode") || "single";
 let puzzleMode = localStorage.getItem("puzzleMode") || "wca";
 let lowTpsSoundEnabled = localStorage.getItem("lowTpsSoundEnabled") !== "0";
+
+const PLL_ERROR_REPEAT_KEY = "pllErrorRepeatCount";
+const HIDDEN_PLL_KEY = "hiddenPllAlgorithms";
+let pllErrorRepeatCount = Math.max(0, Math.min(10, Number(localStorage.getItem(PLL_ERROR_REPEAT_KEY)) || 0));
+let pllErrorRepeatTarget = "";
+let pllErrorRepeatRemaining = 0;
+
 let lastFaceletsAt = 0;
 let randomPllFazeNavratu = false;
 let algorithmStatsFilter = "pll";
@@ -709,6 +720,7 @@ function vytvorPanelRelace() {
   window.addEventListener("cube-trainer-random-pll-selection-changed", () => {
     if (trainingMode === "random" && puzzleMode === "pll") {
       randomPllFazeNavratu = false;
+      resetPllErrorRepeatQueue();
       resetujStatistikyRelace();
       pickRandomPLL();
       naplanujUmisteniPaneluRelace();
@@ -969,6 +981,132 @@ function updateLowTpsSoundSetting() {
   settingsLowTpsSoundBtn.setAttribute("aria-pressed", lowTpsSoundEnabled ? "true" : "false");
 }
 
+function updatePllErrorRepeatSetting() {
+  if (!settingsPllErrorRepeatValue) return;
+  settingsPllErrorRepeatValue.textContent = `${pllErrorRepeatCount}×`;
+  if (settingsPllErrorRepeatMinusBtn) {
+    settingsPllErrorRepeatMinusBtn.disabled = pllErrorRepeatCount <= 0;
+  }
+  if (settingsPllErrorRepeatPlusBtn) {
+    settingsPllErrorRepeatPlusBtn.disabled = pllErrorRepeatCount >= 10;
+  }
+}
+
+function setPllErrorRepeatCount(nextValue) {
+  pllErrorRepeatCount = Math.max(0, Math.min(10, Number(nextValue) || 0));
+  localStorage.setItem(PLL_ERROR_REPEAT_KEY, String(pllErrorRepeatCount));
+
+  if (pllErrorRepeatCount === 0) {
+    pllErrorRepeatTarget = "";
+    pllErrorRepeatRemaining = 0;
+  } else if (pllErrorRepeatRemaining > pllErrorRepeatCount) {
+    pllErrorRepeatRemaining = pllErrorRepeatCount;
+  }
+
+  updatePllErrorRepeatSetting();
+}
+
+function resetPllErrorRepeatQueue() {
+  pllErrorRepeatTarget = "";
+  pllErrorRepeatRemaining = 0;
+}
+
+function registrujPllChybuProOpakovani() {
+  if (
+    puzzleMode !== "pll" ||
+    trainingMode !== "random" ||
+    pllErrorRepeatCount <= 0 ||
+    !currentAlgorithmName ||
+    !Object.prototype.hasOwnProperty.call(pllAlgs, currentAlgorithmName)
+  ) {
+    return;
+  }
+
+  pllErrorRepeatTarget = currentAlgorithmName;
+  pllErrorRepeatRemaining = pllErrorRepeatCount;
+}
+
+function nactiSkrytaPll() {
+  try {
+    const value = JSON.parse(localStorage.getItem(HIDDEN_PLL_KEY) || "[]");
+    return new Set(Array.isArray(value) ? value.filter(name => typeof name === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function ulozSkrytaPll(names) {
+  localStorage.setItem(HIDDEN_PLL_KEY, JSON.stringify([...names]));
+}
+
+function jePllSkryte(name) {
+  return nactiSkrytaPll().has(name);
+}
+
+function ziskejViditelnaPllAlgs() {
+  return Object.fromEntries(
+    Object.entries(pllAlgs).filter(([name]) => !jePllSkryte(name))
+  );
+}
+
+function jeTestovaciPll(name) {
+  return Boolean(name && Object.prototype.hasOwnProperty.call(pllAlgs, name) && /test/i.test(name));
+}
+
+function aktualizujTlacitkoSmazatAlgoritmus() {
+  if (!deleteAlgorithmBtn) return;
+  const visible = puzzleMode === "pll" && jeTestovaciPll(currentAlgorithmName);
+  deleteAlgorithmBtn.hidden = !visible;
+  if (visible) {
+    deleteAlgorithmBtn.textContent = `Smazat ${currentAlgorithmName}`;
+  }
+}
+
+function vratAkceVyberuAlgoritmuZPaticky() {
+  const modalContent = document.getElementById("modalContent");
+  const footer = document.getElementById("pllPickerStickyActions");
+  if (!modalContent || !footer) return;
+
+  [...footer.querySelectorAll("button")].forEach(button => {
+    modalContent.appendChild(button);
+  });
+  footer.remove();
+  modalContent.classList.remove("pll-picker-v12");
+}
+
+function upravPllVyberModalu() {
+  const modalContent = document.getElementById("modalContent");
+  const list = document.getElementById("algList");
+  if (!modalContent || !list) return;
+
+  modalContent.classList.add("pll-picker-v12");
+
+  let footer = document.getElementById("pllPickerStickyActions");
+  if (!footer) {
+    footer = document.createElement("div");
+    footer.id = "pllPickerStickyActions";
+    modalContent.appendChild(footer);
+  }
+
+  const actionButtons = [...modalContent.querySelectorAll("button")].filter(button => {
+    if (button.closest("#algList")) return false;
+    const label = String(button.textContent || "").trim().toUpperCase();
+    return label === "VYBRAT" || label === "ZAVŘÍT";
+  });
+
+  actionButtons
+    .sort((a, b) => {
+      const aLabel = String(a.textContent || "").trim().toUpperCase();
+      const bLabel = String(b.textContent || "").trim().toUpperCase();
+      return (aLabel === "VYBRAT" ? 0 : 1) - (bLabel === "VYBRAT" ? 0 : 1);
+    })
+    .forEach(button => footer.appendChild(button));
+}
+
+function naplanujUpravuPllVyberu() {
+  [0, 40, 140].forEach(delay => setTimeout(upravPllVyberModalu, delay));
+}
+
 
 function switchToNormalCubeMode() {
   cubeMode = "normal";
@@ -1171,6 +1309,7 @@ function prepareWcaScramble() {
 function setPuzzleMode(mode) {
   if (mode !== puzzleMode) {
     randomPllFazeNavratu = false;
+    resetPllErrorRepeatQueue();
     resetujStatistikyRelace();
   }
   puzzleMode = mode;
@@ -1196,6 +1335,7 @@ function setTrainingMode(mode) {
   const zmenenRezim = mode !== trainingMode;
   if (zmenenRezim) {
     randomPllFazeNavratu = false;
+    resetPllErrorRepeatQueue();
     resetujStatistikyRelace();
   }
 
@@ -1769,6 +1909,7 @@ function setupAlgorithmButtons() {
   ollBtn.onclick = e => {
     e.preventDefault();
     e.stopPropagation();
+    vratAkceVyberuAlgoritmuZPaticky();
 
     openOLLMenu({
       algList,
@@ -1813,11 +1954,13 @@ function setupAlgorithmButtons() {
   pllBtn.onclick = e => {
     e.stopPropagation();
     
+    vratAkceVyberuAlgoritmuZPaticky();
+
     openPLLMenu({
       algList,
       modal,
       selectedAlg,
-      pllAlgs,
+      pllAlgs: ziskejViditelnaPllAlgs(),
       randomSelectionMode: trainingMode === "random",
       onSelect: name => {
         if (currentAlgorithmName !== name) {
@@ -1909,6 +2052,8 @@ if (moveDebugEnabled) {
         renderAlgorithmPreview(selectedAlg);
       }
     });
+
+    naplanujUpravuPllVyberu();
   };
   
   closeModal.onclick = e => {
@@ -2261,10 +2406,13 @@ function ziskejPreferovanePllProNavrat() {
     : [];
 
   const platne = Array.isArray(vybrane)
-    ? vybrane.filter(name => Object.prototype.hasOwnProperty.call(pllAlgs, name))
+    ? vybrane.filter(name =>
+        Object.prototype.hasOwnProperty.call(pllAlgs, name) &&
+        !jePllSkryte(name)
+      )
     : [];
 
-  const vsechny = Object.keys(pllAlgs).filter(name => !/test/i.test(name));
+  const vsechny = Object.keys(pllAlgs).filter(name => !/test/i.test(name) && !jePllSkryte(name));
 
   return [...new Set([...platne, ...vsechny])];
 }
@@ -2403,6 +2551,7 @@ function zpracujPredAufNavratu(move) {
       stateMsg.innerText = "CHYBA – VRAŤ TAH";
       stateMsg.style.color = "red";
     }
+    registrujPllChybuProOpakovani();
     playErrorSound();
     return true;
   }
@@ -2416,6 +2565,7 @@ function zpracujPredAufNavratu(move) {
       stateMsg.style.color = "red";
     }
 
+    registrujPllChybuProOpakovani();
     playErrorSound();
     return true;
   }
@@ -2453,21 +2603,44 @@ function nastavPllProTrenink(name, algorithm, { navrat = false, postAuf = "" } =
 }
 
 function pickRandomPLL() {
+  const vsechnyViditelne = Object.keys(pllAlgs).filter(name => !jePllSkryte(name));
   const vybraneNazvy = typeof window.getSelectedRandomPllNames === "function"
-    ? window.getSelectedRandomPllNames(Object.keys(pllAlgs))
+    ? window.getSelectedRandomPllNames(vsechnyViditelne)
     : [];
 
   const platneVybrane = Array.isArray(vybraneNazvy)
-    ? vybraneNazvy.filter(name => Object.prototype.hasOwnProperty.call(pllAlgs, name))
+    ? vybraneNazvy.filter(name =>
+        Object.prototype.hasOwnProperty.call(pllAlgs, name) &&
+        !jePllSkryte(name)
+      )
     : [];
 
   const names = platneVybrane.length > 0
     ? platneVybrane
-    : Object.keys(pllAlgs);
+    : vsechnyViditelne;
 
   if (names.length === 0) return;
 
-  const randomName = names[Math.floor(Math.random() * names.length)];
+  let randomName = "";
+
+  if (
+    pllErrorRepeatRemaining > 0 &&
+    pllErrorRepeatTarget &&
+    Object.prototype.hasOwnProperty.call(pllAlgs, pllErrorRepeatTarget) &&
+    !jePllSkryte(pllErrorRepeatTarget)
+  ) {
+    randomName = pllErrorRepeatTarget;
+    pllErrorRepeatRemaining -= 1;
+
+    if (pllErrorRepeatRemaining <= 0) {
+      pllErrorRepeatRemaining = 0;
+      // Jméno necháme do dokončení posledního opakování jen informativně;
+      // další normální pick už ho nepoužije.
+    }
+  } else {
+    randomName = names[Math.floor(Math.random() * names.length)];
+  }
+
   const randomAlg = getActivePllAlg(randomName);
 
   randomPllFazeNavratu = false;
@@ -3536,6 +3709,7 @@ function commitMove(move, now) {
     if (scrambleState.status === "wrong") {
       stateMsg.innerText = "CHYBA – VRAŤ TAH";
       stateMsg.dataset.wcaState = "wrong";
+      registrujPllChybuProOpakovani();
       playErrorSound();
       return;
     }
@@ -3632,6 +3806,7 @@ function commitMove(move, now) {
           stateMsg.dataset.trainerState = "wrong-auf";
           stateMsg.style.color = "red";
         }
+        registrujPllChybuProOpakovani();
         playErrorSound();
         return;
       }
@@ -3645,6 +3820,7 @@ function commitMove(move, now) {
           stateMsg.style.color = "red";
         }
 
+        registrujPllChybuProOpakovani();
         playErrorSound();
         return;
       }
@@ -3706,6 +3882,7 @@ showMoveDebug({
     stateMsg.innerText = "CHYBA – VRAŤ TAH";
     stateMsg.dataset.trainerState = "wrong";
     stateMsg.style.color = "red";
+    registrujPllChybuProOpakovani();
     playErrorSound();
     return;
   }
@@ -4236,6 +4413,24 @@ if (settingsLowTpsSoundBtn) {
   };
 }
 
+updatePllErrorRepeatSetting();
+
+if (settingsPllErrorRepeatMinusBtn) {
+  settingsPllErrorRepeatMinusBtn.onclick = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPllErrorRepeatCount(pllErrorRepeatCount - 1);
+  };
+}
+
+if (settingsPllErrorRepeatPlusBtn) {
+  settingsPllErrorRepeatPlusBtn.onclick = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPllErrorRepeatCount(pllErrorRepeatCount + 1);
+  };
+}
+
 if (openOllStats) {
   openOllStats.onclick = () => {
     renderAlgorithmStatsScreen("oll");
@@ -4272,6 +4467,7 @@ if (editAlgVariantBtn) {
 
     if (!currentAlgorithmName || currentAlgorithmName === "Nevybráno") return;
 
+    aktualizujTlacitkoSmazatAlgoritmus();
     openVariantPicker(currentAlgorithmName, (newAlg) => {
       selectedAlg.dataset.algText = newAlg;
       selectedAlg.innerText = "Algoritmus: " + newAlg;
@@ -4280,5 +4476,60 @@ if (editAlgVariantBtn) {
       renderAlgorithmPreview(selectedAlg);
     });
   });   
+}
+
+if (deleteAlgorithmBtn) {
+  deleteAlgorithmBtn.addEventListener("click", async e => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const name = currentAlgorithmName;
+    if (!jeTestovaciPll(name)) return;
+
+    const ok = await askUser(
+      "Smazat testovací PLL",
+      `Opravdu odstranit „${name}“ z výběru PLL na tomto zařízení?`,
+      "danger",
+      "Smazat"
+    );
+    if (!ok) return;
+
+    const hidden = nactiSkrytaPll();
+    hidden.add(name);
+    ulozSkrytaPll(hidden);
+
+    try {
+      localStorage.removeItem("pllVariant:" + name);
+      localStorage.removeItem("algorithmImage:" + name);
+    } catch {}
+
+    if (pllErrorRepeatTarget === name) resetPllErrorRepeatQueue();
+
+    const variantModal = document.getElementById("algVariantModal");
+    if (variantModal) variantModal.classList.add("hidden");
+
+    const dalsi = Object.keys(ziskejViditelnaPllAlgs())[0] || "";
+    if (dalsi) {
+      const dalsiAlg = getActivePllAlg(dalsi);
+      currentAlgorithmName = dalsi;
+      selectedAlg.dataset.algName = dalsi;
+      selectedAlg.dataset.algText = dalsiAlg;
+      selectedAlg.innerText = "Algoritmus: " + dalsiAlg;
+      prepareNext();
+      renderAlgorithmPreview(selectedAlg);
+      setTrainerPaused(false);
+    } else {
+      currentAlgorithmName = "Nevybráno";
+      selectedAlg.dataset.algName = "";
+      selectedAlg.dataset.algText = "";
+      selectedAlg.innerText = "Vyber PLL";
+      prepareNext();
+    }
+
+    if (trainingMode === "random" && puzzleMode === "pll") {
+      resetPllErrorRepeatQueue();
+      pickRandomPLL();
+    }
+  });
 }
 /* KONEC APP.JS */
