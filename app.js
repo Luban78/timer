@@ -273,6 +273,7 @@ let algorithmStatsFilter = "pll";
 let lastStateSignature = "";
 let faceletCount = 0;
 let trainerLocked = false;
+let trainerCekaNaPllAuf = false;
 
 let seq = [];
 let moveTimes = [];
@@ -1542,6 +1543,18 @@ function setupCubeButtons() {
           if (event.facelets) setCurrentFacelets(event.facelets);
           if (event.state) setCurrentCubeState(event.state);
 
+          // PLL: po dokončení předepsané sekvence ještě může zbývat AUF
+          // (U / U' / U2). Ten není chyba. Čekáme, dokud je kostka skutečně solved.
+          if (
+            trainerCekaNaPllAuf &&
+            puzzleMode === "pll" &&
+            cubeMode === "smart" &&
+            isSolving &&
+            jePllPoAufSlozeny(event.facelets, event.state)
+          ) {
+            dokonciPllPoAuf(performance.now());
+          }
+
           /* WCA Smart Cube: po návratu do složeného stavu automaticky zastav čas.
              Vyžadujeme dvě po sobě jdoucí potvrzení, aby starý/stale FACELETS
              packet nezastavil timer omylem hned po prvním tahu. */
@@ -2189,6 +2202,7 @@ function restartCurrentTrainerRun() {
 }
 
 function prepareNext() {
+  trainerCekaNaPllAuf = false;
   clearPendingMove();
   clearSliceMoveBuffer();
   clearGuidedOuterBuffer();
@@ -2732,6 +2746,59 @@ function runStartSolve(now) {
 }
 
 
+
+function jePllPoAufSlozeny(facelets = getCurrentFacelets(), cubeState = getCurrentCubeState()) {
+  try {
+    const normalizedFacelets = normalizeWcaFacelets(facelets);
+    if (isSolvedFacelets(normalizedFacelets)) return true;
+  } catch {}
+
+  if (cubeState) {
+    try {
+      const pattern = createPatternFromGanState(cubeState);
+      if (pattern && isPatternSolved(pattern)) return true;
+    } catch {}
+  }
+
+  return false;
+}
+
+function dokonciPllPoAuf(now = performance.now()) {
+  if (!trainerCekaNaPllAuf || trainerLocked || !isSolving) return false;
+
+  trainerCekaNaPllAuf = false;
+  trainerLocked = true;
+
+  clearPendingMove();
+  clearSliceMoveBuffer();
+  clearGuidedOuterBuffer();
+
+  finishSolve(now, false);
+
+  setTimeout(() => {
+    prepareNextTrainerRun();
+    trainerLocked = false;
+  }, 1200);
+
+  return true;
+}
+
+function zkontrolujPllPoAuf(now = performance.now()) {
+  if (!trainerCekaNaPllAuf || puzzleMode !== "pll" || cubeMode !== "smart") return false;
+
+  if (jePllPoAufSlozeny()) {
+    return dokonciPllPoAuf(now);
+  }
+
+  if (stateMsg) {
+    stateMsg.innerText = "AUF – DOKONČI DO SLOŽENÉ";
+    stateMsg.dataset.trainerState = "auf";
+    stateMsg.style.color = "#ffe928";
+  }
+
+  return false;
+}
+
 function commitMove(move, now) {
   if (trainerLocked) return;
 
@@ -2823,6 +2890,24 @@ function commitMove(move, now) {
     return;
   }
 
+  // PLL POST-AUF: předepsaný PLL algoritmus je už hotový, ale kostka může
+  // ještě potřebovat U / U' / U2. V této fázi už tah neporovnáváme s dalším
+  // algoritmem; jen čekáme na skutečně složenou kostku.
+  if (trainerCekaNaPllAuf && puzzleMode === "pll" && cubeMode === "smart") {
+    moveTimes.push(now);
+
+    if (stateMsg) {
+      stateMsg.innerText = "AUF – DOKONČI DO SLOŽENÉ";
+      stateMsg.dataset.trainerState = "auf";
+      stateMsg.style.color = "#ffe928";
+    }
+
+    // FACELETS obvykle přijdou hned po MOVE. Záložní kontrola pokryje
+    // i zařízení/prohlížeče, kde dorazí paket v jiném pořadí.
+    setTimeout(() => zkontrolujPllPoAuf(performance.now()), 90);
+    return;
+  }
+
 const expectedBeforeMove = getExpectedMove();
   const trainerResult = checkMove(move, selectedAlg);
 showMoveDebug({
@@ -2878,11 +2963,28 @@ showMoveDebug({
     return;
   }
   if (trainerResult === "finished") {
-    trainerLocked = true;
     clearPendingMove();
     clearSliceMoveBuffer();
     clearGuidedOuterBuffer();
 
+    // PLL může být po posledním tahu algoritmu správně vyřešený jen "do AUF".
+    // Proto u Smart Cube neukončíme solve podle notace, ale podle skutečného
+    // stavu kostky. U/U'/U2 po algoritmu už tedy není hlášeno jako chyba.
+    if (puzzleMode === "pll" && cubeMode === "smart") {
+      trainerCekaNaPllAuf = true;
+
+      if (stateMsg) {
+        stateMsg.innerText = "AUF – DOKONČI DO SLOŽENÉ";
+        stateMsg.dataset.trainerState = "auf";
+        stateMsg.style.color = "#ffe928";
+      }
+
+      // Finální FACELETS mohou přijít o pár ms později než MOVE.
+      setTimeout(() => zkontrolujPllPoAuf(performance.now()), 120);
+      return;
+    }
+
+    trainerLocked = true;
     finishSolve(performance.now(), false);
 
     setTimeout(() => {
