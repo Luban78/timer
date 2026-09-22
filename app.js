@@ -3175,10 +3175,11 @@ function commitMove(move, now) {
       trainerOcekavanyPllAuf = "";
       chybyPostAuf = [];
 
-      if (randomPllFazeNavratu) {
-        dokonciPllPoAuf(now);
-        return;
-      }
+      // Správný známý POST-AUF je poslední tah matematického návratu.
+      // Dokončíme solve vždy – nespoléháme na randomPllFazeNavratu ani FACELETS,
+      // protože při jediném vybraném PLL (např. jen Ra) může být fáze už přepnutá.
+      dokonciPllPoAuf(now);
+      return;
     }
 
     if (stateMsg) {
