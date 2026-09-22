@@ -1,7 +1,13 @@
 import * as puzzles from "https://cdn.cubing.net/v0/js/cubing/puzzles";
 import { Alg } from "https://cdn.cubing.net/v0/js/cubing/alg";
 import { ExperimentalSVGAnimator } from "https://cdn.cubing.net/v0/js/cubing/twisty";
-import { rotateMove, isTrainerMove, stripTrainerMove } from "./orientation.js";
+import {
+  rotateMove,
+  isTrainerMove,
+  stripTrainerMove,
+  getTrainerRotation,
+  setTrainerRotation
+} from "./orientation.js";
 import {
   pllAlgs,
   ollAlgs,
@@ -25,6 +31,11 @@ let wrongDisplayIndex = -1;
 let virtualY = 0;
 let virtualX = 0;
 let virtualZ = 0;
+
+// Smart Cube nehlásí fyzické otočení celé kostky v ruce.
+// Proto u PLL na začátku solve automaticky zamkneme osu podle prvního
+// jednoznačného bočního tahu (R/F/L/B), aniž bychom měnili algoritmus.
+let autoOrientacePll = false;
 
 
 
@@ -259,6 +270,7 @@ export function renderAlgorithmPreview(selectedAlg) {
     virtualY = 0;
     virtualX = 0;
     virtualZ = 0;
+    autoOrientacePll = false;
 
     selectedAlg.innerHTML = renderAlgorithmCard("Nevybráno", [], true);
     return;
@@ -273,6 +285,11 @@ export function renderAlgorithmPreview(selectedAlg) {
   virtualY = 0;
   virtualX = 0;
   virtualZ = 0;
+
+  // Každý nový PLL solve může uživatel držet v jiné fyzické orientaci,
+  // aby pattern odpovídal obrázku. Samotný zobrazený algoritmus se NEMĚNÍ.
+  const algName = selectedAlg.dataset.algName || "";
+  autoOrientacePll = Object.prototype.hasOwnProperty.call(pllAlgs, algName);
 
   renderTrainer(selectedAlg);
 }
@@ -517,8 +534,8 @@ function hlavickaSipky(ctx, bod, smerX, smerY, barva) {
   const delka = Math.hypot(smerX, smerY) || 1;
   const ux = smerX / delka;
   const uy = smerY / delka;
-  const velikost = 15;
-  const sirka = 8;
+  const velikost = 13;
+  const sirka = 7;
   const bx = bod.x - ux * velikost;
   const by = bod.y - uy * velikost;
   const px = -uy;
@@ -544,8 +561,8 @@ function kresliSipku(ctx, od, kam, options = {}) {
   const {
     oboustranna = false,
     zakriveni = 0,
-    barva = "rgba(36, 40, 42, 0.94)",
-    tloustka = 4.5
+    barva = "rgba(52, 56, 58, 0.88)",
+    tloustka = 5
   } = options;
 
   const dx = kam.x - od.x;
@@ -575,8 +592,8 @@ function kresliSipku(ctx, od, kam, options = {}) {
   ctx.lineJoin = "round";
 
   // Jemny svetly lem pomuze sipce zustat citelne pres zlute dilky.
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.66)";
-  ctx.lineWidth = tloustka + 4;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.34)";
+  ctx.lineWidth = tloustka + 3;
   ctx.beginPath();
   ctx.moveTo(start.x, start.y);
   if (control) ctx.quadraticCurveTo(control.x, control.y, end.x, end.y);
@@ -668,20 +685,18 @@ function vykresliPllCyklus(ctx, cyklus, body, typ) {
   const stred = { x: ctx.canvas.width / 2, y: ctx.canvas.height / 2 };
   const jeRoh = typ === "rohy";
   const barva = jeRoh
-    ? "rgba(24, 27, 29, 0.96)"
-    : "rgba(70, 74, 77, 0.96)";
+    ? "rgba(42, 46, 48, 0.90)"
+    : "rgba(78, 82, 84, 0.92)";
 
   if (cyklus.length === 2) {
     const od = body[cyklus[0]];
     const kam = body[cyklus[1]];
-    const zakriveni = jeRoh
-      ? smerZakriveniVen(od, kam, stred, 54)
-      : -smerZakriveniVen(od, kam, stred, 18);
+    const zakriveni = jeRoh ? smerZakriveniVen(od, kam, stred, 28) : 0;
     kresliSipku(ctx, od, kam, {
       oboustranna: true,
       zakriveni,
       barva,
-      tloustka: jeRoh ? 4.5 : 3.5
+      tloustka: jeRoh ? 5 : 4.5
     });
     return;
   }
@@ -691,15 +706,12 @@ function vykresliPllCyklus(ctx, cyklus, body, typ) {
     const kam = body[cyklus[(i + 1) % cyklus.length]];
     if (!od || !kam) continue;
 
-    // Rohove cykly vedeme vyrazne VEN po obvodu, hranove naopak
-    // lehce DOVNITR. Dve skupiny se tak u R/G permu nesrazi v jednom stredu.
-    const zakriveni = jeRoh
-      ? smerZakriveniVen(od, kam, stred, 62)
-      : -smerZakriveniVen(od, kam, stred, 22);
+    const sila = jeRoh ? 24 : 12;
+    const zakriveni = smerZakriveniVen(od, kam, stred, sila);
     kresliSipku(ctx, od, kam, {
       zakriveni,
       barva,
-      tloustka: jeRoh ? 4.5 : 3.5
+      tloustka: jeRoh ? 5 : 4.5
     });
   }
 }
@@ -710,14 +722,14 @@ function dokresliPllSipky(ctx, imageData) {
   const h = ctx.canvas.height;
 
   const body = {
-    CTL: { x: w * 0.25, y: h * 0.25 },
-    CTR: { x: w * 0.75, y: h * 0.25 },
-    CBR: { x: w * 0.75, y: h * 0.75 },
-    CBL: { x: w * 0.25, y: h * 0.75 },
-    ET: { x: w * 0.50, y: h * 0.36 },
-    ER: { x: w * 0.64, y: h * 0.50 },
-    EB: { x: w * 0.50, y: h * 0.64 },
-    EL: { x: w * 0.36, y: h * 0.50 }
+    CTL: { x: w * 0.31, y: h * 0.31 },
+    CTR: { x: w * 0.69, y: h * 0.31 },
+    CBR: { x: w * 0.69, y: h * 0.69 },
+    CBL: { x: w * 0.31, y: h * 0.69 },
+    ET: { x: w * 0.50, y: h * 0.31 },
+    ER: { x: w * 0.69, y: h * 0.50 },
+    EB: { x: w * 0.50, y: h * 0.69 },
+    EL: { x: w * 0.31, y: h * 0.50 }
   };
 
   const rohoveCykly = najdiCyklyPll(mapping, ["CTL", "CTR", "CBR", "CBL"]);
@@ -1057,6 +1069,50 @@ export function nextTrainerMove(selectedAlg) {
 
 
 /* =========================================================
+   AUTOMATICKÁ ORIENTACE PLL PODLE DRŽENÍ KOSTKY
+   ========================================================= */
+
+function zkusZamknoutOrientaciPll(rawMove, expectedMove) {
+  if (!autoOrientacePll) return;
+  if (!rawMove || !expectedMove) return;
+  if (isTrainerMove(rawMove)) return;
+
+  const expectedFace = String(expectedMove).charAt(0);
+
+  // U/D ani slice tahy neumí jednoznačně určit natočení kolem svislé osy.
+  // Necháme je projít podle dosavadní orientace a čekáme na první R/F/L/B.
+  if (!"RFLB".includes(expectedFace)) return;
+
+  const puvodniRotace = getTrainerRotation();
+  const kandidati = [];
+
+  for (let rotace = 0; rotace < 4; rotace++) {
+    setTrainerRotation(rotace);
+    const mapped = rotateMove(rawMove);
+
+    if (mapped === expectedMove) {
+      kandidati.push(rotace);
+    }
+  }
+
+  if (kandidati.length === 0) {
+    // Není to jen jiným držením kostky – vrať původní osu a nech checkMove
+    // normálně označit chybný tah.
+    setTrainerRotation(puvodniRotace);
+    return;
+  }
+
+  // Pokud mezi kandidáty je dosavadní orientace, necháme ji. Jinak zvolíme
+  // jedinou/nejbližší platnou osu. Od této chvíle je osa pro solve zamknutá.
+  const vybranaRotace = kandidati.includes(puvodniRotace)
+    ? puvodniRotace
+    : kandidati[0];
+
+  setTrainerRotation(vybranaRotace);
+  autoOrientacePll = false;
+}
+
+/* =========================================================
    KONTROLA TAHU
    ========================================================= */
 
@@ -1074,17 +1130,24 @@ export function checkMove(move, selectedAlg) {
     return "none";
   }
 
-  if (isTrainerMove(move)) {
-    move = stripTrainerMove(move);
-  } else {
-    move = rotateMove(move);
-  }
+  const rawMoveProOrientaci = move;
 
   const expectedMove = applyVirtualYToExpectedMove(
   applyVirtualXToExpectedMove(
     applyVirtualZToExpectedMove(expected.move)
   )
 );
+
+  // DŮLEŽITÉ: nic nepřidáváme před Ra/Rb ani jiný PLL. Pokud uživatel
+  // fyzicky otočil celou kostku tak, aby pattern vypadal jako na obrázku,
+  // první boční tah pouze zamkne správnou osu Smart Cube.
+  zkusZamknoutOrientaciPll(rawMoveProOrientaci, expectedMove);
+
+  if (isTrainerMove(move)) {
+    move = stripTrainerMove(move);
+  } else {
+    move = rotateMove(move);
+  }
 
   if (move !== expectedMove) {
     wrongDisplayIndex = getGroupedDisplayIndex(expected.displayIndex);
@@ -1147,6 +1210,9 @@ export function resetTrainer(selectedAlg) {
   virtualY = 0;
   virtualX = 0;
   virtualZ = 0;
+
+  const algName = selectedAlg?.dataset?.algName || "";
+  autoOrientacePll = Object.prototype.hasOwnProperty.call(pllAlgs, algName);
 
   renderTrainer(selectedAlg);
 }
