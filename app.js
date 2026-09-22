@@ -2661,6 +2661,45 @@ box.style.whiteSpace = "pre-line";
 
 
 
+function zpracujSmartAufTah(rawMove, expectedMove) {
+  rawMove = normalizeMove(rawMove);
+  expectedMove = normalizeMove(expectedMove);
+
+  if (!rawMove || !expectedMove) return false;
+
+  const logicalMove = normalizeMove(logicalOuterMove(rawMove));
+  const expectedGroup = moveAxisGroup(expectedMove);
+  const rawGroup = moveAxisGroup(rawMove);
+  const logicalGroup = moveAxisGroup(logicalMove);
+
+  // AUF U/U'/U2 se na GAN kostce při žluté nahoře může hlásit jako D/D'/D2.
+  // Proto porovnáváme osu U-D, ne doslovné písmeno stěny. Směr ale zachováme,
+  // aby U nebylo omylem přijato jako U'.
+  if (expectedGroup < 0 || (rawGroup !== expectedGroup && logicalGroup !== expectedGroup)) {
+    commitMove(logicalMove || rawMove, performance.now());
+    return true;
+  }
+
+  if (!expectedMove.endsWith("2")) {
+    const expectedSuffix = getMoveSuffix(expectedMove);
+    const rawSuffix = getMoveSuffix(rawMove);
+    const logicalSuffix = getMoveSuffix(logicalMove);
+
+    if (rawSuffix !== expectedSuffix && logicalSuffix !== expectedSuffix) {
+      commitMove(logicalMove || rawMove, performance.now());
+      return true;
+    }
+
+    // '=' říká traineru: fyzická osa sedí, použij logický tah zobrazený uživateli.
+    commitMove("=" + expectedMove, performance.now());
+    return true;
+  }
+
+  // U2 může Smart Cube poslat přímo jako U2/D2 nebo jako dva rychlé čtvrttahy.
+  handleGuidedOuterMove(rawMove, expectedMove);
+  return true;
+}
+
 function handleSmartRawMove(move) {
     if (trainerPaused) {
     return;
@@ -2676,6 +2715,26 @@ if (mDebug) {
   
   move = normalizeMove(move);
   if (!move) return;
+
+  // PRE/POST-AUF je mimo běžnou sekvenci algoritmu, takže getExpectedMove() je zde
+  // prázdné. Kdybychom tah poslali běžnou cestou, fyzické U' se při žluté nahoře
+  // může z GANu hlásit jako D' a přímé porovnání by falešně zahlásilo chybu.
+  // V AUF fázi proto používáme stejnou osu-logiku jako trainer.
+  const expectedAufMove =
+    (trainerCekaNaPllAuf && trainerOcekavanyPllAuf)
+      ? trainerOcekavanyPllAuf
+      : (cekajiciPllNavratPoPredAuf?.predAuf || "");
+
+  if (
+    expectedAufMove &&
+    puzzleMode === "pll" &&
+    trainingMode === "random" &&
+    cubeMode === "smart"
+  ) {
+    zpracujSmartAufTah(move, expectedAufMove);
+    return;
+  }
+
   // Pokud aktuální algoritmus NEobsahuje M/E/S, nesmí se používat slice buffer.
 // Jinak se při rychlém T-permu může dvojice raw tahů omylem vyhodnotit jako M/E/S
 // a rozhodí orientaci nebo pending tahy.
@@ -2956,6 +3015,15 @@ function commitMove(move, now) {
 
   move = normalizeMove(move);
   if (!move) return;
+
+  // V přímých AUF fázích může smart-cube mapper předat logický tah s prefixem '='.
+  // Tady už nejsme v checkMove(), takže prefix odstraníme před přímým porovnáním.
+  if (
+    move.startsWith("=") &&
+    (cekajiciPllNavratPoPredAuf || trainerCekaNaPllAuf)
+  ) {
+    move = move.slice(1);
+  }
 
   if (
     cekajiciPllNavratPoPredAuf &&
