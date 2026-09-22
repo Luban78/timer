@@ -703,11 +703,11 @@ function vytvorPanelRelace() {
   naplanujUmisteniPaneluRelace();
 }
 
-function setTrainerPaused(value) {
-  trainerPaused = !!value;
+let trainerPauseTapBound = false;
 
-  if (selectedAlg) {
-    if (selectedAlg) {
+function bindTrainerPauseTapOnce() {
+  if (!selectedAlg || trainerPauseTapBound) return;
+
   selectedAlg.addEventListener("pointerdown", e => {
     if (e.target.closest("#editAlgVariantBtn")) return;
 
@@ -728,14 +728,27 @@ function setTrainerPaused(value) {
         return;
       }
     }
-    
+
+    // Během rozběhnutého solve nesmí náhodný tap na kartu odpojit
+    // Smart Cube vstup. Dříve tím vznikl stav PAUZA + běžící čas,
+    // ze kterého se kvůli vícenásobným listenerům špatně vracelo.
+    if (isSolving) return;
+
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
-    
+
     toggleTrainerPaused();
   });
+
+  trainerPauseTapBound = true;
 }
+
+function setTrainerPaused(value) {
+  trainerPaused = !!value;
+  bindTrainerPauseTapOnce();
+
+  if (selectedAlg) {
     selectedAlg.classList.toggle("trainer-paused", trainerPaused);
   }
 
@@ -2565,13 +2578,39 @@ function handleGuidedOuterMove(rawMove, expectedMove) {
     return;
   }
 
-  if (!rawMatchesExpectedAxis(rawMove, expectedMove)) {
+  const now = performance.now();
+
+  // Když už moveTrainer čeká na vrácení chyby u běžného tahu,
+  // nesmíme korekční tah znovu chytit do U2/R2 double-bufferu.
+  // Raw tah pošleme přímo do checkMove(), které samo použije orientaci
+  // a zásobník chyb. Tohle odstraňuje deadlock „červené U2 + nic nereaguje“.
+  const trainerState = stateMsg?.dataset?.trainerState || "";
+  if (
+    expectedMove.endsWith("2") &&
+    (trainerState === "wrong" || trainerState === "undoing")
+  ) {
     clearGuidedOuterBuffer();
-    handleRawMove(logicalOuterMove(rawMove));
+    clearPendingMove();
+    commitMove(rawMove, now);
     return;
   }
 
-  const now = performance.now();
+  if (!rawMatchesExpectedAxis(rawMove, expectedMove)) {
+    // Pokud už máme první polovinu očekávaného dvojtahu a uživatel místo
+    // druhé poloviny otočí jinou osu, první tah nesmíme zahodit. Nejdřív ho
+    // necháme trainer označit jako chybu a hned potom zpracujeme aktuální tah.
+    const prvniPulTah = pendingGuidedOuter;
+    clearGuidedOuterBuffer();
+
+    if (expectedMove.endsWith("2") && prvniPulTah?.rawMove) {
+      commitMove(prvniPulTah.rawMove, prvniPulTah.time);
+      commitMove(rawMove, now);
+      return;
+    }
+
+    handleRawMove(logicalOuterMove(rawMove));
+    return;
+  }
 
   if (!expectedMove.endsWith("2")) {
     clearGuidedOuterBuffer();
@@ -2579,29 +2618,62 @@ function handleGuidedOuterMove(rawMove, expectedMove) {
     return;
   }
 
+  // Některé Smart Cube pošlou dvojtah rovnou jako U2/R2/...
   if (getMoveSuffix(rawMove) === "2") {
     clearGuidedOuterBuffer();
+    if (stateMsg?.dataset?.trainerState === "partial-double") {
+      stateMsg.innerText = "SKLÁDÁŠ..";
+      stateMsg.dataset.trainerState = "running";
+      stateMsg.style.color = "#00e676";
+    }
     commitMove("=" + expectedMove, now);
     return;
   }
 
-  if (
-    pendingGuidedOuter &&
-    baseFace(pendingGuidedOuter.expected) === expectedBase &&
-    now - pendingGuidedOuter.time <= SLICE_DOUBLE_MOVE_WINDOW
-  ) {
+  if (pendingGuidedOuter) {
+    const prvniPulTah = pendingGuidedOuter;
+    const stejnaFyzickaStena =
+      baseFace(prvniPulTah.rawMove) === baseFace(rawMove);
+    const stejnySmer =
+      getMoveSuffix(prvniPulTah.rawMove) === getMoveSuffix(rawMove);
+
     clearGuidedOuterBuffer();
-    commitMove("=" + expectedMove, now);
+
+    if (stejnaFyzickaStena && stejnySmer) {
+      // Dvojtah nemá tvrdý časový limit. Pomalé U + U je pořád U2.
+      if (stateMsg?.dataset?.trainerState === "partial-double") {
+        stateMsg.innerText = "SKLÁDÁŠ..";
+        stateMsg.dataset.trainerState = "running";
+        stateMsg.style.color = "#00e676";
+      }
+      commitMove("=" + expectedMove, now);
+      return;
+    }
+
+    // U + U' nebo jiná druhá čtvrtotáčka není U2. Zpracujeme oba fyzické
+    // tahy poctivě, aby šel vzniklý error vždy normálně vrátit.
+    commitMove(prvniPulTah.rawMove, prvniPulTah.time);
+    commitMove(rawMove, now);
     return;
   }
 
-  clearGuidedOuterBuffer();
-  pendingGuidedOuter = { expected: expectedMove, time: now };
+  // První polovina U2/R2/... Zůstane uložená bez časového limitu.
+  // Po krátké chvíli pouze zobrazíme nápovědu, buffer ale NEZAHODÍME.
+  pendingGuidedOuter = { expected: expectedMove, rawMove, time: now };
   pendingGuidedOuterTimer = setTimeout(() => {
+    pendingGuidedOuterTimer = null;
+
+    if (!pendingGuidedOuter || pendingGuidedOuter.expected !== expectedMove) return;
+
     if (mDebug) {
       mDebug.innerText = "Čekám na 2. část " + expectedMove;
     }
-    clearGuidedOuterBuffer();
+
+    if (stateMsg && !trainerPaused) {
+      stateMsg.innerText = "DOKONČI " + expectedMove;
+      stateMsg.dataset.trainerState = "partial-double";
+      stateMsg.style.color = "#ffe928";
+    }
   }, SLICE_DOUBLE_MOVE_WINDOW);
 
   if (mDebug) {
@@ -3371,7 +3443,8 @@ timeVal.innerText = currentTPS.toFixed(1);
       Boolean(cekajiciPllNavratPoPredAuf) ||
       stateMsg?.dataset?.trainerState === "wrong" ||
       stateMsg?.dataset?.trainerState === "undoing" ||
-      stateMsg?.dataset?.trainerState === "pre-auf";
+      stateMsg?.dataset?.trainerState === "pre-auf" ||
+      stateMsg?.dataset?.trainerState === "partial-double";
 
     if (
       !trainerVKlidoveFazi &&
