@@ -52,7 +52,7 @@ import {
   checkMove,
   getExpectedMove,
   resetTrainer
-} from "./moveTrainer.js?v=trainer-correction-1";
+} from "./moveTrainer.js?v=return-math-flicker-1";
 
 import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";
@@ -274,6 +274,10 @@ let lastStateSignature = "";
 let faceletCount = 0;
 let trainerLocked = false;
 let trainerCekaNaPllAuf = false;
+let trainerOcekavanyPllAuf = "";
+let cekajiciPllNavratPoPredAuf = null;
+let chybyPredAuf = [];
+let chybyPostAuf = [];
 
 let seq = [];
 let moveTimes = [];
@@ -1547,6 +1551,8 @@ function setupCubeButtons() {
           // (U / U' / U2). Ten není chyba. Čekáme, dokud je kostka skutečně solved.
           if (
             trainerCekaNaPllAuf &&
+            !trainerOcekavanyPllAuf &&
+            chybyPostAuf.length === 0 &&
             puzzleMode === "pll" &&
             cubeMode === "smart" &&
             isSolving &&
@@ -2037,77 +2043,189 @@ function invertujTahProNavrat(tah) {
   return value + "'";
 }
 
-function invertujAlgoritmusProNavrat(algoritmus) {
-  return String(algoritmus || "")
-    .trim()
-    .split(/\s+/)
+function normalizujAlgSekvenci(...casti) {
+  return casti
+    .map(value => String(value || "").trim())
     .filter(Boolean)
-    .reverse()
-    .map(invertujTahProNavrat)
-    .join(" ");
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-function jeTestovaciPllNazev(name) {
-  return /test/i.test(String(name || ""));
+function cenaAuf(tah) {
+  if (!tah) return 0;
+  return String(tah).includes("2") ? 2 : 1;
 }
 
-function najdiNavratovyPll(puvodniNazev, puvodniAlgoritmus) {
-  const protiklady = {
-    "Ua-perm": "Ub-perm",
-    "Ub-perm": "Ua-perm",
-    "Aa-perm": "Ab-perm",
-    "Ab-perm": "Aa-perm",
-    "Ra-perm": "Rb-perm",
-    "Rb-perm": "Ra-perm",
-    "Ga-perm": "Gb-perm",
-    "Gb-perm": "Ga-perm",
-    "Gc-perm": "Gd-perm",
-    "Gd-perm": "Gc-perm"
-  };
+function ziskejPreferovanePllProNavrat() {
+  const vybrane = typeof window.getSelectedRandomPllNames === "function"
+    ? window.getSelectedRandomPllNames(Object.keys(pllAlgs))
+    : [];
 
-  const protikladNazev = protiklady[puvodniNazev];
+  const platne = Array.isArray(vybrane)
+    ? vybrane.filter(name => Object.prototype.hasOwnProperty.call(pllAlgs, name))
+    : [];
 
-  // U PLL, které jsou samy sobě inverzní, se opakuje přesně
-  // stejná právě zvolená varianta. To je důležité pro svalovou paměť:
-  // uživatel vidí stejný algoritmus a jede ho podruhé úplně stejně.
-  if (!protikladNazev && !jeTestovaciPllNazev(puvodniNazev)) {
-    return {
-      name: puvodniNazev,
-      algorithm: puvodniAlgoritmus,
-      namedMatch: true,
-      stejnaVarianta: true
-    };
+  const vsechny = Object.keys(pllAlgs).filter(name => !/test/i.test(name));
+
+  return [...new Set([...platne, ...vsechny])];
+}
+
+/*
+ * Matematický návrat do složené:
+ * - žádná ruční tabulka Aa↔Ab / Ra↔Rb
+ * - vyjdeme z přesného právě provedeného algoritmu na solved kostce
+ * - pro každý známý PLL zkusíme nejkratší AUF před + aktivní variantu PLL + AUF po
+ * - první řešení s nejnižší cenou je skutečný návrat
+ */
+function najdiNavratovyPllMatematicky(puvodniNazev, puvodniAlgoritmus) {
+  if (!puvodniAlgoritmus) return null;
+
+  const solved = createSolvedPattern();
+  if (!solved) return null;
+
+  let stavPoPrvnim;
+
+  try {
+    stavPoPrvnim = applyAlgorithm(solved, puvodniAlgoritmus);
+  } catch (error) {
+    console.warn("PLL návrat: nepodařilo se vytvořit stav po algoritmu.", error);
+    return null;
   }
 
-  // U případů, které mají skutečný protiklad, nabídneme pojmenovaný
-  // protikus a jeho aktuálně vybranou variantu.
-  if (protikladNazev && Object.prototype.hasOwnProperty.call(pllAlgs, protikladNazev)) {
-    const protikladAlg = getActivePllAlg(protikladNazev);
-    if (protikladAlg) {
-      return {
-        name: protikladNazev,
-        algorithm: protikladAlg,
-        namedMatch: true,
-        stejnaVarianta: false
-      };
+  const aufs = ["", "U", "U'", "U2"];
+  const kandidati = [];
+  const poradi = ziskejPreferovanePllProNavrat();
+
+  for (const name of poradi) {
+    const algorithm = getActivePllAlg(name);
+    if (!algorithm) continue;
+
+    for (const predAuf of aufs) {
+      for (const postAuf of aufs) {
+        try {
+          const sekvence = normalizujAlgSekvenci(predAuf, algorithm, postAuf);
+          const vysledek = applyAlgorithm(stavPoPrvnim, sekvence);
+
+          if (!isPatternSolved(vysledek)) continue;
+
+          kandidati.push({
+            name,
+            algorithm,
+            predAuf,
+            postAuf,
+            cena: cenaAuf(predAuf) + cenaAuf(postAuf),
+            stejnyPripad: name === puvodniNazev
+          });
+        } catch (error) {
+          console.warn("PLL návrat: kandidát selhal:", name, predAuf, postAuf, error);
+        }
+      }
     }
   }
 
-  // Jen pro testovací / neznámé položky necháváme bezpečný fallback
-  // přes přesnou inverzi sekvence.
-  const fallbackAlg = invertujAlgoritmusProNavrat(puvodniAlgoritmus);
-  return {
-    name: puvodniNazev,
-    algorithm: fallbackAlg || puvodniAlgoritmus,
-    namedMatch: false,
-    stejnaVarianta: false
-  };
+  if (!kandidati.length) return null;
+
+  kandidati.sort((a, b) => {
+    if (a.cena !== b.cena) return a.cena - b.cena;
+
+    const ai = poradi.indexOf(a.name);
+    const bi = poradi.indexOf(b.name);
+    if (ai !== bi) return ai - bi;
+
+    if (a.stejnyPripad !== b.stejnyPripad) return a.stejnyPripad ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  const vybrany = kandidati[0];
+
+  console.info("[PLL NAVRAT]", {
+    from: puvodniNazev,
+    to: vybrany.name,
+    predAuf: vybrany.predAuf || "-",
+    postAuf: vybrany.postAuf || "-",
+    algorithm: vybrany.algorithm
+  });
+
+  return vybrany;
 }
 
-function nastavPllProTrenink(name, algorithm, { navrat = false } = {}) {
+function dokonciPredAufANastavNavrat() {
+  const navrat = cekajiciPllNavratPoPredAuf;
+  if (!navrat) return false;
+
+  cekajiciPllNavratPoPredAuf = null;
+  chybyPredAuf = [];
+
+  return nastavPllProTrenink(
+    navrat.name,
+    navrat.algorithm,
+    {
+      navrat: true,
+      postAuf: navrat.postAuf || ""
+    }
+  );
+}
+
+function zpracujPredAufNavratu(move) {
+  const navrat = cekajiciPllNavratPoPredAuf;
+  if (!navrat) return false;
+
+  move = normalizeMove(move);
+  if (!move) return true;
+
+  if (chybyPredAuf.length > 0) {
+    const posledniChyba = chybyPredAuf[chybyPredAuf.length - 1];
+    const ocekavanyNavrat = invertujTahProNavrat(posledniChyba);
+
+    if (move === ocekavanyNavrat) {
+      chybyPredAuf.pop();
+
+      if (chybyPredAuf.length === 0) {
+        if (stateMsg) {
+          stateMsg.innerText = `OPRAVENO • AUF ${navrat.predAuf}`;
+          stateMsg.dataset.trainerState = "pre-auf";
+          stateMsg.style.color = "#ffe928";
+        }
+        beep(523, .05);
+      } else if (stateMsg) {
+        stateMsg.innerText = "VRACEJ CHYBU";
+        stateMsg.style.color = "#ffe928";
+      }
+
+      return true;
+    }
+
+    chybyPredAuf.push(move);
+    if (stateMsg) {
+      stateMsg.innerText = "CHYBA – VRAŤ TAH";
+      stateMsg.style.color = "red";
+    }
+    playErrorSound();
+    return true;
+  }
+
+  if (move !== navrat.predAuf) {
+    chybyPredAuf.push(move);
+
+    if (stateMsg) {
+      stateMsg.innerText = "CHYBA – VRAŤ TAH";
+      stateMsg.dataset.trainerState = "wrong-pre-auf";
+      stateMsg.style.color = "red";
+    }
+
+    playErrorSound();
+    return true;
+  }
+
+  beep(523, .05);
+  dokonciPredAufANastavNavrat();
+  return true;
+}
+
+function nastavPllProTrenink(name, algorithm, { navrat = false, postAuf = "" } = {}) {
   if (!name || !algorithm) return false;
 
-  // Random PLL se vždy trénuje se žlutou nahoře a zelenou vpředu.
   setTrainerTop("yellow");
   setTrainerFrontColor("green");
 
@@ -2117,11 +2235,15 @@ function nastavPllProTrenink(name, algorithm, { navrat = false } = {}) {
   selectedAlg.innerText = "Algoritmus: " + algorithm;
 
   prepareNext();
+  trainerOcekavanyPllAuf = navrat ? String(postAuf || "") : "";
+
+  selectedAlg.dataset.trainerRenderKey = "";
   renderAlgorithmPreview(selectedAlg);
   setTrainerPaused(false);
 
   if (navrat && stateMsg) {
     stateMsg.innerText = "NÁVRAT DO SLOŽENÉ";
+    stateMsg.dataset.trainerState = "return";
     stateMsg.style.color = "yellow";
   }
 
@@ -2155,14 +2277,42 @@ function pripravNavratDoSlozene() {
   const puvodniAlgoritmus = selectedAlg?.dataset?.algText || getActivePllAlg(puvodniNazev);
   if (!puvodniNazev || !puvodniAlgoritmus) return false;
 
-  const navratovy = najdiNavratovyPll(puvodniNazev, puvodniAlgoritmus);
-  if (!navratovy?.algorithm) return false;
+  const navratovy = najdiNavratovyPllMatematicky(puvodniNazev, puvodniAlgoritmus);
+
+  if (!navratovy?.algorithm) {
+    console.warn("[PLL NAVRAT] Matematický návrat nebyl nalezen.", {
+      puvodniNazev,
+      puvodniAlgoritmus
+    });
+    return false;
+  }
 
   randomPllFazeNavratu = true;
+
+  if (navratovy.predAuf) {
+    prepareNext();
+    cekajiciPllNavratPoPredAuf = { ...navratovy };
+    chybyPredAuf = [];
+
+    if (stateMsg) {
+      stateMsg.innerText = `AUF ${navratovy.predAuf} → ${navratovy.name}`;
+      stateMsg.dataset.trainerState = "pre-auf";
+      stateMsg.style.color = "#ffe928";
+    }
+
+    return true;
+  }
+
+  cekajiciPllNavratPoPredAuf = null;
+  chybyPredAuf = [];
+
   return nastavPllProTrenink(
     navratovy.name || puvodniNazev,
     navratovy.algorithm,
-    { navrat: true }
+    {
+      navrat: true,
+      postAuf: navratovy.postAuf || ""
+    }
   );
 }
 
@@ -2203,6 +2353,8 @@ function restartCurrentTrainerRun() {
 
 function prepareNext() {
   trainerCekaNaPllAuf = false;
+  trainerOcekavanyPllAuf = "";
+  chybyPostAuf = [];
   clearPendingMove();
   clearSliceMoveBuffer();
   clearGuidedOuterBuffer();
@@ -2805,6 +2957,16 @@ function commitMove(move, now) {
   move = normalizeMove(move);
   if (!move) return;
 
+  if (
+    cekajiciPllNavratPoPredAuf &&
+    puzzleMode === "pll" &&
+    trainingMode === "random" &&
+    cubeMode === "smart"
+  ) {
+    zpracujPredAufNavratu(move);
+    return;
+  }
+
   /* WCA Smart Cube – tolerantní kontrola zamíchání.
      Dvojtahy nemají časový limit. Při chybě čekáme na její vrácení. */
   if (puzzleMode === "wca" && cubeMode === "smart" && !wcaScrambleReady) {
@@ -2890,11 +3052,57 @@ function commitMove(move, now) {
     return;
   }
 
-  // PLL POST-AUF: předepsaný PLL algoritmus je už hotový, ale kostka může
-  // ještě potřebovat U / U' / U2. V této fázi už tah neporovnáváme s dalším
-  // algoritmem; jen čekáme na skutečně složenou kostku.
+  // PLL POST-AUF: u matematického návratu známe přesný AUF, který má
+  // následovat po PLL algoritmu. I tady funguje stejné vracení chyby.
   if (trainerCekaNaPllAuf && puzzleMode === "pll" && cubeMode === "smart") {
     moveTimes.push(now);
+
+    if (trainerOcekavanyPllAuf) {
+      if (chybyPostAuf.length > 0) {
+        const posledniChyba = chybyPostAuf[chybyPostAuf.length - 1];
+        const ocekavanyNavrat = invertujTahProNavrat(posledniChyba);
+
+        if (move === ocekavanyNavrat) {
+          chybyPostAuf.pop();
+
+          if (stateMsg) {
+            stateMsg.innerText = chybyPostAuf.length
+              ? "VRACEJ CHYBU"
+              : `OPRAVENO • AUF ${trainerOcekavanyPllAuf}`;
+            stateMsg.dataset.trainerState = chybyPostAuf.length ? "undoing-auf" : "auf";
+            stateMsg.style.color = "#ffe928";
+          }
+
+          if (chybyPostAuf.length === 0) beep(523, .05);
+          return;
+        }
+
+        chybyPostAuf.push(move);
+        if (stateMsg) {
+          stateMsg.innerText = "CHYBA – VRAŤ TAH";
+          stateMsg.dataset.trainerState = "wrong-auf";
+          stateMsg.style.color = "red";
+        }
+        playErrorSound();
+        return;
+      }
+
+      if (move !== trainerOcekavanyPllAuf) {
+        chybyPostAuf.push(move);
+
+        if (stateMsg) {
+          stateMsg.innerText = "CHYBA – VRAŤ TAH";
+          stateMsg.dataset.trainerState = "wrong-auf";
+          stateMsg.style.color = "red";
+        }
+
+        playErrorSound();
+        return;
+      }
+
+      trainerOcekavanyPllAuf = "";
+      chybyPostAuf = [];
+    }
 
     if (stateMsg) {
       stateMsg.innerText = "AUF – DOKONČI DO SLOŽENÉ";
@@ -2902,8 +3110,6 @@ function commitMove(move, now) {
       stateMsg.style.color = "#ffe928";
     }
 
-    // FACELETS obvykle přijdou hned po MOVE. Záložní kontrola pokryje
-    // i zařízení/prohlížeče, kde dorazí paket v jiném pořadí.
     setTimeout(() => zkontrolujPllPoAuf(performance.now()), 90);
     return;
   }
@@ -2967,10 +3173,59 @@ showMoveDebug({
     clearSliceMoveBuffer();
     clearGuidedOuterBuffer();
 
-    // PLL může být po posledním tahu algoritmu správně vyřešený jen "do AUF".
-    // Proto u Smart Cube neukončíme solve podle notace, ale podle skutečného
-    // stavu kostky. U/U'/U2 po algoritmu už tedy není hlášeno jako chyba.
+    // První průchod v Random + Návrat začíná ze solved kostky.
+    // Po algoritmu má tedy záměrně vzniknout PLL případ; NESMÍME čekat,
+    // že už teď bude kostka složená.
+    if (
+      puzzleMode === "pll" &&
+      cubeMode === "smart" &&
+      jeRandomPllNavratDoSlozeneZapnuty() &&
+      !randomPllFazeNavratu
+    ) {
+      trainerLocked = true;
+      finishSolve(performance.now(), false);
+
+      setTimeout(() => {
+        prepareNextTrainerRun();
+        trainerLocked = false;
+      }, 700);
+
+      return;
+    }
+
+    // Návratová fáze může mít přesně známý finální AUF.
+    if (
+      puzzleMode === "pll" &&
+      cubeMode === "smart" &&
+      randomPllFazeNavratu &&
+      trainerOcekavanyPllAuf
+    ) {
+      trainerCekaNaPllAuf = true;
+      chybyPostAuf = [];
+
+      if (stateMsg) {
+        stateMsg.innerText = `AUF ${trainerOcekavanyPllAuf} – DOKONČI`;
+        stateMsg.dataset.trainerState = "auf";
+        stateMsg.style.color = "#ffe928";
+      }
+
+      return;
+    }
+
+    // Ostatní PLL: pokud je kostka už solved, dokončíme rovnou.
     if (puzzleMode === "pll" && cubeMode === "smart") {
+      if (jePllPoAufSlozeny()) {
+        trainerLocked = true;
+        finishSolve(performance.now(), false);
+
+        setTimeout(() => {
+          prepareNextTrainerRun();
+          trainerLocked = false;
+        }, 700);
+
+        return;
+      }
+
       trainerCekaNaPllAuf = true;
 
       if (stateMsg) {
@@ -2979,7 +3234,6 @@ showMoveDebug({
         stateMsg.style.color = "#ffe928";
       }
 
-      // Finální FACELETS mohou přijít o pár ms později než MOVE.
       setTimeout(() => zkontrolujPllPoAuf(performance.now()), 120);
       return;
     }
@@ -3024,7 +3278,21 @@ timeVal.innerText = currentTPS.toFixed(1);
     const avg = totalMoves / elapsed;
     avgVal.innerText = avg.toFixed(1);
     
-    if (totalMoves > 8 && currentTPS < avg * .65 && now - lastBeep > 1200) {
+    const trainerVKlidoveFazi =
+      trainerPaused ||
+      trainerCekaNaPllAuf ||
+      chybyPostAuf.length > 0 ||
+      Boolean(cekajiciPllNavratPoPredAuf) ||
+      stateMsg?.dataset?.trainerState === "wrong" ||
+      stateMsg?.dataset?.trainerState === "undoing" ||
+      stateMsg?.dataset?.trainerState === "pre-auf";
+
+    if (
+      !trainerVKlidoveFazi &&
+      totalMoves > 8 &&
+      currentTPS < avg * .65 &&
+      now - lastBeep > 1200
+    ) {
       beep(220, .12);
       lastBeep = now;
     }

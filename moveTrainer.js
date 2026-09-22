@@ -310,6 +310,10 @@ function skipRotationMoves() {
    ========================================================= */
 
 export function renderAlgorithmPreview(selectedAlg) {
+  // Explicitní načtení/změna algoritmu smí překreslit celou kartu.
+  // Běžný tah už později mění jen notaci, aby diagram neproblikával.
+  selectedAlg.dataset.trainerRenderKey = "";
+
   const algFromDataset = selectedAlg.dataset.algText || "";
 
   const text = selectedAlg.innerText || "";
@@ -1101,8 +1105,23 @@ function renderAlgorithmCard(algName, displaySteps, empty = false) {
 export function renderTrainer(selectedAlg) {
   const algName = selectedAlg.dataset.algName || "Algoritmus";
   const displaySteps = buildDisplaySteps(displayMoves);
+  const renderKey = `${algName}|${selectedAlg.dataset.algText || ""}`;
+  const movesHtml = renderMoveRows(displaySteps);
+
+  // Zásadní anti-flicker oprava:
+  // při každém tahu už NEMAŽEME celou kartu ani automatický diagram.
+  // Překreslí se pouze řádek notace se zeleným/červeným zvýrazněním.
+  if (selectedAlg.dataset.trainerRenderKey === renderKey) {
+    const movesRow = selectedAlg.querySelector(".alg-moves-row");
+
+    if (movesRow) {
+      movesRow.innerHTML = movesHtml;
+      return;
+    }
+  }
 
   selectedAlg.innerHTML = renderAlgorithmCard(algName, displaySteps, false);
+  selectedAlg.dataset.trainerRenderKey = renderKey;
   namontujAutomatickyDiagram(selectedAlg, algName);
 }
 
