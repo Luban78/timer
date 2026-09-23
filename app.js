@@ -289,7 +289,6 @@ let primaryPllAlg = "";
 // znovu zapnout AUF / návrat / další Random případ.
 let trainerTransitionGeneration = 0;
 const trainerTransitionTimers = new Set();
-let trainerResetWaitForSolved = false;
 
 let lastFaceletsAt = 0;
 let randomPllFazeNavratu = false;
@@ -732,7 +731,7 @@ function vytvorPanelRelace() {
       resetPllSequence();
       resetujStatistikyRelace();
       pickNextPLL();
-      vycistiTrainerDoNuly({ cekatNaSlozeni: true, text: "PŘIPRAVEN" });
+      vycistiTrainerDoNuly({ cekatNaSlozeni: false, text: "PŘIPRAVEN" });
       naplanujUmisteniPaneluRelace();
     }
   });
@@ -808,7 +807,6 @@ function vycistiTrainerDoNuly({ cekatNaSlozeni = false, text = "PŘIPRAVEN • R
   chybyPostAuf = [];
   trainerCorrectionRawStack = [];
   randomPllFazeNavratu = false;
-  trainerResetWaitForSolved = false;
 
   currentMoves = [];
   seq = [];
@@ -833,22 +831,11 @@ function vycistiTrainerDoNuly({ cekatNaSlozeni = false, text = "PŘIPRAVEN • R
 
   setTrainerPaused(false);
 
-  const maCekatNaSlozeni = Boolean(
-    cekatNaSlozeni &&
-    puzzleMode === "pll" &&
-    cubeMode === "smart" &&
-    !jePllPoAufSlozeny()
-  );
-
-  if (maCekatNaSlozeni) {
-    trainerResetWaitForSolved = true;
-    setTrainerPaused(true);
-    if (stateMsg) {
-      stateMsg.innerText = "RESET • SLOŽ KOSTKU";
-      stateMsg.dataset.trainerState = "reset-wait-solved";
-      stateMsg.style.color = "#ffe928";
-    }
-  } else if (stateMsg) {
+  // V16: reset nikdy nečeká na nový FACELETS paket. Některé Smart Cube
+  // po změně režimu/resetu neposílají stav okamžitě; čekání by trainer
+  // zablokovalo i se složenou kostkou. Všechny interní stavy jsou vyčištěné
+  // a trainer se proto vrací rovnou do připraveného stavu.
+  if (stateMsg) {
     stateMsg.innerText = text;
     stateMsg.dataset.trainerState = "ready";
     stateMsg.style.color = "#00e676";
@@ -874,13 +861,12 @@ function jeTrainerVeStavuProNouzovyReset() {
 }
 
 function resetujAktualniTrainerPokus() {
-  // HARD RESET aktuálního pokusu: nejdřív se vrátíme na hlavní trénovaný PLL
-  // (ne na případný matematický návrat), potom smažeme všechny AUF/correction/
-  // double-buffer/timeout stavy. Pokud kostka není solved, tahy při ručním
-  // skládání ignorujeme až do čerstvého solved FACELETS stavu.
+  // HARD RESET aktuálního pokusu: vrátí hlavní trénovaný PLL, zruší staré
+  // timeouty a smaže AUF/correction/double-buffer stavy. Nečeká na FACELETS,
+  // takže Smart Cube je po resetu okamžitě znovu ovladatelná.
   obnovPrimarniPllNaKarte();
   vycistiTrainerDoNuly({
-    cekatNaSlozeni: true,
+    cekatNaSlozeni: false,
     text: "PŘIPRAVEN • RESET"
   });
 }
@@ -1426,7 +1412,7 @@ function setTrainingMode(mode) {
   }
 
   if (zmenenRezim) {
-    vycistiTrainerDoNuly({ cekatNaSlozeni: true, text: "PŘIPRAVEN" });
+    vycistiTrainerDoNuly({ cekatNaSlozeni: false, text: "PŘIPRAVEN" });
   }
 }
 
@@ -1899,21 +1885,6 @@ function setupCubeButtons() {
           if (event.facelets) setCurrentFacelets(event.facelets);
           if (event.state) setCurrentCubeState(event.state);
 
-          // HARD RESET: při ručním skládání kostky trainer ignoruje MOVE eventy.
-          // Jakmile přijde čerstvý solved stav, automaticky se odemkne a nový
-          // algoritmus začíná opravdu z čisté solved kostky.
-          if (trainerResetWaitForSolved && jePllPoAufSlozeny(event.facelets, event.state)) {
-            trainerResetWaitForSolved = false;
-            setTrainerPaused(false);
-            resetTrainer(selectedAlg);
-            prepareNext();
-            if (stateMsg) {
-              stateMsg.innerText = "PŘIPRAVEN • RESET";
-              stateMsg.dataset.trainerState = "ready";
-              stateMsg.style.color = "#00e676";
-            }
-          }
-
           // PLL AUF: fyzicky složená Smart Cube je autorita.
           // Pokud matematika čeká např. U2, ale kostka je už po první čtvrtotáčce
           // skutečně solved (Ja je typický případ), nesmíme nutit druhou polovinu U2.
@@ -2157,7 +2128,7 @@ if (moveDebugEnabled) {
         }
         
         renderAlgorithmPreview(selectedAlg);
-        vycistiTrainerDoNuly({ cekatNaSlozeni: true, text: "PŘIPRAVEN" });
+        vycistiTrainerDoNuly({ cekatNaSlozeni: false, text: "PŘIPRAVEN" });
       }
     });
 
@@ -3465,7 +3436,6 @@ function zpracujTrainerDvojtahBezLimitu(rawMove, labelMove = "") {
 }
 
 function handleSmartRawMove(move) {
-  if (trainerResetWaitForSolved) return;
     if (trainerPaused) {
     return;
   }
@@ -4607,7 +4577,7 @@ if (editAlgVariantBtn) {
 
       prepareNext();
       renderAlgorithmPreview(selectedAlg);
-      vycistiTrainerDoNuly({ cekatNaSlozeni: true, text: "PŘIPRAVEN" });
+      vycistiTrainerDoNuly({ cekatNaSlozeni: false, text: "PŘIPRAVEN" });
     });
   });   
 }
@@ -4668,7 +4638,7 @@ if (deleteAlgorithmBtn) {
       pickNextPLL();
     }
 
-    vycistiTrainerDoNuly({ cekatNaSlozeni: true, text: "PŘIPRAVEN" });
+    vycistiTrainerDoNuly({ cekatNaSlozeni: false, text: "PŘIPRAVEN" });
   });
 }
 /* KONEC APP.JS */
