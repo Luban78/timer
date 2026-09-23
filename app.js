@@ -264,12 +264,14 @@ devExportMap.onclick = () => alert("KLIK MAP");
 
 const singleModeBtn = document.getElementById("singleModeBtn");
 const randomModeBtn = document.getElementById("randomModeBtn");
+const sequenceModeBtn = document.getElementById("sequenceModeBtn");
 
 let waitingForStateAfterMove = false;
 let moveDebugEnabled = false;
 let activeScreen = "timer";
 let cubeMode = localStorage.getItem("cubeMode") || "smart";
 let trainingMode = localStorage.getItem("trainingMode") || "single";
+if (!["single", "random", "sequence"].includes(trainingMode)) trainingMode = "single";
 let puzzleMode = localStorage.getItem("puzzleMode") || "wca";
 let lowTpsSoundEnabled = localStorage.getItem("lowTpsSoundEnabled") !== "0";
 
@@ -278,6 +280,16 @@ const HIDDEN_PLL_KEY = "hiddenPllAlgorithms";
 let pllErrorRepeatCount = Math.max(0, Math.min(10, Number(localStorage.getItem(PLL_ERROR_REPEAT_KEY)) || 0));
 let pllErrorRepeatTarget = "";
 let pllErrorRepeatRemaining = 0;
+let pllSequenceIndex = 0;
+let primaryPllName = "";
+let primaryPllAlg = "";
+
+// Centrální generace/registry pro opožděné přechody traineru.
+// Nouzový reset ji invaliduje, takže už žádný starý timeout nemůže po resetu
+// znovu zapnout AUF / návrat / další Random případ.
+let trainerTransitionGeneration = 0;
+const trainerTransitionTimers = new Set();
+let trainerResetWaitForSolved = false;
 
 let lastFaceletsAt = 0;
 let randomPllFazeNavratu = false;
@@ -715,16 +727,132 @@ function vytvorPanelRelace() {
   }
 
   window.addEventListener("cube-trainer-random-pll-selection-changed", () => {
-    if (trainingMode === "random" && puzzleMode === "pll") {
-      randomPllFazeNavratu = false;
+    if ((trainingMode === "random" || trainingMode === "sequence") && puzzleMode === "pll") {
       resetPllErrorRepeatQueue();
+      resetPllSequence();
       resetujStatistikyRelace();
-      pickRandomPLL();
+      pickNextPLL();
+      vycistiTrainerDoNuly({ cekatNaSlozeni: true, text: "PŘIPRAVEN" });
       naplanujUmisteniPaneluRelace();
     }
   });
 
   naplanujUmisteniPaneluRelace();
+}
+
+function zrusTrainerTransitionTimers() {
+  trainerTransitionGeneration += 1;
+
+  trainerTransitionTimers.forEach(timer => clearTimeout(timer));
+  trainerTransitionTimers.clear();
+}
+
+function naplanujTrainerPrechod(callback, delay) {
+  const generation = trainerTransitionGeneration;
+  const timer = setTimeout(() => {
+    trainerTransitionTimers.delete(timer);
+    if (generation !== trainerTransitionGeneration) return;
+    callback();
+  }, delay);
+
+  trainerTransitionTimers.add(timer);
+  return timer;
+}
+
+function resetPllSequence() {
+  pllSequenceIndex = 0;
+}
+
+function obnovPrimarniPllNaKarte() {
+  if (
+    puzzleMode !== "pll" ||
+    !primaryPllName ||
+    !primaryPllAlg ||
+    !Object.prototype.hasOwnProperty.call(pllAlgs, primaryPllName)
+  ) {
+    return false;
+  }
+
+  currentAlgorithmName = primaryPllName;
+  selectedAlg.dataset.algName = primaryPllName;
+  selectedAlg.dataset.algText = primaryPllAlg;
+  selectedAlg.innerText = "Algoritmus: " + primaryPllAlg;
+  selectedAlg.dataset.trainerRenderKey = "";
+  renderAlgorithmPreview(selectedAlg);
+  return true;
+}
+
+function vycistiTrainerDoNuly({ cekatNaSlozeni = false, text = "PŘIPRAVEN • RESET" } = {}) {
+  zrusTrainerTransitionTimers();
+
+  clearPendingMove();
+  clearSliceMoveBuffer();
+  clearGuidedOuterBuffer();
+  clearPllAufBuffer();
+  resetSliceCenter();
+
+  clearInterval(uiTimer);
+  uiTimer = null;
+  clearTimeout(stopTimer);
+  stopTimer = null;
+  clearTimeout(wcaNextScrambleTimer);
+  wcaNextScrambleTimer = null;
+  setWcaStopFallbackEnabled(false);
+
+  isSolving = false;
+  trainerLocked = false;
+  trainerCekaNaPllAuf = false;
+  trainerOcekavanyPllAuf = "";
+  cekajiciPllNavratPoPredAuf = null;
+  chybyPredAuf = [];
+  chybyPostAuf = [];
+  trainerCorrectionRawStack = [];
+  randomPllFazeNavratu = false;
+  trainerResetWaitForSolved = false;
+
+  currentMoves = [];
+  seq = [];
+  moveTimes = [];
+  tpsHistory = [];
+  totalMoves = 0;
+  maxTPS = 0;
+  longestPause = 0;
+  startTime = 0;
+  lastMoveTime = 0;
+  lastBeep = 0;
+  wcaSolvedConfirmations = 0;
+
+  // Vyčistí i interní checkIndex / correctionStack / virtuální x/y/z v moveTraineru.
+  resetTrainer(selectedAlg);
+  prepareNext();
+
+  if (puzzleMode === "pll") {
+    setTrainerTop("yellow");
+    setTrainerFrontColor("green");
+  }
+
+  setTrainerPaused(false);
+
+  const maCekatNaSlozeni = Boolean(
+    cekatNaSlozeni &&
+    puzzleMode === "pll" &&
+    cubeMode === "smart" &&
+    !jePllPoAufSlozeny()
+  );
+
+  if (maCekatNaSlozeni) {
+    trainerResetWaitForSolved = true;
+    setTrainerPaused(true);
+    if (stateMsg) {
+      stateMsg.innerText = "RESET • SLOŽ KOSTKU";
+      stateMsg.dataset.trainerState = "reset-wait-solved";
+      stateMsg.style.color = "#ffe928";
+    }
+  } else if (stateMsg) {
+    stateMsg.innerText = text;
+    stateMsg.dataset.trainerState = "ready";
+    stateMsg.style.color = "#00e676";
+  }
 }
 
 let trainerPauseTapBound = false;
@@ -746,60 +874,15 @@ function jeTrainerVeStavuProNouzovyReset() {
 }
 
 function resetujAktualniTrainerPokus() {
-  // Nouzový reset pouze aktuálního pokusu. Nic se neukládá do historie/statistik,
-  // Smart Cube zůstává připojená a uživatel nemusí restartovat aplikaci.
-  // U Random PLL si před vyčištěním zapamatujeme přesně případ + aktivní variantu,
-  // aby reset nevylosoval jiný algoritmus.
-  const resetPllName = currentAlgorithmName;
-  const resetPllAlg = selectedAlg?.dataset?.algText || "";
-
-  clearPendingMove();
-  clearSliceMoveBuffer();
-  clearGuidedOuterBuffer();
-  clearPllAufBuffer();
-  resetSliceCenter();
-
-  clearInterval(uiTimer);
-  clearTimeout(stopTimer);
-  setWcaStopFallbackEnabled(false);
-
-  isSolving = false;
-  trainerLocked = false;
-  trainerCekaNaPllAuf = false;
-  trainerOcekavanyPllAuf = "";
-  cekajiciPllNavratPoPredAuf = null;
-  chybyPredAuf = [];
-  chybyPostAuf = [];
-  trainerCorrectionRawStack = [];
-  currentMoves = [];
-  startTime = 0;
-  lastMoveTime = 0;
-
-  // U Random + Návrat se vracíme na začátek cyklu, ale NELOSujeme nový PLL.
-  // Po ručním složení kostky tak může uživatel okamžitě zopakovat přesně případ,
-  // na kterém se nouzový reset použil.
-  if (trainingMode === "random" && puzzleMode === "pll") {
-    randomPllFazeNavratu = false;
-
-    if (
-      resetPllName &&
-      resetPllAlg &&
-      Object.prototype.hasOwnProperty.call(pllAlgs, resetPllName)
-    ) {
-      nastavPllProTrenink(resetPllName, resetPllAlg, { navrat: false });
-    } else {
-      pickRandomPLL();
-    }
-  } else {
-    randomPllFazeNavratu = false;
-    restartCurrentTrainerRun();
-  }
-
-  if (stateMsg) {
-    stateMsg.innerText = "PŘIPRAVEN • RESET";
-    stateMsg.dataset.trainerState = "ready";
-    stateMsg.style.color = "#00e676";
-  }
+  // HARD RESET aktuálního pokusu: nejdřív se vrátíme na hlavní trénovaný PLL
+  // (ne na případný matematický návrat), potom smažeme všechny AUF/correction/
+  // double-buffer/timeout stavy. Pokud kostka není solved, tahy při ručním
+  // skládání ignorujeme až do čerstvého solved FACELETS stavu.
+  obnovPrimarniPllNaKarte();
+  vycistiTrainerDoNuly({
+    cekatNaSlozeni: true,
+    text: "PŘIPRAVEN • RESET"
+  });
 }
 
 function bindTrainerPauseTapOnce() {
@@ -1005,7 +1088,7 @@ function resetPllErrorRepeatQueue() {
 function registrujPllChybuProOpakovani() {
   if (
     puzzleMode !== "pll" ||
-    trainingMode !== "random" ||
+    (trainingMode !== "random" && trainingMode !== "sequence") ||
     pllErrorRepeatCount <= 0 ||
     !currentAlgorithmName ||
     !Object.prototype.hasOwnProperty.call(pllAlgs, currentAlgorithmName)
@@ -1123,6 +1206,7 @@ function switchToNormalCubeMode() {
 function updateTrainingButtons() {
   if (singleModeBtn) singleModeBtn.classList.toggle("active", trainingMode === "single");
   if (randomModeBtn) randomModeBtn.classList.toggle("active", trainingMode === "random");
+  if (sequenceModeBtn) sequenceModeBtn.classList.toggle("active", trainingMode === "sequence");
   updateCompactControlsState();
 }
 
@@ -1160,7 +1244,10 @@ function updateCompactControlsState() {
     setTrainingModeLabel("Next Scramble");
     if (trainingModeBtn) trainingModeBtn.setAttribute("aria-label", "Next Scramble");
   } else {
-    const label = trainingMode === "random" ? "Random" : "Single";
+    const label =
+      trainingMode === "random" ? "Random" :
+      trainingMode === "sequence" ? "Pořadí" :
+      "Single";
     setTrainingModeLabel(label);
     if (trainingModeBtn) trainingModeBtn.setAttribute("aria-label", "Vybrat trénink");
   }
@@ -1297,9 +1384,10 @@ function prepareWcaScramble() {
 
 function setPuzzleMode(mode) {
   if (mode !== puzzleMode) {
-    randomPllFazeNavratu = false;
     resetPllErrorRepeatQueue();
+    resetPllSequence();
     resetujStatistikyRelace();
+    vycistiTrainerDoNuly({ cekatNaSlozeni: false, text: "PŘIPRAVEN" });
   }
   puzzleMode = mode;
   localStorage.setItem("puzzleMode", puzzleMode);
@@ -1319,12 +1407,12 @@ function setPuzzleMode(mode) {
 }
 
 function setTrainingMode(mode) {
-  if (mode !== "single" && mode !== "random") return;
+  if (mode !== "single" && mode !== "random" && mode !== "sequence") return;
 
   const zmenenRezim = mode !== trainingMode;
   if (zmenenRezim) {
-    randomPllFazeNavratu = false;
     resetPllErrorRepeatQueue();
+    resetPllSequence();
     resetujStatistikyRelace();
   }
 
@@ -1332,9 +1420,13 @@ function setTrainingMode(mode) {
   localStorage.setItem("trainingMode", trainingMode);
   updateTrainingButtons();
 
-  // Po zvolení Random se musí hned zobrazit jeden z vybraných PLL.
-  if (trainingMode === "random" && puzzleMode === "pll") {
-    pickRandomPLL();
+  // Random i Pořadí používají společný výběr zaškrtnutých PLL.
+  if ((trainingMode === "random" || trainingMode === "sequence") && puzzleMode === "pll") {
+    pickNextPLL();
+  }
+
+  if (zmenenRezim) {
+    vycistiTrainerDoNuly({ cekatNaSlozeni: true, text: "PŘIPRAVEN" });
   }
 }
 
@@ -1416,6 +1508,8 @@ function setupCompactControls() {
           setTrainingMode("single");
         } else if (mode === "random") {
           setTrainingMode("random");
+        } else if (mode === "sequence") {
+          setTrainingMode("sequence");
         }
 
         closeCompactMenus();
@@ -1441,6 +1535,13 @@ function setupTrainingButtons() {
     randomModeBtn.onclick = e => {
       e.stopPropagation();
       setTrainingMode("random");
+    };
+  }
+
+  if (sequenceModeBtn) {
+    sequenceModeBtn.onclick = e => {
+      e.stopPropagation();
+      setTrainingMode("sequence");
     };
   }
 
@@ -1798,6 +1899,21 @@ function setupCubeButtons() {
           if (event.facelets) setCurrentFacelets(event.facelets);
           if (event.state) setCurrentCubeState(event.state);
 
+          // HARD RESET: při ručním skládání kostky trainer ignoruje MOVE eventy.
+          // Jakmile přijde čerstvý solved stav, automaticky se odemkne a nový
+          // algoritmus začíná opravdu z čisté solved kostky.
+          if (trainerResetWaitForSolved && jePllPoAufSlozeny(event.facelets, event.state)) {
+            trainerResetWaitForSolved = false;
+            setTrainerPaused(false);
+            resetTrainer(selectedAlg);
+            prepareNext();
+            if (stateMsg) {
+              stateMsg.innerText = "PŘIPRAVEN • RESET";
+              stateMsg.dataset.trainerState = "ready";
+              stateMsg.style.color = "#00e676";
+            }
+          }
+
           // PLL AUF: fyzicky složená Smart Cube je autorita.
           // Pokud matematika čeká např. U2, ale kostka je už po první čtvrtotáčce
           // skutečně solved (Ja je typický případ), nesmíme nutit druhou polovinu U2.
@@ -1950,7 +2066,7 @@ function setupAlgorithmButtons() {
       modal,
       selectedAlg,
       pllAlgs: ziskejViditelnaPllAlgs(),
-      randomSelectionMode: trainingMode === "random",
+      randomSelectionMode: trainingMode === "random" || trainingMode === "sequence",
       onSelect: name => {
         if (currentAlgorithmName !== name) {
           resetujStatistikyRelace();
@@ -1959,6 +2075,8 @@ function setupAlgorithmButtons() {
 selectedAlg.dataset.algName = name;
 selectedAlg.dataset.algText = getActivePllAlg(name);
 selectedAlg.innerText = "Algoritmus: " + selectedAlg.dataset.algText;
+primaryPllName = name;
+primaryPllAlg = selectedAlg.dataset.algText;
 
 prepareNext();
 setTrainerPaused(false);
@@ -2039,6 +2157,7 @@ if (moveDebugEnabled) {
         }
         
         renderAlgorithmPreview(selectedAlg);
+        vycistiTrainerDoNuly({ cekatNaSlozeni: true, text: "PŘIPRAVEN" });
       }
     });
 
@@ -2288,7 +2407,7 @@ function showAchievement(title) {
 function jeRandomPllNavratDoSlozeneZapnuty() {
   return (
     puzzleMode === "pll" &&
-    trainingMode === "random" &&
+    (trainingMode === "random" || trainingMode === "sequence") &&
     typeof window.getRandomPllReturnToSolvedEnabled === "function" &&
     window.getRandomPllReturnToSolvedEnabled()
   );
@@ -2578,8 +2697,14 @@ function nastavPllProTrenink(name, algorithm, { navrat = false, postAuf = "" } =
   prepareNext();
   trainerOcekavanyPllAuf = navrat ? String(postAuf || "") : "";
 
+  if (!navrat) {
+    primaryPllName = name;
+    primaryPllAlg = algorithm;
+  }
+
   selectedAlg.dataset.trainerRenderKey = "";
   renderAlgorithmPreview(selectedAlg);
+  resetTrainer(selectedAlg);
   setTrainerPaused(false);
 
   if (navrat && stateMsg) {
@@ -2591,49 +2716,80 @@ function nastavPllProTrenink(name, algorithm, { navrat = false, postAuf = "" } =
   return true;
 }
 
-function pickRandomPLL() {
+function ziskejPllPoolProTrenink() {
   const vsechnyViditelne = Object.keys(pllAlgs).filter(name => !jePllSkryte(name));
   const vybraneNazvy = typeof window.getSelectedRandomPllNames === "function"
     ? window.getSelectedRandomPllNames(vsechnyViditelne)
     : [];
 
-  const platneVybrane = Array.isArray(vybraneNazvy)
-    ? vybraneNazvy.filter(name =>
-        Object.prototype.hasOwnProperty.call(pllAlgs, name) &&
-        !jePllSkryte(name)
-      )
-    : [];
+  const vybrane = new Set(
+    Array.isArray(vybraneNazvy)
+      ? vybraneNazvy.filter(name =>
+          Object.prototype.hasOwnProperty.call(pllAlgs, name) &&
+          !jePllSkryte(name)
+        )
+      : []
+  );
 
-  const names = platneVybrane.length > 0
-    ? platneVybrane
-    : vsechnyViditelne;
+  // Pořadí je vždy podle skutečného pořadí PLL v databázi/menu, ne podle toho,
+  // v jakém pořadí uživatel checkboxy naklikal.
+  const platneVybrane = vsechnyViditelne.filter(name => vybrane.has(name));
+  return platneVybrane.length > 0 ? platneVybrane : vsechnyViditelne;
+}
 
-  if (names.length === 0) return;
-
-  let randomName = "";
-
+function ziskejPllProOpakovaniPoChybe() {
   if (
     pllErrorRepeatRemaining > 0 &&
     pllErrorRepeatTarget &&
     Object.prototype.hasOwnProperty.call(pllAlgs, pllErrorRepeatTarget) &&
     !jePllSkryte(pllErrorRepeatTarget)
   ) {
-    randomName = pllErrorRepeatTarget;
+    const name = pllErrorRepeatTarget;
     pllErrorRepeatRemaining -= 1;
-
-    if (pllErrorRepeatRemaining <= 0) {
-      pllErrorRepeatRemaining = 0;
-      // Jméno necháme do dokončení posledního opakování jen informativně;
-      // další normální pick už ho nepoužije.
-    }
-  } else {
-    randomName = names[Math.floor(Math.random() * names.length)];
+    if (pllErrorRepeatRemaining < 0) pllErrorRepeatRemaining = 0;
+    return name;
   }
 
+  return "";
+}
+
+function pickRandomPLL() {
+  const names = ziskejPllPoolProTrenink();
+  if (names.length === 0) return;
+
+  const repeatName = ziskejPllProOpakovaniPoChybe();
+  const randomName = repeatName || names[Math.floor(Math.random() * names.length)];
   const randomAlg = getActivePllAlg(randomName);
 
   randomPllFazeNavratu = false;
   nastavPllProTrenink(randomName, randomAlg, { navrat: false });
+}
+
+function pickSequentialPLL() {
+  const names = ziskejPllPoolProTrenink();
+  if (names.length === 0) return;
+
+  const repeatName = ziskejPllProOpakovaniPoChybe();
+  let name = repeatName;
+
+  if (!name) {
+    if (pllSequenceIndex >= names.length) pllSequenceIndex = 0;
+    name = names[pllSequenceIndex];
+    pllSequenceIndex = (pllSequenceIndex + 1) % names.length;
+  }
+
+  const algorithm = getActivePllAlg(name);
+  randomPllFazeNavratu = false;
+  nastavPllProTrenink(name, algorithm, { navrat: false });
+}
+
+function pickNextPLL() {
+  if (trainingMode === "sequence") {
+    pickSequentialPLL();
+    return;
+  }
+
+  pickRandomPLL();
 }
 
 function pripravNavratDoSlozene() {
@@ -2682,7 +2838,7 @@ function pripravNavratDoSlozene() {
 }
 
 function prepareNextTrainerRun() {
-  if (trainingMode === "random") {
+  if (trainingMode === "random" || trainingMode === "sequence") {
     if (jeRandomPllNavratDoSlozeneZapnuty()) {
       if (!randomPllFazeNavratu) {
         if (pripravNavratDoSlozene()) return;
@@ -2691,7 +2847,7 @@ function prepareNextTrainerRun() {
       }
     }
 
-    pickRandomPLL();
+    pickNextPLL();
     return;
   }
 
@@ -3309,6 +3465,7 @@ function zpracujTrainerDvojtahBezLimitu(rawMove, labelMove = "") {
 }
 
 function handleSmartRawMove(move) {
+  if (trainerResetWaitForSolved) return;
     if (trainerPaused) {
     return;
   }
@@ -3336,7 +3493,7 @@ if (mDebug) {
   if (
     expectedAufMove &&
     puzzleMode === "pll" &&
-    trainingMode === "random" &&
+    (trainingMode === "random" || trainingMode === "sequence") &&
     cubeMode === "smart"
   ) {
     zpracujSmartAufTah(move, expectedAufMove);
@@ -3629,7 +3786,7 @@ function dokonciPllPoAuf(now = performance.now()) {
 
   finishSolve(now, false);
 
-  setTimeout(() => {
+  naplanujTrainerPrechod(() => {
     prepareNextTrainerRun();
     trainerLocked = false;
   }, 1200);
@@ -3671,7 +3828,7 @@ function commitMove(move, now) {
   if (
     cekajiciPllNavratPoPredAuf &&
     puzzleMode === "pll" &&
-    trainingMode === "random" &&
+    (trainingMode === "random" || trainingMode === "sequence") &&
     cubeMode === "smart"
   ) {
     zpracujPredAufNavratu(move);
@@ -3835,7 +3992,7 @@ function commitMove(move, now) {
       stateMsg.style.color = "#ffe928";
     }
 
-    setTimeout(() => zkontrolujPllPoAuf(performance.now()), 90);
+    naplanujTrainerPrechod(() => zkontrolujPllPoAuf(performance.now()), 90);
     return;
   }
 
@@ -3971,7 +4128,7 @@ showMoveDebug({
         trainerLocked = true;
         finishSolve(performance.now(), false);
 
-        setTimeout(() => {
+        naplanujTrainerPrechod(() => {
           prepareNextTrainerRun();
           trainerLocked = false;
         }, 700);
@@ -3987,14 +4144,14 @@ showMoveDebug({
         stateMsg.style.color = "#ffe928";
       }
 
-      setTimeout(() => zkontrolujPllPoAuf(performance.now()), 120);
+      naplanujTrainerPrechod(() => zkontrolujPllPoAuf(performance.now()), 120);
       return;
     }
 
     trainerLocked = true;
     finishSolve(performance.now(), false);
 
-    setTimeout(() => {
+    naplanujTrainerPrechod(() => {
       prepareNextTrainerRun();
       trainerLocked = false;
     }, 1200);
@@ -4443,8 +4600,14 @@ if (editAlgVariantBtn) {
       selectedAlg.dataset.algText = newAlg;
       selectedAlg.innerText = "Algoritmus: " + newAlg;
 
+      if (puzzleMode === "pll" && currentAlgorithmName) {
+        primaryPllName = currentAlgorithmName;
+        primaryPllAlg = newAlg;
+      }
+
       prepareNext();
       renderAlgorithmPreview(selectedAlg);
+      vycistiTrainerDoNuly({ cekatNaSlozeni: true, text: "PŘIPRAVEN" });
     });
   });   
 }
@@ -4475,6 +4638,7 @@ if (deleteAlgorithmBtn) {
     } catch {}
 
     if (pllErrorRepeatTarget === name) resetPllErrorRepeatQueue();
+    resetPllSequence();
 
     const variantModal = document.getElementById("algVariantModal");
     if (variantModal) variantModal.classList.add("hidden");
@@ -4486,6 +4650,8 @@ if (deleteAlgorithmBtn) {
       selectedAlg.dataset.algName = dalsi;
       selectedAlg.dataset.algText = dalsiAlg;
       selectedAlg.innerText = "Algoritmus: " + dalsiAlg;
+      primaryPllName = dalsi;
+      primaryPllAlg = dalsiAlg;
       prepareNext();
       renderAlgorithmPreview(selectedAlg);
       setTrainerPaused(false);
@@ -4497,10 +4663,12 @@ if (deleteAlgorithmBtn) {
       prepareNext();
     }
 
-    if (trainingMode === "random" && puzzleMode === "pll") {
+    if ((trainingMode === "random" || trainingMode === "sequence") && puzzleMode === "pll") {
       resetPllErrorRepeatQueue();
-      pickRandomPLL();
+      pickNextPLL();
     }
+
+    vycistiTrainerDoNuly({ cekatNaSlozeni: true, text: "PŘIPRAVEN" });
   });
 }
 /* KONEC APP.JS */
