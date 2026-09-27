@@ -1479,7 +1479,8 @@ function vlozStylyPaneluRelace() {
         height: 100px !important;
         flex-basis: 100px !important;
         font-size: clamp(68px, 16vw, 88px) !important;
-        translate: 0 -44px !important;
+        /* V22: jemně níž, o přesných 5 px oproti V21. */
+        translate: 0 -39px !important;
         margin-bottom: 7px !important;
       }
 
