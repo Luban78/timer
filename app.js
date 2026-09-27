@@ -159,6 +159,7 @@ const closeImportBtn = document.getElementById("close-import-btn");
 const navTimer = document.getElementById("nav-timer");
 const navStats = document.getElementById("nav-stats");
 const navSettings = document.getElementById("nav-settings");
+const navSessionPanelToggle = document.getElementById("nav-session-panel-toggle");
 const topMenuWrap = document.getElementById("top-menu-wrap");
 const topMenuBtn = document.getElementById("top-menu-btn");
 const globalMenuBtn = document.getElementById("globalMenuBtn");
@@ -453,6 +454,8 @@ function toggleColorPreset() {
 }
 
 const RELACE_STORAGE_KEY = "cubeTrainerProfessionalSessionV1";
+const PLL_OLL_SESSION_PANEL_KEY = "cubeTrainerPllOllSessionPanelV1";
+let pllOllSessionPanelEnabled = localStorage.getItem(PLL_OLL_SESSION_PANEL_KEY) !== "0";
 
 function nactiStatistikyRelace() {
   try {
@@ -462,14 +465,18 @@ function nactiStatistikyRelace() {
     return data
       .map(pokus => ({
         cas: Number(pokus?.cas),
-        tps: Number(pokus?.tps)
+        tps: Number(pokus?.tps),
+        rezim: typeof pokus?.rezim === "string" ? pokus.rezim : "",
+        alg: typeof pokus?.alg === "string" ? pokus.alg : ""
       }))
       .filter(pokus => Number.isFinite(pokus.cas) && pokus.cas > 0)
       .map(pokus => ({
         cas: pokus.cas,
-        tps: Number.isFinite(pokus.tps) ? pokus.tps : 0
+        tps: Number.isFinite(pokus.tps) ? pokus.tps : 0,
+        rezim: pokus.rezim,
+        alg: pokus.alg
       }))
-      .slice(0, 500);
+      .slice(0, 1200);
   } catch (error) {
     console.warn("Session historii se nepodařilo načíst:", error);
     return [];
@@ -487,8 +494,15 @@ function ulozStatistikyRelace() {
 let pokusyRelace = nactiStatistikyRelace();
 let relaceSeznamEl = null;
 let relacePocetEl = null;
+let relaceTitleEl = null;
 let relaceNowEls = {};
 let relaceBestEls = {};
+let legacyRelaceCountEl = null;
+let legacyRelaceAverageEl = null;
+let legacyRelaceBestEl = null;
+let legacyMovesEl = null;
+let legacyAvgTpsEl = null;
+let legacyLiveTpsEl = null;
 
 function formatCasRelace(cas) {
   const hodnota = Number(cas) || 0;
@@ -497,6 +511,27 @@ function formatCasRelace(cas) {
   const minuty = Math.floor(hodnota / 60);
   const sekundy = hodnota - minuty * 60;
   return `${minuty}:${sekundy.toFixed(2).padStart(5, "0")}`;
+}
+
+function ziskejAktivniPokusyRelace() {
+  if (puzzleMode === "wca") {
+    // Záznamy z V18/V19 ještě neměly režim ani název.
+    // V té době se panel používal primárně pro WCA, proto je při migraci
+    // zobrazíme pouze ve WCA a nemícháme je do statistik PLL/OLL.
+    return pokusyRelace.filter(pokus =>
+      pokus.rezim === "wca" ||
+      pokus.alg === "WCA 3x3" ||
+      (!pokus.rezim && !pokus.alg)
+    );
+  }
+
+  const alg = String(currentAlgorithmName || "").trim();
+  if (!alg || alg === "Nevybráno") return [];
+
+  return pokusyRelace.filter(pokus =>
+    pokus.rezim === puzzleMode &&
+    pokus.alg === alg
+  );
 }
 
 function spocitejPrumerRelace(casy) {
@@ -516,20 +551,20 @@ function spocitejPrumerRelace(casy) {
   return platne.reduce((sum, cas) => sum + cas, 0) / platne.length;
 }
 
-function aktualniPrumerRelace(pocet) {
-  if (pokusyRelace.length < pocet) return null;
+function aktualniPrumerRelace(pocet, pokusy = ziskejAktivniPokusyRelace()) {
+  if (pokusy.length < pocet) return null;
   return spocitejPrumerRelace(
-    pokusyRelace.slice(0, pocet).map(pokus => pokus.cas)
+    pokusy.slice(0, pocet).map(pokus => pokus.cas)
   );
 }
 
-function nejlepsiPrumerRelace(pocet) {
-  if (pokusyRelace.length < pocet) return null;
+function nejlepsiPrumerRelace(pocet, pokusy = ziskejAktivniPokusyRelace()) {
+  if (pokusy.length < pocet) return null;
 
   let nejlepsi = Infinity;
-  for (let i = 0; i <= pokusyRelace.length - pocet; i += 1) {
+  for (let i = 0; i <= pokusy.length - pocet; i += 1) {
     const prumer = spocitejPrumerRelace(
-      pokusyRelace.slice(i, i + pocet).map(pokus => pokus.cas)
+      pokusy.slice(i, i + pocet).map(pokus => pokus.cas)
     );
     if (Number.isFinite(prumer)) nejlepsi = Math.min(nejlepsi, prumer);
   }
@@ -545,19 +580,27 @@ function vykresliHodnotuRelace(element, hodnota) {
 }
 
 function vykresliStatistikyRelace() {
+  const aktivniPokusy = ziskejAktivniPokusyRelace();
+
+  if (relaceTitleEl) {
+    relaceTitleEl.textContent = puzzleMode === "wca"
+      ? "SESSION"
+      : `SESSION · ${currentAlgorithmName || "—"}`;
+  }
+
   if (relacePocetEl) {
-    relacePocetEl.textContent = `${pokusyRelace.length} solve`;
+    relacePocetEl.textContent = `${aktivniPokusy.length} solve`;
   }
 
   if (relaceSeznamEl) {
-    if (!pokusyRelace.length) {
+    if (!aktivniPokusy.length) {
       relaceSeznamEl.innerHTML = `
         <div class="session-pro-empty">
           První dokončený solve se objeví tady.
         </div>
       `;
     } else {
-      relaceSeznamEl.innerHTML = pokusyRelace.map((pokus) => {
+      relaceSeznamEl.innerHTML = aktivniPokusy.map((pokus) => {
         return `
           <div class="session-pro-solve-row">
             <span class="session-pro-solve-tps">${Number(pokus.tps || 0).toFixed(2)}</span>
@@ -568,18 +611,34 @@ function vykresliStatistikyRelace() {
     }
   }
 
-  const posledni = pokusyRelace[0]?.cas;
-  const nejlepsiSingle = pokusyRelace.length
-    ? Math.min(...pokusyRelace.map(pokus => pokus.cas))
+  const posledni = aktivniPokusy[0]?.cas;
+  const nejlepsiSingle = aktivniPokusy.length
+    ? Math.min(...aktivniPokusy.map(pokus => pokus.cas))
     : null;
 
   vykresliHodnotuRelace(relaceNowEls.single, posledni);
   vykresliHodnotuRelace(relaceBestEls.single, nejlepsiSingle);
 
   [5, 12, 50, 100].forEach(pocet => {
-    vykresliHodnotuRelace(relaceNowEls[`ao${pocet}`], aktualniPrumerRelace(pocet));
-    vykresliHodnotuRelace(relaceBestEls[`ao${pocet}`], nejlepsiPrumerRelace(pocet));
+    vykresliHodnotuRelace(relaceNowEls[`ao${pocet}`], aktualniPrumerRelace(pocet, aktivniPokusy));
+    vykresliHodnotuRelace(relaceBestEls[`ao${pocet}`], nejlepsiPrumerRelace(pocet, aktivniPokusy));
   });
+
+  // Původní tréninková okénka používají stejnou per-algoritmovou relaci.
+  if (legacyRelaceCountEl) legacyRelaceCountEl.textContent = String(aktivniPokusy.length);
+
+  if (legacyRelaceAverageEl) {
+    const prumer = aktivniPokusy.length
+      ? aktivniPokusy.reduce((sum, pokus) => sum + pokus.cas, 0) / aktivniPokusy.length
+      : 0;
+    legacyRelaceAverageEl.textContent = formatCasRelace(prumer);
+  }
+
+  if (legacyRelaceBestEl) {
+    legacyRelaceBestEl.textContent = Number.isFinite(nejlepsiSingle)
+      ? formatCasRelace(nejlepsiSingle)
+      : "—";
+  }
 }
 
 function resetujStatistikyRelace() {
@@ -598,13 +657,99 @@ function pridejPokusDoRelace(cas, tps = 0) {
 
   pokusyRelace.unshift({
     cas: hodnota,
-    tps: Number.isFinite(Number(tps)) ? Number(tps) : 0
+    tps: Number.isFinite(Number(tps)) ? Number(tps) : 0,
+    rezim: puzzleMode,
+    alg: currentAlgorithmName || (puzzleMode === "wca" ? "WCA 3x3" : "")
   });
 
-  // Jedna session může být dlouhá, ale nepotřebujeme v DOM držet nekonečno řádků.
-  pokusyRelace = pokusyRelace.slice(0, 500);
+  // Uchováváme dost dlouhou persistentní relaci i pro střídání více PLL/OLL.
+  pokusyRelace = pokusyRelace.slice(0, 1200);
   ulozStatistikyRelace();
   vykresliStatistikyRelace();
+}
+
+function jeProfessionalSessionAktivni() {
+  return puzzleMode === "wca" || pllOllSessionPanelEnabled;
+}
+
+function aktualizujTlacitkoSessionPanelu() {
+  if (!navSessionPanelToggle) return;
+  navSessionPanelToggle.textContent = pllOllSessionPanelEnabled
+    ? "PLL/OLL panel: SESSION"
+    : "PLL/OLL panel: Okénka";
+  navSessionPanelToggle.setAttribute("aria-pressed", pllOllSessionPanelEnabled ? "true" : "false");
+}
+
+function aplikujZobrazeniSessionPanelu() {
+  const pro = jeProfessionalSessionAktivni();
+
+  document.body.classList.toggle("pro-session-active", pro);
+  document.body.classList.toggle(
+    "legacy-training-stats-active",
+    puzzleMode !== "wca" && !pro
+  );
+
+  aktualizujTlacitkoSessionPanelu();
+  vykresliStatistikyRelace();
+}
+
+function synchronizujLegacyLiveHodnoty() {
+  if (legacyMovesEl && movesVal) legacyMovesEl.textContent = movesVal.textContent || "0";
+  if (legacyAvgTpsEl && avgVal) legacyAvgTpsEl.textContent = avgVal.textContent || "0.0";
+  if (legacyLiveTpsEl && timeVal) legacyLiveTpsEl.textContent = timeVal.textContent || "0.0";
+}
+
+function vytvorLegacyTrainingPanel() {
+  if (document.getElementById("legacy-training-stats-panel") || !tpsDiv) return;
+
+  const panel = document.createElement("section");
+  panel.id = "legacy-training-stats-panel";
+  panel.setAttribute("aria-label", "Původní tréninkové statistiky");
+  panel.innerHTML = `
+    <div class="legacy-train-box">
+      <div class="legacy-train-label">Počet složení</div>
+      <div id="legacy-session-count" class="legacy-train-value">0</div>
+    </div>
+    <div class="legacy-train-box">
+      <div class="legacy-train-label">Průměrný čas</div>
+      <div id="legacy-session-average" class="legacy-train-value">0.00</div>
+    </div>
+    <div class="legacy-train-box">
+      <div class="legacy-train-label">Rekord</div>
+      <div id="legacy-session-best" class="legacy-train-value">—</div>
+    </div>
+    <div class="legacy-train-box">
+      <div class="legacy-train-label">Moves HTM</div>
+      <div id="legacy-session-moves" class="legacy-train-value">0</div>
+    </div>
+    <div class="legacy-train-box">
+      <div class="legacy-train-label">Average TPS</div>
+      <div id="legacy-session-avg-tps" class="legacy-train-value">0.0</div>
+    </div>
+    <div class="legacy-train-box">
+      <div class="legacy-train-label">TPS</div>
+      <div id="legacy-session-live-tps" class="legacy-train-value">0.0</div>
+    </div>
+  `;
+
+  tpsDiv.insertAdjacentElement("afterend", panel);
+
+  legacyRelaceCountEl = document.getElementById("legacy-session-count");
+  legacyRelaceAverageEl = document.getElementById("legacy-session-average");
+  legacyRelaceBestEl = document.getElementById("legacy-session-best");
+  legacyMovesEl = document.getElementById("legacy-session-moves");
+  legacyAvgTpsEl = document.getElementById("legacy-session-avg-tps");
+  legacyLiveTpsEl = document.getElementById("legacy-session-live-tps");
+
+  synchronizujLegacyLiveHodnoty();
+  vykresliStatistikyRelace();
+
+  if (typeof MutationObserver === "function") {
+    const observer = new MutationObserver(synchronizujLegacyLiveHodnoty);
+    [movesVal, avgVal, timeVal].filter(Boolean).forEach(el => {
+      observer.observe(el, { childList: true, characterData: true, subtree: true });
+    });
+  }
 }
 
 function vlozStylyPaneluRelace() {
@@ -1206,6 +1351,170 @@ function vlozStylyPaneluRelace() {
     }
   `;
   document.head.appendChild(v19Style);
+
+  const v20Style = document.createElement("style");
+  v20Style.id = "cube-trainer-v20-adaptive-session";
+  v20Style.textContent = `
+    /* =========================================================
+       V20 – vyváženější výška + přepínatelný PLL/OLL panel
+       ========================================================= */
+
+    /* Boční vysouvací AO/History panely zůstávají schované vždy. */
+    body.screen-timer #ao-panel,
+    body.screen-timer #history,
+    body.screen-timer #aoPanelToggle,
+    body.screen-timer #historyPanelToggle,
+    body.screen-timer #aoPinBtn,
+    body.screen-timer #historyPinBtn,
+    body.screen-timer #app > .stats-grid {
+      display: none !important;
+    }
+
+    body.screen-timer:not(.pro-session-active) #session-stats-panel {
+      display: none !important;
+    }
+
+    body.screen-timer:not(.legacy-training-stats-active) #legacy-training-stats-panel {
+      display: none !important;
+    }
+
+    body.screen-timer.legacy-training-stats-active #legacy-training-stats-panel {
+      display: grid !important;
+    }
+
+    #legacy-training-stats-panel {
+      width: 100% !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+      overflow: hidden !important;
+      border: 1.5px solid rgba(0, 230, 118, .82) !important;
+      border-radius: 22px !important;
+      background: linear-gradient(180deg, rgba(10, 25, 29, .98), rgba(2, 12, 14, .99)) !important;
+      box-shadow: inset 0 0 28px rgba(0, 230, 118, .04), 0 0 16px rgba(0, 230, 118, .08) !important;
+      box-sizing: border-box !important;
+      position: relative !important;
+      z-index: 4 !important;
+    }
+
+    #legacy-training-stats-panel .legacy-train-box {
+      min-width: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: center !important;
+      gap: 4px !important;
+      padding: 9px 5px !important;
+      text-align: center !important;
+      box-sizing: border-box !important;
+    }
+
+    #legacy-training-stats-panel .legacy-train-box:nth-child(2),
+    #legacy-training-stats-panel .legacy-train-box:nth-child(3),
+    #legacy-training-stats-panel .legacy-train-box:nth-child(5),
+    #legacy-training-stats-panel .legacy-train-box:nth-child(6) {
+      border-left: 1px solid rgba(0, 230, 118, .42) !important;
+    }
+
+    #legacy-training-stats-panel .legacy-train-box:nth-child(n+4) {
+      border-top: 1px solid rgba(0, 230, 118, .42) !important;
+    }
+
+    #legacy-training-stats-panel .legacy-train-label {
+      color: rgba(255,255,255,.62) !important;
+      font-size: clamp(12px, 3vw, 16px) !important;
+      line-height: 1.05 !important;
+    }
+
+    #legacy-training-stats-panel .legacy-train-value {
+      color: #00e676 !important;
+      font-size: clamp(26px, 6.8vw, 38px) !important;
+      font-weight: 800 !important;
+      line-height: 1 !important;
+      font-variant-numeric: tabular-nums !important;
+    }
+
+    #screen-menu-dropdown #nav-session-panel-toggle[aria-pressed="true"] {
+      color: #00e676 !important;
+    }
+
+    @media (max-width: 899px) {
+      /* V19 byl zbytečně stlačený. V20 využívá víc dostupné výšky. */
+      body.screen-timer #compact-controls {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 50px !important;
+        gap: 7px !important;
+        margin-bottom: 8px !important;
+      }
+
+      body.screen-timer #compact-controls .compact-main-btn {
+        min-height: 50px !important;
+        height: 50px !important;
+        padding: 0 9px !important;
+        font-size: clamp(18px, 4.8vw, 22px) !important;
+      }
+
+      body.screen-timer #top-menu-wrap,
+      body.screen-timer #top-menu-btn {
+        width: 50px !important;
+        min-width: 50px !important;
+        height: 50px !important;
+        min-height: 50px !important;
+      }
+
+      :is(#ct-vd-specificity-a, #selectedAlg):is(#ct-vd-specificity-b, #selectedAlg):not(:has(.alg-empty-marker)) {
+        height: clamp(335px, 44.5dvh, 365px) !important;
+        min-height: clamp(335px, 44.5dvh, 365px) !important;
+        max-height: clamp(335px, 44.5dvh, 365px) !important;
+        padding: 13px 16px !important;
+        translate: 0 -4px !important;
+      }
+
+      :is(#ct-vd-specificity-a, #state-msg):is(#ct-vd-specificity-b, #state-msg) {
+        translate: 0 -46px !important;
+        min-height: 27px !important;
+        font-size: clamp(25px, 6.5vw, 33px) !important;
+      }
+
+      :is(#ct-vd-specificity-a, #tps):is(#ct-vd-specificity-b, #tps) {
+        min-height: 100px !important;
+        height: 100px !important;
+        flex-basis: 100px !important;
+        font-size: clamp(68px, 16vw, 88px) !important;
+        translate: 0 -44px !important;
+        margin-bottom: 7px !important;
+      }
+
+      #session-stats-panel {
+        height: 232px !important;
+        min-height: 232px !important;
+        max-height: 232px !important;
+        translate: 0 -44px !important;
+        margin-bottom: -44px !important;
+      }
+
+      #legacy-training-stats-panel {
+        height: 168px !important;
+        min-height: 168px !important;
+        max-height: 168px !important;
+        translate: 0 -44px !important;
+        margin-bottom: -44px !important;
+      }
+
+      #session-stats-panel .session-pro-title {
+        max-width: 72% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+    }
+
+    @media (min-width: 900px) {
+      #legacy-training-stats-panel {
+        min-height: 180px !important;
+        margin: 10px 0 !important;
+      }
+    }
+  `;
+  document.head.appendChild(v20Style);
 }
 
 function umistiPanelRelace() {
@@ -1237,7 +1546,7 @@ function vytvorPanelRelace() {
   panel.setAttribute("aria-label", "Výsledky aktuální tréninkové relace");
   panel.innerHTML = `
     <div class="session-pro-head">
-      <span class="session-pro-title">SESSION</span>
+      <span id="session-pro-title" class="session-pro-title">SESSION</span>
       <span id="session-solve-count">0 solve</span>
     </div>
 
@@ -1266,6 +1575,7 @@ function vytvorPanelRelace() {
 
   tpsDiv.insertAdjacentElement("afterend", panel);
 
+  relaceTitleEl = document.getElementById("session-pro-title");
   relacePocetEl = document.getElementById("session-solve-count");
   relaceSeznamEl = document.getElementById("session-pro-list");
   ["single", "ao5", "ao12", "ao50", "ao100"].forEach(label => {
@@ -1273,7 +1583,19 @@ function vytvorPanelRelace() {
     relaceBestEls[label] = document.getElementById(`session-best-${label}`);
   });
 
+  vytvorLegacyTrainingPanel();
+  aplikujZobrazeniSessionPanelu();
   vykresliStatistikyRelace();
+
+  if (typeof MutationObserver === "function" && selectedAlg) {
+    const algObserver = new MutationObserver(() => {
+      vykresliStatistikyRelace();
+    });
+    algObserver.observe(selectedAlg, {
+      attributes: true,
+      attributeFilter: ["data-alg-name"]
+    });
+  }
 
   window.addEventListener("resize", naplanujUmisteniPaneluRelace);
 
@@ -1281,8 +1603,8 @@ function vytvorPanelRelace() {
     if ((trainingMode === "random" || trainingMode === "sequence") && puzzleMode === "pll") {
       resetPllErrorRepeatQueue();
       resetPllSequence();
-      resetujStatistikyRelace();
       pickNextPLL();
+      vykresliStatistikyRelace();
       vycistiTrainerDoNuly({ cekatNaSlozeni: false, text: "PŘIPRAVEN" });
       naplanujUmisteniPaneluRelace();
     }
@@ -1789,6 +2111,8 @@ function updateCompactControlsState() {
     setTrainingModeLabel(label);
     if (trainingModeBtn) trainingModeBtn.setAttribute("aria-label", "Vybrat trénink");
   }
+
+  aplikujZobrazeniSessionPanelu();
 }
 
 
@@ -1924,7 +2248,6 @@ function setPuzzleMode(mode) {
   if (mode !== puzzleMode) {
     resetPllErrorRepeatQueue();
     resetPllSequence();
-    resetujStatistikyRelace();
     vycistiTrainerDoNuly({ cekatNaSlozeni: false, text: "PŘIPRAVEN" });
   }
   puzzleMode = mode;
@@ -1951,7 +2274,6 @@ function setTrainingMode(mode) {
   if (zmenenRezim) {
     resetPllErrorRepeatQueue();
     resetPllSequence();
-    resetujStatistikyRelace();
   }
 
   trainingMode = mode;
@@ -2207,6 +2529,22 @@ function setupNavigation() {
   if (topMenuBtn) topMenuBtn.onclick = toggleTopMenu;
   if (globalMenuBtn) globalMenuBtn.onclick = toggleTopMenu;
   if (screenTopMenuBtn) screenTopMenuBtn.onclick = toggleTopMenu;
+
+  if (navSessionPanelToggle) {
+    navSessionPanelToggle.onclick = e => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      pllOllSessionPanelEnabled = !pllOllSessionPanelEnabled;
+      localStorage.setItem(
+        PLL_OLL_SESSION_PANEL_KEY,
+        pllOllSessionPanelEnabled ? "1" : "0"
+      );
+
+      aplikujZobrazeniSessionPanelu();
+      closeTopMenu();
+    };
+  }
 
   document.addEventListener("pointerdown", e => {
     if (e.target.closest("#top-menu-btn")) return;
@@ -2545,9 +2883,6 @@ function setupAlgorithmButtons() {
       selectedAlg,
       ollAlgs,
       onSelect: name => {
-        if (currentAlgorithmName !== name) {
-          resetujStatistikyRelace();
-        }
         currentAlgorithmName = name;
 
         selectedAlg.dataset.algName = name;
@@ -2591,9 +2926,6 @@ function setupAlgorithmButtons() {
       pllAlgs: ziskejViditelnaPllAlgs(),
       randomSelectionMode: trainingMode === "random" || trainingMode === "sequence",
       onSelect: name => {
-        if (currentAlgorithmName !== name) {
-          resetujStatistikyRelace();
-        }
         currentAlgorithmName = name;
 selectedAlg.dataset.algName = name;
 selectedAlg.dataset.algText = getActivePllAlg(name);
@@ -4961,6 +5293,7 @@ async function clearHistory() {
 
   savedSolves = [];
   saveSolves(savedSolves);
+  resetujStatistikyRelace();
 
   refreshAll();
 }
@@ -5030,6 +5363,7 @@ function initApp() {
 
   updateModeLabel();
   vytvorPanelRelace();
+  aplikujZobrazeniSessionPanelu();
 
   setupTrainingButtons();
   setupCompactControls();
