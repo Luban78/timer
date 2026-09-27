@@ -557,11 +557,9 @@ function vykresliStatistikyRelace() {
         </div>
       `;
     } else {
-      relaceSeznamEl.innerHTML = pokusyRelace.map((pokus, index) => {
-        const poradi = pokusyRelace.length - index;
+      relaceSeznamEl.innerHTML = pokusyRelace.map((pokus) => {
         return `
           <div class="session-pro-solve-row">
-            <span class="session-pro-solve-index">${poradi}</span>
             <span class="session-pro-solve-tps">${Number(pokus.tps || 0).toFixed(2)}</span>
             <span class="session-pro-solve-time">${formatCasRelace(pokus.cas)}</span>
           </div>
@@ -1007,6 +1005,207 @@ function vlozStylyPaneluRelace() {
     }
   `;
   document.head.appendChild(style);
+
+  const v19Style = document.createElement("style");
+  v19Style.id = "cube-trainer-v19-compact-session";
+  v19Style.textContent = `
+    /* =========================================================
+       V19 – COMPACT WCA + CUBEMY-LIKE SESSION
+       Pouze layout. Bez zásahu do timer / Smart Cube logiky.
+       ========================================================= */
+
+    @media (max-width: 899px) {
+      /* Tři horní ovladače nesmí sahat do žluté karty. */
+      body.screen-timer #compact-controls {
+        grid-template-columns: minmax(0, .92fr) minmax(0, 1.18fr) 46px !important;
+        gap: 6px !important;
+        margin: 0 0 7px !important;
+      }
+
+      body.screen-timer #compact-controls .compact-main-btn {
+        min-height: 46px !important;
+        height: 46px !important;
+        padding: 0 7px !important;
+        border-radius: 15px !important;
+        font-size: clamp(17px, 4.6vw, 21px) !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+      }
+
+      body.screen-timer #top-menu-wrap,
+      body.screen-timer #top-menu-btn {
+        width: 46px !important;
+        min-width: 46px !important;
+        min-height: 46px !important;
+        height: 46px !important;
+      }
+
+      body.screen-timer #top-menu-btn .strip-icon {
+        font-size: 27px !important;
+        transform: translateY(-2px) !important;
+      }
+
+      body.screen-timer #algorithm-card-wrap {
+        margin-top: 1px !important;
+      }
+
+      /* Přepis i uživatelského Visual Debug min-heightu – karta je záměrně nižší. */
+      :is(#ct-vd-specificity-a, #selectedAlg):is(#ct-vd-specificity-b, #selectedAlg):not(:has(.alg-empty-marker)) {
+        height: clamp(315px, 42dvh, 340px) !important;
+        min-height: clamp(315px, 42dvh, 340px) !important;
+        max-height: clamp(315px, 42dvh, 340px) !important;
+        padding: 12px 16px !important;
+        translate: 0 -7px !important;
+      }
+
+      /* Stav a timer zůstávají ve stejném vizuálním toku, jen jsou kompaktnější. */
+      :is(#ct-vd-specificity-a, #state-msg):is(#ct-vd-specificity-b, #state-msg) {
+        min-height: 24px !important;
+        font-size: clamp(24px, 6.3vw, 32px) !important;
+        translate: 0 -56px !important;
+        margin: 3px 0 3px !important;
+      }
+
+      :is(#ct-vd-specificity-a, #tps):is(#ct-vd-specificity-b, #tps) {
+        min-height: 88px !important;
+        height: 88px !important;
+        flex-basis: 88px !important;
+        font-size: clamp(62px, 15vw, 84px) !important;
+        translate: 0 -54px !important;
+        margin-bottom: 5px !important;
+      }
+
+      /* SESSION je jeden kompaktní panel: vlevo časy, vpravo NOW/BEST. */
+      #session-stats-panel {
+        min-height: 218px !important;
+        height: 218px !important;
+        max-height: 218px !important;
+        padding: 8px 9px !important;
+        gap: 6px !important;
+        translate: 0 -54px !important;
+        margin-bottom: -54px !important;
+        border-radius: 18px !important;
+      }
+
+      #session-stats-panel .session-pro-head {
+        min-height: 22px !important;
+        padding: 0 2px 5px !important;
+        gap: 8px !important;
+      }
+
+      #session-stats-panel .session-pro-title {
+        font-size: 13px !important;
+      }
+
+      #session-stats-panel #session-solve-count {
+        font-size: 11px !important;
+      }
+
+      #session-stats-panel .session-pro-content {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr) !important;
+        grid-template-rows: minmax(0, 1fr) !important;
+        gap: 0 !important;
+        min-height: 0 !important;
+      }
+
+      #session-stats-panel .session-pro-solves,
+      #session-stats-panel .session-pro-summary {
+        min-height: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+      }
+
+      #session-stats-panel .session-pro-solves {
+        padding-right: 8px !important;
+      }
+
+      #session-stats-panel .session-pro-summary {
+        padding-left: 8px !important;
+        border-left: 1px solid rgba(255,255,255,.11) !important;
+      }
+
+      #session-stats-panel .session-pro-columns,
+      #session-stats-panel .session-pro-solve-row {
+        grid-template-columns: minmax(42px, .78fr) minmax(64px, 1.22fr) !important;
+        column-gap: 5px !important;
+        padding: 0 4px !important;
+      }
+
+      #session-stats-panel .session-pro-columns {
+        min-height: 27px !important;
+        font-size: 10px !important;
+      }
+
+      #session-stats-panel .session-pro-columns span:first-child,
+      #session-stats-panel .session-pro-solve-tps {
+        text-align: left !important;
+      }
+
+      #session-stats-panel .session-pro-solve-row {
+        min-height: 27px !important;
+      }
+
+      #session-stats-panel .session-pro-list {
+        height: calc(100% - 27px) !important;
+      }
+
+      #session-stats-panel .session-pro-solve-tps {
+        font-size: 11px !important;
+      }
+
+      #session-stats-panel .session-pro-solve-time {
+        font-size: 13px !important;
+      }
+
+      #session-stats-panel .session-pro-summary-head,
+      #session-stats-panel .session-pro-summary-row {
+        grid-template-columns: 42px minmax(44px, 1fr) minmax(44px, 1fr) !important;
+        column-gap: 4px !important;
+        padding: 0 3px !important;
+      }
+
+      #session-stats-panel .session-pro-summary-head,
+      #session-stats-panel .session-pro-summary-row {
+        min-height: 27px !important;
+      }
+
+      #session-stats-panel .session-pro-summary-head {
+        font-size: 10px !important;
+      }
+
+      #session-stats-panel .session-pro-summary-label {
+        font-size: 10px !important;
+      }
+
+      #session-stats-panel .session-pro-summary-value {
+        font-size: 11px !important;
+      }
+
+      #session-stats-panel .session-pro-empty {
+        min-height: 80px !important;
+        padding: 8px !important;
+        font-size: 11px !important;
+      }
+    }
+
+    @media (max-width: 380px) {
+      body.screen-timer #compact-controls .compact-main-btn {
+        font-size: 16px !important;
+      }
+
+      #session-stats-panel {
+        padding-left: 7px !important;
+        padding-right: 7px !important;
+      }
+
+      #session-stats-panel .session-pro-summary-head,
+      #session-stats-panel .session-pro-summary-row {
+        grid-template-columns: 37px minmax(40px, 1fr) minmax(40px, 1fr) !important;
+      }
+    }
+  `;
+  document.head.appendChild(v19Style);
 }
 
 function umistiPanelRelace() {
@@ -1045,7 +1244,7 @@ function vytvorPanelRelace() {
     <div class="session-pro-content">
       <div class="session-pro-solves">
         <div class="session-pro-columns">
-          <span>#</span><span>TPS</span><span>TIME</span>
+          <span>TPS</span><span>TIME</span>
         </div>
         <div id="session-pro-list" class="session-pro-list"></div>
       </div>
