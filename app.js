@@ -452,7 +452,39 @@ function toggleColorPreset() {
   applyColorPreset();
 }
 
-let pokusyRelace = [];
+const RELACE_STORAGE_KEY = "cubeTrainerProfessionalSessionV1";
+
+function nactiStatistikyRelace() {
+  try {
+    const data = JSON.parse(localStorage.getItem(RELACE_STORAGE_KEY) || "[]");
+    if (!Array.isArray(data)) return [];
+
+    return data
+      .map(pokus => ({
+        cas: Number(pokus?.cas),
+        tps: Number(pokus?.tps)
+      }))
+      .filter(pokus => Number.isFinite(pokus.cas) && pokus.cas > 0)
+      .map(pokus => ({
+        cas: pokus.cas,
+        tps: Number.isFinite(pokus.tps) ? pokus.tps : 0
+      }))
+      .slice(0, 500);
+  } catch (error) {
+    console.warn("Session historii se nepodařilo načíst:", error);
+    return [];
+  }
+}
+
+function ulozStatistikyRelace() {
+  try {
+    localStorage.setItem(RELACE_STORAGE_KEY, JSON.stringify(pokusyRelace));
+  } catch (error) {
+    console.warn("Session historii se nepodařilo uložit:", error);
+  }
+}
+
+let pokusyRelace = nactiStatistikyRelace();
 let relaceSeznamEl = null;
 let relacePocetEl = null;
 let relaceNowEls = {};
@@ -554,6 +586,11 @@ function vykresliStatistikyRelace() {
 
 function resetujStatistikyRelace() {
   pokusyRelace = [];
+  try {
+    localStorage.removeItem(RELACE_STORAGE_KEY);
+  } catch (error) {
+    console.warn("Session historii se nepodařilo vymazat:", error);
+  }
   vykresliStatistikyRelace();
 }
 
@@ -568,6 +605,7 @@ function pridejPokusDoRelace(cas, tps = 0) {
 
   // Jedna session může být dlouhá, ale nepotřebujeme v DOM držet nekonečno řádků.
   pokusyRelace = pokusyRelace.slice(0, 500);
+  ulozStatistikyRelace();
   vykresliStatistikyRelace();
 }
 
@@ -578,8 +616,8 @@ function vlozStylyPaneluRelace() {
   style.id = "session-stats-style";
   style.textContent = `
     /* =========================================================
-       V17 – PROFESSIONAL SESSION PANEL
-       Jeden velký panel místo starých mini-statistik a vysouváků.
+       V18 – PROFESSIONAL SESSION PANEL
+       Kompaktní horní ovládání + persistentní session přímo pod timerem.
        ========================================================= */
     body.screen-timer #main-layout {
       grid-template-rows: minmax(0, 1fr) !important;
@@ -610,7 +648,7 @@ function vlozStylyPaneluRelace() {
       width: 100% !important;
       min-height: 224px !important;
       max-height: min(34dvh, 340px) !important;
-      margin: 2px 0 0 !important;
+      margin: 0 !important;
       padding: 12px !important;
       flex: 0 0 auto !important;
       order: 32 !important;
@@ -803,22 +841,76 @@ function vlozStylyPaneluRelace() {
     }
 
     body.screen-timer #top-strip {
-      display: flex !important;
-      justify-content: flex-end !important;
-      align-items: stretch !important;
+      display: none !important;
+    }
+
+    body.screen-timer #top-dashboard {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    body.screen-timer #compact-controls {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 58px !important;
+      gap: 8px !important;
       width: 100% !important;
-      height: clamp(36px, 5.4dvh, 46px) !important;
-      border: 0 !important;
-      background: transparent !important;
-      overflow: visible !important;
+      margin: 0 0 6px !important;
+      align-items: stretch !important;
+    }
+
+    body.screen-timer #compact-controls .compact-main-btn {
+      min-height: 54px !important;
+      height: 54px !important;
     }
 
     body.screen-timer #top-menu-wrap {
       display: flex !important;
-      width: min(190px, 38%) !important;
-      border: 1px solid rgba(155, 180, 195, .25) !important;
-      border-radius: 12px !important;
-      background: rgba(17, 28, 34, .95) !important;
+      width: 58px !important;
+      min-width: 58px !important;
+      height: 54px !important;
+      min-height: 54px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      background: transparent !important;
+    }
+
+    body.screen-timer #top-menu-btn {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 58px !important;
+      min-width: 58px !important;
+      height: 54px !important;
+      min-height: 54px !important;
+      padding: 0 !important;
+      border: 1.5px solid rgba(0, 230, 118, .78) !important;
+      border-radius: 17px !important;
+      background: linear-gradient(180deg, rgba(9, 42, 25, .95), rgba(5, 22, 15, .98)) !important;
+      color: #00e676 !important;
+      box-shadow: inset 0 0 18px rgba(0, 230, 118, .04) !important;
+      font-size: 28px !important;
+      font-weight: 900 !important;
+      line-height: 1 !important;
+    }
+
+    body.screen-timer #top-menu-btn .strip-icon {
+      display: block !important;
+      color: #00e676 !important;
+      font-size: 30px !important;
+      line-height: .7 !important;
+      transform: translateY(-3px) !important;
+    }
+
+    body.screen-timer #top-menu-btn .top-menu-label {
+      display: none !important;
+    }
+
+    body.screen-timer #screen-menu-dropdown {
+      left: auto !important;
+      right: 18px !important;
+      top: max(64px, calc(env(safe-area-inset-top) + 56px)) !important;
+      transform-origin: top right !important;
     }
 
     /* Zvýraznění tahu nesmí měnit rozměry notace. */
@@ -849,7 +941,34 @@ function vlozStylyPaneluRelace() {
       box-shadow: 0 0 0 .15em var(--red) !important;
     }
 
+    @media (max-width: 899px) {
+      /* Visual Debug posouvá mobilní timer o 67 px nahoru. Session musí následovat stejný vizuální tok. */
+      #session-stats-panel {
+        translate: 0 -67px !important;
+        margin-bottom: -67px !important;
+      }
+    }
+
     @media (max-width: 520px) {
+      body.screen-timer #compact-controls {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 52px !important;
+        gap: 7px !important;
+        margin-bottom: 4px !important;
+      }
+
+      body.screen-timer #compact-controls .compact-main-btn,
+      body.screen-timer #top-menu-wrap,
+      body.screen-timer #top-menu-btn {
+        min-height: 50px !important;
+        height: 50px !important;
+      }
+
+      body.screen-timer #top-menu-wrap,
+      body.screen-timer #top-menu-btn {
+        width: 52px !important;
+        min-width: 52px !important;
+      }
+
       #session-stats-panel {
         min-height: 420px !important;
         max-height: 440px !important;
@@ -871,6 +990,7 @@ function vlozStylyPaneluRelace() {
 
     @media (min-width: 900px) {
       #session-stats-panel {
+        order: 7 !important;
         min-height: 260px !important;
         max-height: 330px !important;
         margin-top: 8px !important;
