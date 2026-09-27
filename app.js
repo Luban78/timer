@@ -4337,6 +4337,27 @@ if (mDebug) {
   move = normalizeMove(move);
   if (!move) return;
 
+  // V21 – WCA musí být úplně oddělené od PLL/OLL moveTraineru.
+  // Po přepnutí z PLL/OLL mohl v moveTraineru zůstat starý expected tah
+  // (typicky L2/U2/R2). handleSmartRawMove pak WCA tah omylem chytil
+  // do trainer double-bufferu a zobrazil „DOKONČI L2“, i když WCA
+  // scramble čekal úplně jiný tah.
+  //
+  // WCA má vlastní tolerantní kontrolu dvojtahů/chyb ve wcaTrainer.js,
+  // proto všechny Smart Cube tahy pošleme rovnou do commitMove() a
+  // předtím zrušíme pouze zbytky PLL/OLL bufferů. WCA partial/error stav
+  // tím nemažeme – ten žije samostatně uvnitř wcaTrainer.js.
+  if (puzzleMode === "wca" && cubeMode === "smart") {
+    clearPendingMove();
+    clearSliceMoveBuffer();
+    clearGuidedOuterBuffer();
+    clearPllAufBuffer();
+    resetSliceCenter();
+
+    commitMove(move, performance.now());
+    return;
+  }
+
   // PRE/POST-AUF je mimo běžnou sekvenci algoritmu, takže getExpectedMove() je zde
   // prázdné. Kdybychom tah poslali běžnou cestou, fyzické U' se při žluté nahoře
   // může z GANu hlásit jako D' a přímé porovnání by falešně zahlásilo chybu.
