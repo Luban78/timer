@@ -149,6 +149,27 @@
     }
   </style>
 
+  <style id="cube-trainer-v17-professional-ui">
+    /* Schovat gamifikaci okamžitě už při prvním vykreslení, bez probliknutí. */
+    #screen-top-strip,
+    #top-strip > .top-strip-center,
+    #top-strip > .xp-item,
+    #xp-card,
+    #openProgressStats,
+    #openAchievementsStats,
+    #stats-progress-view,
+    #stats-achievements-view,
+    #settings-reset-profile-btn,
+    #level-modal,
+    #achievement-modal,
+    #aoPanelToggle,
+    #historyPanelToggle,
+    #aoPinBtn,
+    #historyPinBtn {
+      display: none !important;
+    }
+  </style>
+
   <title>Cube Trainer</title>
 </head>
 
@@ -1104,7 +1125,7 @@
   </div>
 </div>
 <script src="appDialog.js?v=1"></script>
-<script type="module" src="./app.js?v=trainer-v16-reset-unlock-sequence"></script>
+<script type="module" src="./app.js?v=trainer-v17-professional-session"></script>
 <script src="statsNavigation.js?v=32"></script>
 <script src="statsHistory.js?v=3"></script>
 <script src="screenHeaders.js?v=clean-1"></script>

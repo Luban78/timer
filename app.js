@@ -101,6 +101,8 @@ alert("Move maps vymazány");
 */
 
 const DEV_MODE = true;
+// V17: čistý profesionální tréninkový režim – gamifikace je dočasně vypnutá.
+const GAMIFICATION_ENABLED = false;
 
 const btn = document.getElementById("btn");
 const modeButtons = document.getElementById("modeButtons");
@@ -450,12 +452,11 @@ function toggleColorPreset() {
   applyColorPreset();
 }
 
-let pocetPokusuRelace = 0;
-let soucetCasuRelace = 0;
-let nejlepsiCasRelace = Infinity;
+let pokusyRelace = [];
+let relaceSeznamEl = null;
 let relacePocetEl = null;
-let relacePrumerEl = null;
-let relaceRekordEl = null;
+let relaceNowEls = {};
+let relaceBestEls = {};
 
 function formatCasRelace(cas) {
   const hodnota = Number(cas) || 0;
@@ -466,39 +467,107 @@ function formatCasRelace(cas) {
   return `${minuty}:${sekundy.toFixed(2).padStart(5, "0")}`;
 }
 
+function spocitejPrumerRelace(casy) {
+  const platne = casy
+    .map(Number)
+    .filter(cas => Number.isFinite(cas) && cas > 0);
+
+  if (!platne.length) return null;
+
+  if (platne.length >= 3) {
+    const serazene = [...platne].sort((a, b) => a - b);
+    serazene.shift();
+    serazene.pop();
+    return serazene.reduce((sum, cas) => sum + cas, 0) / serazene.length;
+  }
+
+  return platne.reduce((sum, cas) => sum + cas, 0) / platne.length;
+}
+
+function aktualniPrumerRelace(pocet) {
+  if (pokusyRelace.length < pocet) return null;
+  return spocitejPrumerRelace(
+    pokusyRelace.slice(0, pocet).map(pokus => pokus.cas)
+  );
+}
+
+function nejlepsiPrumerRelace(pocet) {
+  if (pokusyRelace.length < pocet) return null;
+
+  let nejlepsi = Infinity;
+  for (let i = 0; i <= pokusyRelace.length - pocet; i += 1) {
+    const prumer = spocitejPrumerRelace(
+      pokusyRelace.slice(i, i + pocet).map(pokus => pokus.cas)
+    );
+    if (Number.isFinite(prumer)) nejlepsi = Math.min(nejlepsi, prumer);
+  }
+
+  return Number.isFinite(nejlepsi) ? nejlepsi : null;
+}
+
+function vykresliHodnotuRelace(element, hodnota) {
+  if (!element) return;
+  element.textContent = Number.isFinite(hodnota)
+    ? formatCasRelace(hodnota)
+    : "—";
+}
+
 function vykresliStatistikyRelace() {
   if (relacePocetEl) {
-    relacePocetEl.textContent = String(pocetPokusuRelace);
+    relacePocetEl.textContent = `${pokusyRelace.length} solve`;
   }
 
-  if (relacePrumerEl) {
-    const prumer = pocetPokusuRelace > 0
-      ? soucetCasuRelace / pocetPokusuRelace
-      : 0;
-    relacePrumerEl.textContent = formatCasRelace(prumer);
+  if (relaceSeznamEl) {
+    if (!pokusyRelace.length) {
+      relaceSeznamEl.innerHTML = `
+        <div class="session-pro-empty">
+          První dokončený solve se objeví tady.
+        </div>
+      `;
+    } else {
+      relaceSeznamEl.innerHTML = pokusyRelace.map((pokus, index) => {
+        const poradi = pokusyRelace.length - index;
+        return `
+          <div class="session-pro-solve-row">
+            <span class="session-pro-solve-index">${poradi}</span>
+            <span class="session-pro-solve-tps">${Number(pokus.tps || 0).toFixed(2)}</span>
+            <span class="session-pro-solve-time">${formatCasRelace(pokus.cas)}</span>
+          </div>
+        `;
+      }).join("");
+    }
   }
 
-  if (relaceRekordEl) {
-    relaceRekordEl.textContent = Number.isFinite(nejlepsiCasRelace)
-      ? formatCasRelace(nejlepsiCasRelace)
-      : "—";
-  }
+  const posledni = pokusyRelace[0]?.cas;
+  const nejlepsiSingle = pokusyRelace.length
+    ? Math.min(...pokusyRelace.map(pokus => pokus.cas))
+    : null;
+
+  vykresliHodnotuRelace(relaceNowEls.single, posledni);
+  vykresliHodnotuRelace(relaceBestEls.single, nejlepsiSingle);
+
+  [5, 12, 50, 100].forEach(pocet => {
+    vykresliHodnotuRelace(relaceNowEls[`ao${pocet}`], aktualniPrumerRelace(pocet));
+    vykresliHodnotuRelace(relaceBestEls[`ao${pocet}`], nejlepsiPrumerRelace(pocet));
+  });
 }
 
 function resetujStatistikyRelace() {
-  pocetPokusuRelace = 0;
-  soucetCasuRelace = 0;
-  nejlepsiCasRelace = Infinity;
+  pokusyRelace = [];
   vykresliStatistikyRelace();
 }
 
-function pridejPokusDoRelace(cas) {
+function pridejPokusDoRelace(cas, tps = 0) {
   const hodnota = Number(cas);
   if (!Number.isFinite(hodnota) || hodnota <= 0) return;
 
-  pocetPokusuRelace += 1;
-  soucetCasuRelace += hodnota;
-  nejlepsiCasRelace = Math.min(nejlepsiCasRelace, hodnota);
+  pokusyRelace.unshift({
+    cas: hodnota,
+    tps: Number.isFinite(Number(tps)) ? Number(tps) : 0
+  });
+
+  // Jedna session může být dlouhá, ale nepotřebujeme v DOM držet nekonečno řádků.
+  pokusyRelace = pokusyRelace.slice(0, 500);
   vykresliStatistikyRelace();
 }
 
@@ -508,58 +577,209 @@ function vlozStylyPaneluRelace() {
   const style = document.createElement("style");
   style.id = "session-stats-style";
   style.textContent = `
-    #app {
-      position: relative !important;
+    /* =========================================================
+       V17 – PROFESSIONAL SESSION PANEL
+       Jeden velký panel místo starých mini-statistik a vysouváků.
+       ========================================================= */
+    body.screen-timer #main-layout {
+      grid-template-rows: minmax(0, 1fr) !important;
+    }
+
+    body.screen-timer #app {
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      scrollbar-width: none !important;
+      padding-bottom: 14px !important;
+    }
+
+    body.screen-timer #app::-webkit-scrollbar {
+      display: none !important;
+    }
+
+    body.screen-timer #ao-panel,
+    body.screen-timer #history,
+    body.screen-timer #aoPanelToggle,
+    body.screen-timer #historyPanelToggle,
+    body.screen-timer #aoPinBtn,
+    body.screen-timer #historyPinBtn,
+    body.screen-timer #app > .stats-grid {
+      display: none !important;
     }
 
     #session-stats-panel {
-      width: 100%;
-      min-height: 54px;
-      margin: 0;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      overflow: hidden;
-      border: 1.5px solid #00d96b;
-      border-radius: 22px;
-      background: linear-gradient(180deg, rgba(7, 24, 26, .96), rgba(2, 13, 14, .98));
-      box-shadow: inset 0 0 24px rgba(0, 230, 118, .04), 0 0 14px rgba(0, 230, 118, .08);
-      box-sizing: border-box;
-      z-index: 14;
+      width: 100% !important;
+      min-height: 224px !important;
+      max-height: min(34dvh, 340px) !important;
+      margin: 2px 0 0 !important;
+      padding: 12px !important;
+      flex: 0 0 auto !important;
+      order: 32 !important;
+      position: relative !important;
+      inset: auto !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
+      overflow: hidden !important;
+      border: 1.5px solid rgba(0, 230, 118, .82) !important;
+      border-radius: 22px !important;
+      background: linear-gradient(180deg, rgba(10, 25, 29, .98), rgba(2, 12, 14, .99)) !important;
+      box-shadow: inset 0 0 28px rgba(0, 230, 118, .04), 0 0 16px rgba(0, 230, 118, .08) !important;
+      box-sizing: border-box !important;
+      z-index: 4 !important;
     }
 
-    #session-stats-panel .session-stat-box {
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      padding: 8px 6px;
-      text-align: center;
-      box-sizing: border-box;
+    #session-stats-panel .session-pro-head {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 12px !important;
+      min-height: 24px !important;
+      padding: 0 2px 7px !important;
+      border-bottom: 1px solid rgba(0, 230, 118, .22) !important;
     }
 
-    #session-stats-panel .session-stat-box + .session-stat-box {
-      border-left: 1px solid rgba(0, 230, 118, .45);
+    #session-stats-panel .session-pro-title {
+      color: #f4f7f8 !important;
+      font-size: 15px !important;
+      font-weight: 800 !important;
+      letter-spacing: .08em !important;
     }
 
-    #session-stats-panel .session-stat-label {
-      color: rgba(255, 255, 255, .66);
-      font-size: clamp(12px, 3.3vw, 17px);
-      line-height: 1.05;
-      white-space: nowrap;
+    #session-stats-panel #session-solve-count {
+      color: #00e676 !important;
+      font-size: 13px !important;
+      font-weight: 800 !important;
+      white-space: nowrap !important;
     }
 
-    #session-stats-panel .session-stat-value {
-      color: #00e676;
-      font-size: clamp(25px, 7vw, 38px);
-      font-weight: 800;
-      line-height: 1;
-      font-variant-numeric: tabular-nums;
+    #session-stats-panel .session-pro-content {
+      min-height: 0 !important;
+      flex: 1 1 auto !important;
+      display: grid !important;
+      grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr) !important;
+      gap: 12px !important;
     }
 
-    #session-stats-panel .session-stat-empty {
-      min-height: 100%;
+    #session-stats-panel .session-pro-solves,
+    #session-stats-panel .session-pro-summary {
+      min-width: 0 !important;
+      min-height: 0 !important;
+      border: 1px solid rgba(255, 255, 255, .09) !important;
+      border-radius: 14px !important;
+      background: rgba(255, 255, 255, .025) !important;
+      overflow: hidden !important;
+    }
+
+    #session-stats-panel .session-pro-columns,
+    #session-stats-panel .session-pro-solve-row {
+      display: grid !important;
+      grid-template-columns: 34px 76px 1fr !important;
+      align-items: center !important;
+      column-gap: 8px !important;
+    }
+
+    #session-stats-panel .session-pro-columns {
+      min-height: 31px !important;
+      padding: 0 10px !important;
+      border-bottom: 1px solid rgba(255, 255, 255, .09) !important;
+      color: rgba(255, 255, 255, .53) !important;
+      font: 700 12px/1 monospace !important;
+      letter-spacing: .05em !important;
+    }
+
+    #session-stats-panel .session-pro-columns span:nth-child(2),
+    #session-stats-panel .session-pro-solve-tps {
+      text-align: right !important;
+    }
+
+    #session-stats-panel .session-pro-columns span:nth-child(3),
+    #session-stats-panel .session-pro-solve-time {
+      text-align: right !important;
+    }
+
+    #session-stats-panel .session-pro-list {
+      height: calc(100% - 31px) !important;
+      min-height: 0 !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      scrollbar-width: thin !important;
+      scrollbar-color: rgba(0,230,118,.45) transparent !important;
+    }
+
+    #session-stats-panel .session-pro-solve-row {
+      min-height: 34px !important;
+      padding: 0 10px !important;
+      border-bottom: 1px solid rgba(255,255,255,.055) !important;
+      color: rgba(255,255,255,.88) !important;
+      font-variant-numeric: tabular-nums !important;
+    }
+
+    #session-stats-panel .session-pro-solve-index {
+      color: rgba(255,255,255,.34) !important;
+      font: 600 12px/1 monospace !important;
+    }
+
+    #session-stats-panel .session-pro-solve-tps {
+      color: rgba(255,255,255,.66) !important;
+      font: 600 14px/1 monospace !important;
+    }
+
+    #session-stats-panel .session-pro-solve-time {
+      color: #f5f7f8 !important;
+      font: 700 17px/1 monospace !important;
+    }
+
+    #session-stats-panel .session-pro-empty {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      min-height: 92px !important;
+      padding: 14px !important;
+      text-align: center !important;
+      color: rgba(255,255,255,.42) !important;
+      font-size: 13px !important;
+    }
+
+    #session-stats-panel .session-pro-summary-head,
+    #session-stats-panel .session-pro-summary-row {
+      display: grid !important;
+      grid-template-columns: 70px 1fr 1fr !important;
+      align-items: center !important;
+      column-gap: 8px !important;
+      padding: 0 10px !important;
+    }
+
+    #session-stats-panel .session-pro-summary-head {
+      min-height: 31px !important;
+      border-bottom: 1px solid rgba(255,255,255,.09) !important;
+      color: rgba(255,255,255,.53) !important;
+      font: 700 12px/1 monospace !important;
+      letter-spacing: .05em !important;
+    }
+
+    #session-stats-panel .session-pro-summary-row {
+      min-height: 32px !important;
+      border-bottom: 1px solid rgba(255,255,255,.055) !important;
+      font-variant-numeric: tabular-nums !important;
+    }
+
+    #session-stats-panel .session-pro-summary-row:last-child {
+      border-bottom: 0 !important;
+    }
+
+    #session-stats-panel .session-pro-summary-label {
+      color: rgba(255,255,255,.48) !important;
+      font: 600 13px/1 monospace !important;
+    }
+
+    #session-stats-panel .session-pro-summary-value {
+      text-align: right !important;
+      color: #eef2f3 !important;
+      font: 700 14px/1 monospace !important;
+    }
+
+    #session-stats-panel .session-pro-summary-value.best {
+      color: rgba(255,255,255,.53) !important;
     }
 
     body:not(.screen-timer) #session-stats-panel,
@@ -567,8 +787,38 @@ function vlozStylyPaneluRelace() {
       display: none !important;
     }
 
-    body.screen-timer.trainer-ready #session-stats-panel {
-      display: grid;
+    /* Gamifikace dočasně úplně mimo profesionální režim. */
+    #screen-top-strip,
+    #top-strip > .top-strip-center,
+    #top-strip > .xp-item,
+    #xp-card,
+    #openProgressStats,
+    #openAchievementsStats,
+    #stats-progress-view,
+    #stats-achievements-view,
+    #settings-reset-profile-btn,
+    #level-modal,
+    #achievement-modal {
+      display: none !important;
+    }
+
+    body.screen-timer #top-strip {
+      display: flex !important;
+      justify-content: flex-end !important;
+      align-items: stretch !important;
+      width: 100% !important;
+      height: clamp(36px, 5.4dvh, 46px) !important;
+      border: 0 !important;
+      background: transparent !important;
+      overflow: visible !important;
+    }
+
+    body.screen-timer #top-menu-wrap {
+      display: flex !important;
+      width: min(190px, 38%) !important;
+      border: 1px solid rgba(155, 180, 195, .25) !important;
+      border-radius: 12px !important;
+      background: rgba(17, 28, 34, .95) !important;
     }
 
     /* Zvýraznění tahu nesmí měnit rozměry notace. */
@@ -599,30 +849,40 @@ function vlozStylyPaneluRelace() {
       box-shadow: 0 0 0 .15em var(--red) !important;
     }
 
-    @media (max-width: 899px) {
+    @media (max-width: 520px) {
       #session-stats-panel {
-        position: absolute !important;
+        min-height: 420px !important;
+        max-height: 440px !important;
+      }
+
+      #session-stats-panel .session-pro-content {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: minmax(108px, 1fr) auto !important;
+      }
+
+      #session-stats-panel .session-pro-summary {
+        min-height: 191px !important;
+      }
+
+      #session-stats-panel .session-pro-solves {
+        min-height: 112px !important;
       }
     }
 
     @media (min-width: 900px) {
       #session-stats-panel {
-        position: relative !important;
-        order: 32 !important;
-        min-height: 86px;
-        margin: 10px 0;
+        min-height: 260px !important;
+        max-height: 330px !important;
+        margin-top: 8px !important;
       }
 
-      body.screen-timer .stats-grid {
-        order: 33 !important;
+      #session-stats-panel .session-pro-title {
+        font-size: 17px !important;
       }
 
-      #session-stats-panel .session-stat-label {
-        font-size: 15px;
-      }
-
-      #session-stats-panel .session-stat-value {
-        font-size: 32px;
+      #session-stats-panel .session-pro-solve-time,
+      #session-stats-panel .session-pro-summary-value {
+        font-size: 16px !important;
       }
     }
   `;
@@ -631,42 +891,17 @@ function vlozStylyPaneluRelace() {
 
 function umistiPanelRelace() {
   const panel = document.getElementById("session-stats-panel");
-  const app = document.getElementById("app");
-  const statsGrid = app?.querySelector(":scope > .stats-grid");
+  if (!panel) return;
 
-  if (!panel || !app || !tpsDiv) return;
-
-  if (!window.matchMedia("(max-width: 899px)").matches) {
-    panel.style.removeProperty("top");
-    panel.style.removeProperty("left");
-    panel.style.removeProperty("width");
-    panel.style.removeProperty("height");
-    return;
-  }
-
-  const appRect = app.getBoundingClientRect();
-  const tpsRect = tpsDiv.getBoundingClientRect();
-  const statsRect = statsGrid?.getBoundingClientRect();
-
-  if (!appRect.width || !tpsRect.width) return;
-
-  const top = tpsRect.bottom - appRect.top + 8;
-  const mezera = statsRect
-    ? Math.max(0, statsRect.top - tpsRect.bottom - 12)
-    : 74;
-  const vyska = Math.max(54, Math.min(78, mezera || 74));
-
-  panel.style.top = `${Math.round(top)}px`;
-  panel.style.left = `${Math.round(tpsRect.left - appRect.left)}px`;
-  panel.style.width = `${Math.round(tpsRect.width)}px`;
-  panel.style.height = `${Math.round(vyska)}px`;
+  // V17: panel je součástí normálního layoutu; žádné absolutní překrývání.
+  panel.style.removeProperty("top");
+  panel.style.removeProperty("left");
+  panel.style.removeProperty("width");
+  panel.style.removeProperty("height");
 }
 
 function naplanujUmisteniPaneluRelace() {
-  requestAnimationFrame(() => {
-    umistiPanelRelace();
-    setTimeout(umistiPanelRelace, 80);
-  });
+  requestAnimationFrame(umistiPanelRelace);
 }
 
 function vytvorPanelRelace() {
@@ -678,52 +913,50 @@ function vytvorPanelRelace() {
 
   vlozStylyPaneluRelace();
 
-  const panel = document.createElement("div");
+  const panel = document.createElement("section");
   panel.id = "session-stats-panel";
-  panel.setAttribute("aria-label", "Statistiky aktuální tréninkové relace");
+  panel.setAttribute("aria-label", "Výsledky aktuální tréninkové relace");
   panel.innerHTML = `
-    <div class="session-stat-box">
-      <div class="session-stat-label">Počet složení</div>
-      <div id="session-solve-count" class="session-stat-value">0</div>
+    <div class="session-pro-head">
+      <span class="session-pro-title">SESSION</span>
+      <span id="session-solve-count">0 solve</span>
     </div>
-    <div class="session-stat-box">
-      <div class="session-stat-label">Průměrný čas</div>
-      <div id="session-average-time" class="session-stat-value">0.00</div>
-    </div>
-    <div class="session-stat-box">
-      <div class="session-stat-label">Rekord</div>
-      <div id="session-best-time" class="session-stat-value">—</div>
+
+    <div class="session-pro-content">
+      <div class="session-pro-solves">
+        <div class="session-pro-columns">
+          <span>#</span><span>TPS</span><span>TIME</span>
+        </div>
+        <div id="session-pro-list" class="session-pro-list"></div>
+      </div>
+
+      <div class="session-pro-summary">
+        <div class="session-pro-summary-head">
+          <span></span><span style="text-align:right">NOW</span><span style="text-align:right">BEST</span>
+        </div>
+        ${["single", "ao5", "ao12", "ao50", "ao100"].map(label => `
+          <div class="session-pro-summary-row">
+            <span class="session-pro-summary-label">${label}</span>
+            <span id="session-now-${label}" class="session-pro-summary-value">—</span>
+            <span id="session-best-${label}" class="session-pro-summary-value best">—</span>
+          </div>
+        `).join("")}
+      </div>
     </div>
   `;
 
-  /*
-   * Panel je v DOM přesně za timerem. Na mobilu je absolutní, takže
-   * neodsune spodní Moves/TPS panel a využije volné místo vytvořené
-   * vizuálním posunem timeru ve Visual Debugu.
-   */
   tpsDiv.insertAdjacentElement("afterend", panel);
 
   relacePocetEl = document.getElementById("session-solve-count");
-  relacePrumerEl = document.getElementById("session-average-time");
-  relaceRekordEl = document.getElementById("session-best-time");
+  relaceSeznamEl = document.getElementById("session-pro-list");
+  ["single", "ao5", "ao12", "ao50", "ao100"].forEach(label => {
+    relaceNowEls[label] = document.getElementById(`session-now-${label}`);
+    relaceBestEls[label] = document.getElementById(`session-best-${label}`);
+  });
+
   vykresliStatistikyRelace();
 
   window.addEventListener("resize", naplanujUmisteniPaneluRelace);
-
-  if (typeof ResizeObserver === "function") {
-    const observer = new ResizeObserver(naplanujUmisteniPaneluRelace);
-    observer.observe(tpsDiv);
-    const statsGrid = document.querySelector("#app > .stats-grid");
-    if (statsGrid) observer.observe(statsGrid);
-  }
-
-  if (document.body && typeof MutationObserver === "function") {
-    const observer = new MutationObserver(naplanujUmisteniPaneluRelace);
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ["class"]
-    });
-  }
 
   window.addEventListener("cube-trainer-random-pll-selection-changed", () => {
     if ((trainingMode === "random" || trainingMode === "sequence") && puzzleMode === "pll") {
@@ -2329,14 +2562,16 @@ function refreshAll() {
   updateStatistics();
   updateAlgorithmStats();
 
-  updateCoach(
-    savedSolves,
-    getAlgorithmStats,
-    coachAlg,
-    coachDetail
-  );
+  if (GAMIFICATION_ENABLED) {
+    updateCoach(
+      savedSolves,
+      getAlgorithmStats,
+      coachAlg,
+      coachDetail
+    );
 
-  updateAchievementList(achievementList, playerProfile);
+    updateAchievementList(achievementList, playerProfile);
+  }
 }
 
 async function resetProfile() {
@@ -4301,48 +4536,53 @@ moveTimes = [];
   ) {
     // Panel relace funguje i pro WCA: počet solve, průměr a rekord.
     // Při Next Scramble se nerestartuje; resetne se až při změně režimu.
-    pridejPokusDoRelace(finalTime);
+    pridejPokusDoRelace(finalTime, finalAvg);
   }
 
   saveSolve(finalTime, finalMoves, finalAvg);
-  giveXP(10);
 
-  checkDailyTasks(
-    savedSolves,
-    finalAvg,
-    isPB,
-    dailyList,
-    giveXP
-  );
+  if (GAMIFICATION_ENABLED) {
+    giveXP(10);
+
+    checkDailyTasks(
+      savedSolves,
+      finalAvg,
+      isPB,
+      dailyList,
+      giveXP
+    );
+
+    if (isPB) {
+      unlockAchievement(
+        "new_pb",
+        "Nový osobní rekord",
+        100,
+        playerProfile,
+        saveProfile,
+        giveXP,
+        showAchievement,
+        updateAchievementList,
+        achievementList
+      );
+    }
+
+    if (savedSolves.length === 1) {
+      unlockAchievement(
+        "first_solve",
+        "První solve",
+        50,
+        playerProfile,
+        saveProfile,
+        giveXP,
+        showAchievement,
+        updateAchievementList,
+        achievementList
+      );
+    }
+  }
 
   if (isPB) {
     showRecord(finalTime, recordTime, recordModal);
-
-    unlockAchievement(
-      "new_pb",
-      "Nový osobní rekord",
-      100,
-      playerProfile,
-      saveProfile,
-      giveXP,
-      showAchievement,
-      updateAchievementList,
-      achievementList
-    );
-  }
-
-  if (savedSolves.length === 1) {
-    unlockAchievement(
-      "first_solve",
-      "První solve",
-      50,
-      playerProfile,
-      saveProfile,
-      giveXP,
-      showAchievement,
-      updateAchievementList,
-      achievementList
-    );
   }
 
   beep(880, .2);
@@ -4484,14 +4724,16 @@ function initApp() {
   setupGlobalControls();
   setupProfileButtons();
 
-  updateDailyTasks(dailyList);
+  if (GAMIFICATION_ENABLED) {
+    updateDailyTasks(dailyList);
 
-  updateXPUI(
-    playerProfile,
-    playerLevel,
-    xpText,
-    xpFill
-  );
+    updateXPUI(
+      playerProfile,
+      playerLevel,
+      xpText,
+      xpFill
+    );
+  }
   applyColorPreset();
 
 if (colorPresetBtn) {
