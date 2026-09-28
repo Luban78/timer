@@ -3413,3 +3413,96 @@ body.training-menu-open #trainingModeBtn {
   word-break: normal !important;
   overflow: hidden !important;
 }
+
+/* =========================================================
+   CUBE TRAINER V23 – FINAL MOBILE TIMER LAYOUT
+   Konsolidováno z Visual Debugu do stabilního style.css.
+   debugMobileGenerated.css už tyto prvky nepřepisuje.
+   ========================================================= */
+@media (max-width: 899px) {
+  body.screen-timer #algorithm-card-wrap {
+    overflow: visible !important;
+  }
+
+  body.screen-timer #selectedAlg {
+    overflow: visible !important;
+    z-index: 20 !important;
+  }
+
+  body.screen-timer #selectedAlg .alg-moves-row {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0 -5px !important;
+  }
+
+  body.screen-timer #selectedAlg .alg-cube-placeholder {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0 -1px !important;
+  }
+
+  body.screen-timer #selectedAlg .alg-picture {
+    overflow: visible !important;
+    z-index: 20 !important;
+    translate: 0 -22px !important;
+  }
+
+  body.screen-timer #selectedAlg .alg-move-line:nth-of-type(1) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0 -17px !important;
+  }
+
+  body.screen-timer #selectedAlg .alg-move-line:nth-of-type(2) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0 -19px !important;
+  }
+
+  body.screen-timer #selectedAlg .alg-move-line:nth-of-type(3) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0 -22px !important;
+  }
+
+  body.screen-timer #selectedAlg .alg-move-line:nth-of-type(4) {
+    position: relative !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0 -26px !important;
+  }
+
+  body.screen-timer #state-msg {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    overflow: visible !important;
+    z-index: 20 !important;
+  }
+
+  body.screen-timer #tps {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    overflow: visible !important;
+    z-index: 20 !important;
+  }
+
+  body.screen-timer #editAlgVariantBtn {
+    display: grid !important;
+    z-index: 20 !important;
+    overflow: visible !important;
+    translate: 0 -22px !important;
+  }
+}

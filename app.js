@@ -1469,8 +1469,8 @@ function vlozStylyPaneluRelace() {
       }
 
       :is(#ct-vd-specificity-a, #state-msg):is(#ct-vd-specificity-b, #state-msg) {
-        translate: 0 -46px !important;
-        min-height: 27px !important;
+        translate: 0 -32px !important;
+        min-height: 34px !important;
         font-size: clamp(25px, 6.5vw, 33px) !important;
       }
 
@@ -1480,7 +1480,7 @@ function vlozStylyPaneluRelace() {
         flex-basis: 100px !important;
         font-size: clamp(68px, 16vw, 88px) !important;
         /* V22: jemně níž, o přesných 5 px oproti V21. */
-        translate: 0 -39px !important;
+        translate: 0 -33px !important;
         margin-bottom: 7px !important;
       }
 
@@ -1488,16 +1488,16 @@ function vlozStylyPaneluRelace() {
         height: 232px !important;
         min-height: 232px !important;
         max-height: 232px !important;
-        translate: 0 -44px !important;
-        margin-bottom: -44px !important;
+        translate: 0 -38px !important;
+        margin-bottom: -38px !important;
       }
 
       #legacy-training-stats-panel {
         height: 168px !important;
         min-height: 168px !important;
         max-height: 168px !important;
-        translate: 0 -44px !important;
-        margin-bottom: -44px !important;
+        translate: 0 -38px !important;
+        margin-bottom: -38px !important;
       }
 
       #session-stats-panel .session-pro-title {
