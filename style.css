@@ -3506,3 +3506,59 @@ body.training-menu-open #trainingModeBtn {
     translate: 0 -22px !important;
   }
 }
+
+
+/* =========================================================
+   CUBE TRAINER V24 – MODE BUTTON POLISH
+   Jedno čisté tlačítko: text vlevo, nenápadný chevron vpravo.
+   Bez dělicí čáry / split-button vzhledu.
+   ========================================================= */
+@media (max-width: 899px) {
+  body.screen-timer #puzzleModeBtn {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    gap: 8px !important;
+    padding: 0 12px 0 16px !important;
+    text-align: left !important;
+  }
+
+  body.screen-timer #puzzleModeLabel {
+    min-width: 0 !important;
+    justify-self: start !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  body.screen-timer #puzzleModeBtn .compact-arrow {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 22px !important;
+    min-width: 22px !important;
+    height: 22px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    box-shadow: none !important;
+    background: rgba(0,230,118,.08) !important;
+    color: rgba(0,230,118,.90) !important;
+    font-size: .60em !important;
+    line-height: 1 !important;
+    opacity: .92 !important;
+    transform: translateY(1px) !important;
+  }
+
+  body.screen-timer #puzzleModeBtn::before,
+  body.screen-timer #puzzleModeBtn::after,
+  body.screen-timer #puzzleModeBtn > span::before,
+  body.screen-timer #puzzleModeBtn > span::after {
+    content: none !important;
+    display: none !important;
+    border: 0 !important;
+  }
+}

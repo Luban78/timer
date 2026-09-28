@@ -1461,15 +1461,17 @@ function vlozStylyPaneluRelace() {
       }
 
       :is(#ct-vd-specificity-a, #selectedAlg):is(#ct-vd-specificity-b, #selectedAlg):not(:has(.alg-empty-marker)) {
-        height: clamp(335px, 44.5dvh, 365px) !important;
-        min-height: clamp(335px, 44.5dvh, 365px) !important;
-        max-height: clamp(335px, 44.5dvh, 365px) !important;
+        /* V24: o trochu hlubší karta, aby se stav PŘIPRAVEN vešel dovnitř rámečku. */
+        height: clamp(355px, 46.5dvh, 385px) !important;
+        min-height: clamp(355px, 46.5dvh, 385px) !important;
+        max-height: clamp(355px, 46.5dvh, 385px) !important;
         padding: 13px 16px !important;
         translate: 0 -4px !important;
       }
 
       :is(#ct-vd-specificity-a, #state-msg):is(#ct-vd-specificity-b, #state-msg) {
-        translate: 0 -32px !important;
+        /* Karta je +20 px vyšší, stav proto držíme vizuálně na místě uvnitř jejího spodku. */
+        translate: 0 -52px !important;
         min-height: 34px !important;
         font-size: clamp(25px, 6.5vw, 33px) !important;
       }
@@ -1479,8 +1481,8 @@ function vlozStylyPaneluRelace() {
         height: 100px !important;
         flex-basis: 100px !important;
         font-size: clamp(68px, 16vw, 88px) !important;
-        /* V22: jemně níž, o přesných 5 px oproti V21. */
-        translate: 0 -33px !important;
+        /* V24: výsledný timer je cca o 8 px níž než ve V23. */
+        translate: 0 -45px !important;
         margin-bottom: 7px !important;
       }
 
@@ -1488,16 +1490,22 @@ function vlozStylyPaneluRelace() {
         height: 232px !important;
         min-height: 232px !important;
         max-height: 232px !important;
-        translate: 0 -38px !important;
-        margin-bottom: -38px !important;
+        translate: 0 -50px !important;
+        margin-bottom: -50px !important;
       }
 
       #legacy-training-stats-panel {
         height: 168px !important;
         min-height: 168px !important;
         max-height: 168px !important;
-        translate: 0 -38px !important;
-        margin-bottom: -38px !important;
+        translate: 0 -50px !important;
+        margin-bottom: -50px !important;
+      }
+
+      /* Pravý scrollbar nesmí ukusovat TIME – hlavičku i hodnoty posuneme o 3 px doleva. */
+      #session-stats-panel .session-pro-columns span:nth-child(2),
+      #session-stats-panel .session-pro-solve-time {
+        transform: translateX(-3px) !important;
       }
 
       #session-stats-panel .session-pro-title {
