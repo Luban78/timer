@@ -77,7 +77,7 @@ import {
 } from "./dailyTasks.js";
 
 import { getAlgorithmStats } from "./algorithmStats.js";
-import { drawDetailGraph } from "./detailGraph.js";
+import { drawDetailGraph } from "./detailGraph.js?v=v26-solve-detail";
 import { openPLLMenu, openOLLMenu } from "./algMenu.js?v=pll-picker-v14";
 import {
   generateWcaScramble,
@@ -340,6 +340,187 @@ let wcaLivePattern = null;
 let wcaLiveScramble = "";
 let wcaNextScrambleTimer = null;
 
+// V26 – analytika WCA solve. Během solve ukládáme stav po každém tahu
+// a z něj po dokončení odvodíme stabilní hranice Cross / F2L 1–4 / OLL / PLL.
+let wcaCfopGeometry = null;
+let wcaCfopSamples = [];
+
+function prunikMnozin(...sets) {
+  if (!sets.length) return new Set();
+  const prvni = [...sets[0]];
+  return new Set(prvni.filter(value => sets.slice(1).every(set => set.has(value))));
+}
+
+function zmenenePozicePoTahu(solved, move, orbit) {
+  try {
+    const moved = applyAlgorithm(solved, move);
+    const before = solved?.patternData?.[orbit];
+    const after = moved?.patternData?.[orbit];
+    if (!before || !after) return new Set();
+
+    const result = new Set();
+    for (let i = 0; i < before.pieces.length; i += 1) {
+      if (
+        before.pieces[i] !== after.pieces[i] ||
+        before.orientation[i] !== after.orientation[i]
+      ) {
+        result.add(i);
+      }
+    }
+    return result;
+  } catch {
+    return new Set();
+  }
+}
+
+function pripravWcaCfopGeometry() {
+  if (wcaCfopGeometry) return wcaCfopGeometry;
+
+  const solved = createSolvedPattern();
+  if (!solved?.patternData?.EDGES || !solved?.patternData?.CORNERS) return null;
+
+  const faces = {};
+  for (const face of ["U", "D", "F", "R", "B", "L"]) {
+    faces[face] = {
+      edges: zmenenePozicePoTahu(solved, face, "EDGES"),
+      corners: zmenenePozicePoTahu(solved, face, "CORNERS")
+    };
+  }
+
+  // WCA scramble je v aplikaci definovaný jako White top / Green front.
+  // Bílá je tedy v interním barevném rámci U. Fyzické otočení celé kostky
+  // při solve nemění cubie pattern, takže můžeme bezpečně sledovat U cross.
+  const crossEdges = ["F", "R", "B", "L"]
+    .map(side => [...prunikMnozin(faces.U.edges, faces[side].edges)][0])
+    .filter(Number.isInteger);
+
+  const slotDefs = [
+    ["F", "R"],
+    ["R", "B"],
+    ["B", "L"],
+    ["L", "F"]
+  ].map(([a, b]) => ({
+    edge: [...prunikMnozin(faces[a].edges, faces[b].edges)][0],
+    corner: [...prunikMnozin(faces.U.corners, faces[a].corners, faces[b].corners)][0]
+  })).filter(slot => Number.isInteger(slot.edge) && Number.isInteger(slot.corner));
+
+  const lastLayerEdges = [...faces.D.edges];
+  const lastLayerCorners = [...faces.D.corners];
+
+  if (crossEdges.length !== 4 || slotDefs.length !== 4) return null;
+
+  wcaCfopGeometry = {
+    solved,
+    crossEdges,
+    slotDefs,
+    lastLayerEdges,
+    lastLayerCorners
+  };
+
+  return wcaCfopGeometry;
+}
+
+function jePoziceVyresena(pattern, solved, orbit, index) {
+  const current = pattern?.patternData?.[orbit];
+  const target = solved?.patternData?.[orbit];
+  if (!current || !target || !Number.isInteger(index)) return false;
+  return current.pieces[index] === target.pieces[index] &&
+    current.orientation[index] === target.orientation[index];
+}
+
+function analyzujWcaCfopPattern(pattern) {
+  const geometry = pripravWcaCfopGeometry();
+  if (!geometry || !pattern) return null;
+
+  const { solved, crossEdges, slotDefs, lastLayerEdges, lastLayerCorners } = geometry;
+  const cross = crossEdges.every(index => jePoziceVyresena(pattern, solved, "EDGES", index));
+  const slots = slotDefs.filter(slot =>
+    jePoziceVyresena(pattern, solved, "EDGES", slot.edge) &&
+    jePoziceVyresena(pattern, solved, "CORNERS", slot.corner)
+  ).length;
+
+  const edges = pattern?.patternData?.EDGES;
+  const corners = pattern?.patternData?.CORNERS;
+  const solvedEdges = solved?.patternData?.EDGES;
+  const solvedCorners = solved?.patternData?.CORNERS;
+
+  const llOriented = Boolean(
+    cross && slots === 4 && edges && corners && solvedEdges && solvedCorners &&
+    lastLayerEdges.every(index => edges.orientation[index] === solvedEdges.orientation[index]) &&
+    lastLayerCorners.every(index => corners.orientation[index] === solvedCorners.orientation[index])
+  );
+
+  return { cross, slots, oll: llOriented };
+}
+
+function zaznamenejWcaCfopVzorek(pattern, now = performance.now()) {
+  if (puzzleMode !== "wca" || !isSolving || !pattern) return;
+  const status = analyzujWcaCfopPattern(pattern);
+  if (!status) return;
+
+  const time = Math.max(0, (now - startTime) / 1000);
+  wcaCfopSamples.push({
+    time: Number(time.toFixed(3)),
+    moveIndex: currentMoves.length,
+    cross: !!status.cross,
+    slots: Number(status.slots) || 0,
+    oll: !!status.oll
+  });
+}
+
+function najdiStabilniMilnik(samples, predicate) {
+  if (!Array.isArray(samples) || !samples.length) return null;
+  let lastFalse = -1;
+  samples.forEach((sample, index) => {
+    if (!predicate(sample)) lastFalse = index;
+  });
+  const candidate = samples[lastFalse + 1];
+  if (!candidate || !predicate(candidate)) return null;
+  return { time: Number(candidate.time), moveIndex: Number(candidate.moveIndex) || 0 };
+}
+
+function sestavWcaCfopRozpad(finalTime) {
+  if (puzzleMode !== "wca" || !wcaCfopSamples.length) return null;
+
+  const cross = najdiStabilniMilnik(wcaCfopSamples, s => s.cross);
+  const f1 = najdiStabilniMilnik(wcaCfopSamples, s => s.cross && s.slots >= 1);
+  const f2 = najdiStabilniMilnik(wcaCfopSamples, s => s.cross && s.slots >= 2);
+  const f3 = najdiStabilniMilnik(wcaCfopSamples, s => s.cross && s.slots >= 3);
+  const f4 = najdiStabilniMilnik(wcaCfopSamples, s => s.cross && s.slots >= 4);
+  const oll = najdiStabilniMilnik(wcaCfopSamples, s => s.cross && s.slots >= 4 && s.oll);
+
+  const milestones = [cross, f1, f2, f3, f4, oll];
+  if (milestones.some(item => !item || !Number.isFinite(item.time))) return null;
+
+  const cumulative = milestones.map(item => item.time);
+  const labels = ["Cross", "F2L 1", "F2L 2", "F2L 3", "F2L 4", "OLL", "PLL"];
+  const endTimes = [...cumulative, Number(finalTime)];
+  let previous = 0;
+
+  const segments = labels.map((label, index) => {
+    const end = Math.max(previous, Number(endTimes[index]) || previous);
+    const duration = Math.max(0, end - previous);
+    const moveIndex = index < milestones.length
+      ? milestones[index].moveIndex
+      : currentMoves.length;
+    const previousMoveIndex = index === 0 ? 0 : (milestones[index - 1]?.moveIndex || 0);
+
+    const segment = {
+      label,
+      duration: Number(duration.toFixed(3)),
+      cumulative: Number(end.toFixed(3)),
+      moves: Math.max(0, moveIndex - previousMoveIndex)
+    };
+    previous = end;
+    return segment;
+  });
+
+  return {
+    method: "CFOP-auto-v1",
+    segments
+  };
+}
+
 let savedSolves = loadSolves();
 let playerProfile = loadProfile();
 //úprava rychlosti U2
@@ -467,14 +648,16 @@ function nactiStatistikyRelace() {
         cas: Number(pokus?.cas),
         tps: Number(pokus?.tps),
         rezim: typeof pokus?.rezim === "string" ? pokus.rezim : "",
-        alg: typeof pokus?.alg === "string" ? pokus.alg : ""
+        alg: typeof pokus?.alg === "string" ? pokus.alg : "",
+        solveId: Number.isFinite(Number(pokus?.solveId)) ? Number(pokus.solveId) : null
       }))
       .filter(pokus => Number.isFinite(pokus.cas) && pokus.cas > 0)
       .map(pokus => ({
         cas: pokus.cas,
         tps: Number.isFinite(pokus.tps) ? pokus.tps : 0,
         rezim: pokus.rezim,
-        alg: pokus.alg
+        alg: pokus.alg,
+        solveId: pokus.solveId
       }))
       .slice(0, 1200);
   } catch (error) {
@@ -579,6 +762,28 @@ function vykresliHodnotuRelace(element, hodnota) {
     : "—";
 }
 
+function najdiUlozenySolveProRelaci(pokus) {
+  if (!pokus) return null;
+
+  if (pokus.solveId != null) {
+    const podleId = savedSolves.find(solve => Number(solve?.id) === Number(pokus.solveId));
+    if (podleId) return podleId;
+  }
+
+  // Migrace starších SESSION záznamů, které ještě solveId neměly.
+  // Hledáme stejný algoritmus/režim a čas s přesností uloženého setinového času.
+  const alg = String(pokus.alg || "").trim();
+  const cas = Number(pokus.cas);
+  const kandidati = savedSolves.filter(solve => {
+    const solveAlg = String(solve?.algorithm || "").trim();
+    const casShoda = Math.abs(Number(solve?.time) - cas) < 0.011;
+    const algShoda = !alg || solveAlg === alg || (pokus.rezim === "wca" && solveAlg === "WCA 3x3");
+    return casShoda && algShoda;
+  });
+
+  return kandidati[0] || null;
+}
+
 function vykresliStatistikyRelace() {
   const aktivniPokusy = ziskejAktivniPokusyRelace();
 
@@ -600,14 +805,34 @@ function vykresliStatistikyRelace() {
         </div>
       `;
     } else {
-      relaceSeznamEl.innerHTML = aktivniPokusy.map((pokus) => {
+      relaceSeznamEl.innerHTML = aktivniPokusy.map((pokus, index) => {
         return `
-          <div class="session-pro-solve-row">
+          <div class="session-pro-solve-row" data-session-index="${index}">
             <span class="session-pro-solve-tps">${Number(pokus.tps || 0).toFixed(2)}</span>
-            <span class="session-pro-solve-time">${formatCasRelace(pokus.cas)}</span>
+            <button type="button" class="session-pro-solve-time session-pro-time-button" data-session-index="${index}" aria-label="Otevřít detail solve ${formatCasRelace(pokus.cas)}">${formatCasRelace(pokus.cas)}</button>
           </div>
         `;
       }).join("");
+
+      relaceSeznamEl.querySelectorAll(".session-pro-time-button").forEach(button => {
+        button.addEventListener("click", event => {
+          event.stopPropagation();
+          const index = Number(button.dataset.sessionIndex);
+          const pokus = aktivniPokusy[index];
+          const solve = najdiUlozenySolveProRelaci(pokus);
+
+          if (solve) {
+            showSolveDetail(solve);
+          } else {
+            showNotice(
+              "Detail není dostupný",
+              "Tento starší SESSION záznam ještě nemá uložená Smart Cube data.",
+              "info",
+              "i"
+            );
+          }
+        });
+      });
     }
   }
 
@@ -651,7 +876,7 @@ function resetujStatistikyRelace() {
   vykresliStatistikyRelace();
 }
 
-function pridejPokusDoRelace(cas, tps = 0) {
+function pridejPokusDoRelace(cas, tps = 0, solveId = null) {
   const hodnota = Number(cas);
   if (!Number.isFinite(hodnota) || hodnota <= 0) return;
 
@@ -659,7 +884,8 @@ function pridejPokusDoRelace(cas, tps = 0) {
     cas: hodnota,
     tps: Number.isFinite(Number(tps)) ? Number(tps) : 0,
     rezim: puzzleMode,
-    alg: currentAlgorithmName || (puzzleMode === "wca" ? "WCA 3x3" : "")
+    alg: currentAlgorithmName || (puzzleMode === "wca" ? "WCA 3x3" : ""),
+    solveId: Number.isFinite(Number(solveId)) ? Number(solveId) : null
   });
 
   // Uchováváme dost dlouhou persistentní relaci i pro střídání více PLL/OLL.
@@ -2221,6 +2447,7 @@ function applyWcaLiveMove(move, now) {
 
   try {
     wcaLivePattern = applyAlgorithm(wcaLivePattern, move);
+    zaznamenejWcaCfopVzorek(wcaLivePattern, now);
 
     if (isPatternSolved(wcaLivePattern)) {
       return finishWcaSolve(false, now);
@@ -4653,6 +4880,7 @@ function runStartSolve(now) {
   moveTimes = [];
   tpsHistory = [];
   seq = [];
+  wcaCfopSamples = puzzleMode === "wca" ? [] : wcaCfopSamples;
 
   clearInterval(uiTimer);
   uiTimer = setInterval(updateUI, 100);
@@ -5229,16 +5457,18 @@ moveTimes = [];
 
   const isPB = finalTime < oldBest;
 
+  const solveId = Date.now();
+
   if (
     currentAlgorithmName &&
     currentAlgorithmName !== "Nevybráno"
   ) {
     // Panel relace funguje i pro WCA: počet solve, průměr a rekord.
-    // Při Next Scramble se nerestartuje; resetne se až při změně režimu.
-    pridejPokusDoRelace(finalTime, finalAvg);
+    // solveId propojí čas v SESSION s plným Smart Cube detailem.
+    pridejPokusDoRelace(finalTime, finalAvg, solveId);
   }
 
-  saveSolve(finalTime, finalMoves, finalAvg);
+  saveSolve(finalTime, finalMoves, finalAvg, solveId);
 
   if (GAMIFICATION_ENABLED) {
     giveXP(10);
@@ -5305,9 +5535,9 @@ function failSolve() {
   stateMsg.style.color = "red";
 }
 
-function saveSolve(time, moves, avg) {
+function saveSolve(time, moves, avg, solveId = Date.now()) {
   const solve = {
-    id: Date.now(),
+    id: solveId,
     algorithm: currentAlgorithmName,
     time: Number(time.toFixed(2)),
     htm: moves,
@@ -5320,6 +5550,8 @@ function saveSolve(time, moves, avg) {
     moves: Array.isArray(currentMoves)
       ? [...currentMoves]
       : [],
+    scramble: puzzleMode === "wca" ? String(wcaLiveScramble || "") : "",
+    cfop: puzzleMode === "wca" ? sestavWcaCfopRozpad(time) : null,
     date: new Date().toLocaleString("cs-CZ")
   };
 
@@ -5346,29 +5578,129 @@ async function clearHistory() {
   refreshAll();
 }
 
+function escapeSolveHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function ziskejNejvetsiPauzySolve(solve, limit = 4) {
+  const moves = Array.isArray(solve?.moves) ? solve.moves : [];
+  const pauses = [];
+
+  for (let i = 1; i < moves.length; i += 1) {
+    const previous = Number(moves[i - 1]?.time);
+    const current = Number(moves[i]?.time);
+    if (!Number.isFinite(previous) || !Number.isFinite(current)) continue;
+    const delta = current - previous;
+    if (delta <= 0) continue;
+
+    pauses.push({
+      delta,
+      move: String(moves[i]?.move || "?"),
+      at: current,
+      index: i + 1
+    });
+  }
+
+  return pauses.sort((a, b) => b.delta - a.delta).slice(0, limit);
+}
+
+function vykresliCfopDetail(solve) {
+  const segments = Array.isArray(solve?.cfop?.segments) ? solve.cfop.segments : [];
+  if (!segments.length) {
+    if (String(solve?.algorithm || "") !== "WCA 3x3") return "";
+    return `
+      <section class="solve-detail-section">
+        <h3>CFOP úseky</h3>
+        <p class="solve-detail-muted">Automatický rozpad Cross / F2L / OLL / PLL se ukládá u nových WCA solve od této verze.</p>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="solve-detail-section">
+      <h3>CFOP úseky</h3>
+      <div class="solve-phase-grid">
+        ${segments.map(segment => `
+          <div class="solve-phase-row">
+            <span>${escapeSolveHtml(segment.label)}</span>
+            <strong>${Number(segment.duration || 0).toFixed(2)} s</strong>
+            <small>${Number(segment.moves || 0)} tahů</small>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
 function showSolveDetail(solve) {
+  const notationMoves = Array.isArray(solve?.notation) ? solve.notation : [];
+  const pauses = ziskejNejvetsiPauzySolve(solve);
+  const isWca = String(solve?.algorithm || "") === "WCA 3x3";
+
   solveDetailContent.innerHTML = `
-    <div><b>Algoritmus:</b> ${solve.algorithm || "Nevybráno"}</div>
-    <div><b>Čas:</b> ${Number(solve.time).toFixed(2)}s</div>
-    <div><b>Tahy:</b> ${solve.htm ?? solve.moves ?? 0}</div>
-    <div><b>TPS:</b> ${Number(solve.tps ?? solve.avg ?? 0).toFixed(1)}</div>
-    <div><b>Peak TPS:</b> ${Number(solve.peakTPS ?? 0).toFixed(1)}</div>
-    <div><b>Nejdelší pauza:</b> ${Number(solve.longestPause ?? 0).toFixed(2)}s</div>
-    <div><b>Datum:</b> ${solve.date || "-"}</div>
-    <div class="detail-notation">
-      <b>Notace:</b><br>
-      ${(solve.notation || []).join(" ")}
-    </div>
+    <section class="solve-detail-hero">
+      <div>
+        <span class="solve-detail-kicker">${isWca ? "WCA 3×3" : escapeSolveHtml(solve.algorithm || "Nevybráno")}</span>
+        <strong class="solve-detail-main-time">${Number(solve.time || 0).toFixed(2)} s</strong>
+      </div>
+      <div class="solve-detail-metrics">
+        <span><b>${Number(solve.htm ?? notationMoves.length ?? 0)}</b> HTM</span>
+        <span><b>${Number(solve.tps ?? solve.avg ?? 0).toFixed(2)}</b> TPS</span>
+        <span><b>${Number(solve.longestPause ?? 0).toFixed(2)} s</b> max pauza</span>
+      </div>
+    </section>
+
+    ${isWca && solve.scramble ? `
+      <section class="solve-detail-section">
+        <h3>Scramble</h3>
+        <div class="solve-detail-scramble">${escapeSolveHtml(solve.scramble)}</div>
+      </section>
+    ` : ""}
+
+    <section class="solve-detail-section solve-detail-notation-section">
+      <h3>Notace solve</h3>
+      <div class="solve-detail-notation">${notationMoves.length ? notationMoves.map(escapeSolveHtml).join(" ") : "—"}</div>
+    </section>
+
+    <section class="solve-detail-section">
+      <h3>Průběh TPS / pauz</h3>
+      <div class="solve-detail-graph-wrap">
+        <canvas id="detail-graph"></canvas>
+      </div>
+    </section>
+
+    ${vykresliCfopDetail(solve)}
+
+    <section class="solve-detail-section">
+      <h3>Kde ztrácíš čas</h3>
+      ${pauses.length ? `
+        <div class="solve-pause-list">
+          ${pauses.map(pause => `
+            <div class="solve-pause-row">
+              <span>před <b>${escapeSolveHtml(pause.move)}</b> · tah ${pause.index}</span>
+              <strong>+${pause.delta.toFixed(2)} s</strong>
+            </div>
+          `).join("")}
+        </div>
+      ` : `<p class="solve-detail-muted">Zatím není dost Smart Cube timing dat.</p>`}
+    </section>
+
+    <div class="solve-detail-date">${escapeSolveHtml(solve.date || "")}</div>
   `;
 
   solveDetail.style.display = "block";
 
-  setTimeout(() => {
+  requestAnimationFrame(() => {
     drawDetailGraph(
       document.getElementById("detail-graph"),
       solve
     );
-  }, 0);
+  });
 }
 
 closeDetailBtn.onclick = () => {
