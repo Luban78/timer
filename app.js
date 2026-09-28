@@ -1482,7 +1482,7 @@ function vlozStylyPaneluRelace() {
         flex-basis: 100px !important;
         font-size: clamp(68px, 16vw, 88px) !important;
         /* V24: výsledný timer je cca o 8 px níž než ve V23. */
-        translate: 0 -45px !important;
+        translate: 0 -55px !important;
         margin-bottom: 7px !important;
       }
 
@@ -1490,19 +1490,37 @@ function vlozStylyPaneluRelace() {
         height: 232px !important;
         min-height: 232px !important;
         max-height: 232px !important;
-        translate: 0 -50px !important;
-        margin-bottom: -50px !important;
+        translate: 0 -60px !important;
+        margin-bottom: -60px !important;
       }
 
       #legacy-training-stats-panel {
         height: 168px !important;
         min-height: 168px !important;
         max-height: 168px !important;
-        translate: 0 -50px !important;
-        margin-bottom: -50px !important;
+        translate: 0 -60px !important;
+        margin-bottom: -60px !important;
       }
 
-      /* Pravý scrollbar nesmí ukusovat TIME – hlavičku i hodnoty posuneme o 3 px doleva. */
+      /* Historie se dál scrolluje dotykem, ale scrollbar nesmí překrývat TIME. */
+      #session-stats-panel .session-pro-list {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+        padding-right: 4px !important;
+        box-sizing: border-box !important;
+      }
+
+      #session-stats-panel .session-pro-list::-webkit-scrollbar {
+        width: 0 !important;
+        height: 0 !important;
+        display: none !important;
+      }
+
+      #session-stats-panel .session-pro-columns,
+      #session-stats-panel .session-pro-solve-row {
+        padding-right: 9px !important;
+      }
+
       #session-stats-panel .session-pro-columns span:nth-child(2),
       #session-stats-panel .session-pro-solve-time {
         transform: translateX(-3px) !important;
