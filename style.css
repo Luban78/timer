@@ -3781,3 +3781,250 @@ body.screen-timer #legacy-training-stats-panel {
     order: 32 !important;
   }
 }
+
+
+/* ==============================================================
+   V28 – FULLSCREEN VARIANT EDITOR
+   - Varianty algoritmu přes celou obrazovku.
+   - Každou variantu lze přepsat přímo v aplikaci.
+   ============================================================== */
+#algVariantModal.variant-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  padding: 0 !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  background: rgba(2, 8, 11, .96) !important;
+  z-index: 99999 !important;
+}
+
+#algVariantModal .variant-modal-box {
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  padding: 0 18px 14px !important;
+  box-sizing: border-box !important;
+}
+
+#algVariantModal .variant-modal-title {
+  flex: 0 0 auto !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 8 !important;
+  min-height: 76px !important;
+  margin: 0 -18px 14px !important;
+  padding: max(12px, env(safe-area-inset-top)) 18px 12px !important;
+  background: #121f25 !important;
+  border-bottom: 1px solid rgba(0, 230, 118, .20) !important;
+}
+
+#algVariantModal #variantImagePanel {
+  flex: 0 0 auto !important;
+  margin: 0 0 14px !important;
+}
+
+#algVariantModal .variant-list {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  padding: 0 2px 14px !important;
+}
+
+#algVariantModal .variant-modal-actions {
+  flex: 0 0 auto !important;
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 8 !important;
+  margin: 0 -18px -14px !important;
+  padding: 10px 18px max(10px, env(safe-area-inset-bottom)) !important;
+  background: #121f25 !important;
+  border-top: 1px solid rgba(0, 230, 118, .20) !important;
+}
+
+#algVariantModal .variant-item-head {
+  gap: 10px !important;
+}
+
+#algVariantModal .variant-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+#algVariantModal .variant-item-tools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+#algVariantModal .variant-edit-btn {
+  min-height: 38px !important;
+  height: 38px !important;
+  width: auto !important;
+  padding: 0 12px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(0,230,118,.62) !important;
+  background: rgba(0,230,118,.08) !important;
+  color: #e9fff4 !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+}
+
+#algVariantModal .variant-edited-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(255, 215, 64, .13);
+  border: 1px solid rgba(255, 215, 64, .45);
+  color: #ffe26a;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+#algVariantModal .variant-edit-panel {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,.10);
+}
+
+#algVariantModal .variant-edit-panel.hidden {
+  display: none !important;
+}
+
+#algVariantModal .variant-edit-input {
+  display: block;
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,230,118,.65);
+  outline: none;
+  background: rgba(0,0,0,.30);
+  color: #fff;
+  font: 700 18px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  caret-color: var(--green);
+}
+
+#algVariantModal .variant-edit-input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px rgba(0,230,118,.14);
+}
+
+#algVariantModal .variant-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+#algVariantModal .variant-edit-actions > button {
+  width: auto !important;
+  min-height: 42px !important;
+  height: 42px !important;
+  padding: 0 14px !important;
+  margin: 0 !important;
+  font-size: 14px !important;
+  border-radius: 12px !important;
+}
+
+#algVariantModal .variant-edit-save-btn {
+  border-color: var(--green) !important;
+  color: var(--green) !important;
+}
+
+#algVariantModal .variant-restore-btn {
+  margin-right: auto !important;
+  border-color: rgba(255,215,64,.62) !important;
+  color: #ffe26a !important;
+}
+
+@media (min-width: 900px) {
+  #algVariantModal .variant-modal-box {
+    padding-left: 28px !important;
+    padding-right: 28px !important;
+  }
+
+  #algVariantModal .variant-modal-title {
+    margin-left: -28px !important;
+    margin-right: -28px !important;
+    padding-left: 28px !important;
+    padding-right: 28px !important;
+  }
+
+  #algVariantModal .variant-modal-actions {
+    margin-left: -28px !important;
+    margin-right: -28px !important;
+    padding-left: 28px !important;
+    padding-right: 28px !important;
+  }
+
+  #algVariantModal .variant-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: 14px;
+  }
+
+  #algVariantModal .variant-item {
+    margin: 0 !important;
+  }
+}
+
+@media (max-width: 520px) {
+  #algVariantModal .variant-modal-box {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  #algVariantModal .variant-modal-title {
+    margin-left: -12px !important;
+    margin-right: -12px !important;
+    padding-left: 14px !important;
+    padding-right: 12px !important;
+  }
+
+  #algVariantModal .variant-modal-title #variantModalTitle {
+    font-size: clamp(25px, 8vw, 38px) !important;
+  }
+
+  #algVariantModal .variant-item-head {
+    align-items: center !important;
+  }
+
+  #algVariantModal .variant-edit-btn {
+    font-size: 0 !important;
+    width: 42px !important;
+    padding: 0 !important;
+  }
+
+  #algVariantModal .variant-edit-btn::before {
+    content: "✎";
+    font-size: 21px;
+  }
+
+  #algVariantModal .variant-edit-input {
+    font-size: 16px;
+  }
+}

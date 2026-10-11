@@ -1,7 +1,7 @@
 // app.js
 // Hlavní logika MG3i Traineru
 
-import { openVariantPicker, initVariantPicker } from "./variantPicker.js?v=auto-diagram-2";
+import { openVariantPicker, initVariantPicker } from "./variantPicker.js?v=variant-edit-v28";
 import { adaptSliceMoveForTrainer } from "./sliceAdapter.js";
 import {
   setTrainerRotation,
@@ -52,7 +52,7 @@ import {
   checkMove,
   getExpectedMove,
   resetTrainer
-} from "./moveTrainer.js?v=return-math-flicker-1";
+} from "./moveTrainer.js?v=variant-edit-v28";
 
 import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";
@@ -93,7 +93,7 @@ import { drawGraph, resizeGraphCanvas } from "./graph.js";
 import { renderHistory } from "./history.js";
 import { loadSolves, saveSolves, loadProfile, saveProfile } from "./storage.js";
 import { connectCube } from "./cubeConnection.js?v=14";
-import { pllAlgs, ollAlgs, getActivePllAlg, getActiveOllAlg } from "./algorithms.js";
+import { pllAlgs, ollAlgs, getActivePllAlg, getActiveOllAlg } from "./algorithms.js?v=variant-edit-v28";
 
 /*
 localStorage.removeItem("mg3i_move_maps");

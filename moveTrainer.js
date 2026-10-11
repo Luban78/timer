@@ -13,7 +13,7 @@ import {
   ollAlgs,
   getActivePllAlg,
   getActiveOllAlg
-} from "./algorithms.js";
+} from "./algorithms.js?v=variant-edit-v28";
 
 /* =========================================================
    STAV TRAINERU

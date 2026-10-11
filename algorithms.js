@@ -95,6 +95,31 @@ export const pllAlgVariants = Object.fromEntries(
   ])
 );
 
+const VARIANT_OVERRIDE_PREFIX = "cubeTrainerAlgVariantOverride:";
+
+export function getVariantOverrideKey(type, name, index) {
+  return `${VARIANT_OVERRIDE_PREFIX}${type}:${name}:${index}`;
+}
+
+export function getEffectiveVariantAlg(type, name, index, fallback = "") {
+  try {
+    const stored = localStorage.getItem(getVariantOverrideKey(type, name, index));
+    if (stored && stored.trim()) return stored.trim();
+  } catch {}
+  return String(fallback || "").trim();
+}
+
+export function setVariantOverride(type, name, index, algorithm) {
+  const value = String(algorithm || "").trim();
+  if (!value) return false;
+  localStorage.setItem(getVariantOverrideKey(type, name, index), value);
+  return true;
+}
+
+export function clearVariantOverride(type, name, index) {
+  localStorage.removeItem(getVariantOverrideKey(type, name, index));
+}
+
 export const pllCases = Object.entries(pllAlgs).map(([name, algorithm]) => ({
   id: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
   name,
@@ -108,11 +133,8 @@ export function getActivePllAlg(name) {
   if (!variants || variants.length === 0) return pllAlgs[name];
 
   const savedIndex = Number(localStorage.getItem("pllVariant:" + name));
-  if (Number.isInteger(savedIndex) && variants[savedIndex]?.alg) {
-    return variants[savedIndex].alg;
-  }
-
-  return variants[0]?.alg || pllAlgs[name];
+  const index = Number.isInteger(savedIndex) && variants[savedIndex] ? savedIndex : 0;
+  return getEffectiveVariantAlg("pll", name, index, variants[index]?.alg || pllAlgs[name]);
 }
 
 export const ollCases = [
@@ -587,11 +609,8 @@ export function getActiveOllAlg(name) {
   if (!variants || variants.length === 0) return ollAlgs[name];
 
   const savedIndex = Number(localStorage.getItem("ollVariant:" + name));
-  if (Number.isInteger(savedIndex) && variants[savedIndex]?.alg) {
-    return variants[savedIndex].alg;
-  }
-
-  return variants[0]?.alg || ollAlgs[name];
+  const index = Number.isInteger(savedIndex) && variants[savedIndex] ? savedIndex : 0;
+  return getEffectiveVariantAlg("oll", name, index, variants[index]?.alg || ollAlgs[name]);
 }
 
 export function getAlgorithmCase(type, name) {

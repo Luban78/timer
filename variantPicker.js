@@ -2,8 +2,11 @@ import {
   pllAlgVariants,
   ollAlgVariants,
   getActivePllAlg,
-  getActiveOllAlg
-} from "./algorithms.js";
+  getActiveOllAlg,
+  getEffectiveVariantAlg,
+  setVariantOverride,
+  clearVariantOverride
+} from "./algorithms.js?v=variant-edit-v28";
 
 let pendingVariantIndex = null;
 let currentName = null;
@@ -13,6 +16,42 @@ let pendingImageData = null;
 let removePendingImage = false;
 
 const IMAGE_KEY_PREFIX = "algorithmImage:";
+
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function effectiveVariantAlg(name, index, variant) {
+  return getEffectiveVariantAlg(currentType, name, index, variant?.alg || "");
+}
+
+function validateAlgorithmText(value) {
+  const alg = String(value || "").trim().replace(/\s+/g, " ");
+  if (!alg) return { ok: false, alg, invalid: ["prázdný algoritmus"] };
+  const tokens = alg.split(" ");
+  const moveRe = /^(?:[URFDLBMESxyzurfdlb](?:w)?(?:2|'|2')?)$/;
+  const invalid = tokens.filter((token) => !moveRe.test(token));
+  return { ok: invalid.length === 0, alg, invalid };
+}
+
+function showAlgorithmEditWarning(message) {
+  if (typeof window.showAppDialog === "function") {
+    window.showAppDialog({
+      title: "Algoritmus nelze uložit",
+      message,
+      type: "warning",
+      icon: "i"
+    });
+  } else {
+    alert(message);
+  }
+}
 
 function getVariantsForName(name) {
   if (ollAlgVariants[name]) {
@@ -284,14 +323,27 @@ export function openVariantPicker(name, onSave) {
   list.innerHTML = variants.map((variant, index) => {
     const selectedClass = index === activeIndex ? " selected" : "";
     const check = index === activeIndex ? "✓" : "";
-    
+    const effectiveAlg = effectiveVariantAlg(name, index, variant);
+    const isEdited = effectiveAlg !== String(variant.alg || "").trim();
+
     return `
       <div class="variant-item${selectedClass}" data-index="${index}">
         <div class="variant-item-head">
-          <div class="variant-name">${variant.name}</div>
-          <div class="variant-check">${check}</div>
+          <div class="variant-name">${escapeHtml(variant.name)}${isEdited ? '<span class="variant-edited-badge">upraveno</span>' : ''}</div>
+          <div class="variant-item-tools">
+            <button class="variant-edit-btn" type="button" data-edit-index="${index}">✎ Upravit</button>
+            <div class="variant-check">${check}</div>
+          </div>
         </div>
-        <div class="variant-alg">${variant.alg}</div>
+        <div class="variant-alg">${escapeHtml(effectiveAlg)}</div>
+        <div class="variant-edit-panel hidden" data-editor-index="${index}">
+          <textarea class="variant-edit-input" rows="3" spellcheck="false">${escapeHtml(effectiveAlg)}</textarea>
+          <div class="variant-edit-actions">
+            <button class="variant-restore-btn" type="button" data-restore-index="${index}" ${isEdited ? '' : 'hidden'}>Obnovit původní</button>
+            <button class="variant-edit-cancel-btn" type="button" data-cancel-index="${index}">Zrušit</button>
+            <button class="variant-edit-save-btn" type="button" data-save-index="${index}">Uložit změnu</button>
+          </div>
+        </div>
       </div>
     `;
   }).join("");
@@ -339,9 +391,72 @@ export function initVariantPicker() {
   
   if (list) {
     list.addEventListener("click", (e) => {
+      const editBtn = e.target.closest(".variant-edit-btn");
+      if (editBtn) {
+        e.stopPropagation();
+        const index = Number(editBtn.dataset.editIndex);
+        const item = list.querySelector(`.variant-item[data-index="${index}"]`);
+        const panel = item?.querySelector(".variant-edit-panel");
+        if (!item || !panel) return;
+        list.querySelectorAll(".variant-edit-panel").forEach((node) => {
+          if (node !== panel) node.classList.add("hidden");
+        });
+        panel.classList.toggle("hidden");
+        if (!panel.classList.contains("hidden")) {
+          const input = panel.querySelector(".variant-edit-input");
+          input?.focus();
+          input?.setSelectionRange(input.value.length, input.value.length);
+        }
+        return;
+      }
+
+      const cancelEditBtn = e.target.closest(".variant-edit-cancel-btn");
+      if (cancelEditBtn) {
+        e.stopPropagation();
+        cancelEditBtn.closest(".variant-edit-panel")?.classList.add("hidden");
+        return;
+      }
+
+      const restoreBtn = e.target.closest(".variant-restore-btn");
+      if (restoreBtn) {
+        e.stopPropagation();
+        const index = Number(restoreBtn.dataset.restoreIndex);
+        if (!currentName || !Number.isInteger(index)) return;
+        clearVariantOverride(currentType, currentName, index);
+        openVariantPicker(currentName, onSaveCallback);
+        if (pendingVariantIndex === index && typeof onSaveCallback === "function") {
+          onSaveCallback(getActiveAlgorithm(currentName));
+        }
+        return;
+      }
+
+      const saveEditBtn = e.target.closest(".variant-edit-save-btn");
+      if (saveEditBtn) {
+        e.stopPropagation();
+        const index = Number(saveEditBtn.dataset.saveIndex);
+        const item = saveEditBtn.closest(".variant-item");
+        const input = item?.querySelector(".variant-edit-input");
+        if (!currentName || !input || !Number.isInteger(index)) return;
+        const checked = validateAlgorithmText(input.value);
+        if (!checked.ok) {
+          showAlgorithmEditWarning(`Neplatná notace: ${checked.invalid.join(", ")}. Používej tahy jako R, U', F2, M, r, x, y2.`);
+          return;
+        }
+        setVariantOverride(currentType, currentName, index, checked.alg);
+        const wasCurrent = pendingVariantIndex === index;
+        openVariantPicker(currentName, onSaveCallback);
+        pendingVariantIndex = index;
+        refreshVariantSelection();
+        if (wasCurrent && typeof onSaveCallback === "function") {
+          onSaveCallback(getActiveAlgorithm(currentName));
+        }
+        return;
+      }
+
+      if (e.target.closest("textarea, button")) return;
       const item = e.target.closest(".variant-item");
       if (!item) return;
-      
+
       pendingVariantIndex = Number(item.dataset.index);
       refreshVariantSelection();
     });
