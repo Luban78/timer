@@ -185,6 +185,8 @@ const settingsResetProfileBtn = document.getElementById("settings-reset-profile-
 const settingsCubeModeBtn = document.getElementById("settingsCubeModeBtn");
 const settingsLowTpsSoundBtn = document.getElementById("settingsLowTpsSoundBtn");
 const settingsLowTpsSoundText = document.getElementById("settingsLowTpsSoundText");
+const settingsAlgorithmVoiceBtn = document.getElementById("settingsAlgorithmVoiceBtn");
+const settingsAlgorithmVoiceText = document.getElementById("settingsAlgorithmVoiceText");
 const deleteAlgorithmBtn = document.getElementById("deleteAlgorithmBtn");
 
 const statsBest = document.getElementById("stats-best");
@@ -278,6 +280,9 @@ let trainingMode = localStorage.getItem("trainingMode") || "single";
 if (!["single", "random", "sequence"].includes(trainingMode)) trainingMode = "single";
 let puzzleMode = localStorage.getItem("puzzleMode") || "wca";
 let lowTpsSoundEnabled = localStorage.getItem("lowTpsSoundEnabled") !== "0";
+let algorithmVoiceEnabled = localStorage.getItem("algorithmVoiceEnabled") === "1";
+let lastAlgorithmVoiceKey = "";
+let lastAlgorithmVoiceAt = 0;
 
 const PLL_ERROR_REPEAT_KEY = "pllErrorRepeatCount";
 const HIDDEN_PLL_KEY = "hiddenPllAlgorithms";
@@ -2181,6 +2186,87 @@ function updateLowTpsSoundSetting() {
   settingsLowTpsSoundBtn.setAttribute("aria-pressed", lowTpsSoundEnabled ? "true" : "false");
 }
 
+function updateAlgorithmVoiceSetting() {
+  if (!settingsAlgorithmVoiceBtn || !settingsAlgorithmVoiceText) return;
+
+  const podporovano = typeof window !== "undefined" &&
+    "speechSynthesis" in window &&
+    typeof SpeechSynthesisUtterance !== "undefined";
+
+  settingsAlgorithmVoiceBtn.disabled = !podporovano;
+  settingsAlgorithmVoiceBtn.setAttribute("aria-pressed", algorithmVoiceEnabled ? "true" : "false");
+  settingsAlgorithmVoiceText.textContent = podporovano
+    ? `Hlásit algoritmus nahlas: ${algorithmVoiceEnabled ? "Zapnuto" : "Vypnuto"}`
+    : "Hlásit algoritmus nahlas: Nepodporováno";
+}
+
+function ceskaVyslovnostPll(name) {
+  const base = String(name || "")
+    .replace(/-perm$/i, "")
+    .trim();
+
+  const pismena = {
+    A: "á", B: "bé", C: "cé", D: "dé", E: "é", F: "ef",
+    G: "gé", H: "há", I: "í", J: "jé", K: "ká", L: "el",
+    M: "em", N: "en", O: "ó", P: "pé", Q: "kvé", R: "er",
+    S: "es", T: "té", U: "ú", V: "vé", W: "dvojité vé",
+    X: "iks", Y: "ypsilon", Z: "zet"
+  };
+
+  const dvojice = base.match(/^([A-Za-z])([A-Da-d])$/);
+  if (dvojice) {
+    const prvni = pismena[dvojice[1].toUpperCase()] || dvojice[1];
+    const druhe = pismena[dvojice[2].toUpperCase()] || dvojice[2];
+    return `${prvni} ${druhe}`;
+  }
+
+  if (/^[A-Za-z]$/.test(base)) {
+    return pismena[base.toUpperCase()] || base;
+  }
+
+  // Záloha pro případné budoucí názvy – pomlčky přečíst jako mezeru.
+  return base.replace(/[-_]+/g, " ");
+}
+
+function rekniTrainerText(text, { key = "" } = {}) {
+  if (!algorithmVoiceEnabled || !text) return false;
+  if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") return false;
+
+  const now = performance.now();
+  if (key && key === lastAlgorithmVoiceKey && now - lastAlgorithmVoiceAt < 700) {
+    return false;
+  }
+
+  lastAlgorithmVoiceKey = key;
+  lastAlgorithmVoiceAt = now;
+
+  try {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "cs-CZ";
+    utterance.rate = 1.05;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    const voices = window.speechSynthesis.getVoices?.() || [];
+    const ceskyHlas = voices.find(v => /^cs(?:-|_)/i.test(v.lang || ""));
+    if (ceskyHlas) utterance.voice = ceskyHlas;
+
+    window.speechSynthesis.speak(utterance);
+    return true;
+  } catch (error) {
+    console.warn("[VOICE] Hlasové hlášení selhalo:", error);
+    return false;
+  }
+}
+
+function hlasAlgoritmus(name, { navrat = false } = {}) {
+  if (!algorithmVoiceEnabled || !name) return;
+  const label = ceskaVyslovnostPll(name);
+  const text = navrat ? `Návrat. ${label}` : label;
+  rekniTrainerText(text, { key: `${navrat ? "return" : "train"}:${name}` });
+}
+
 function setPllErrorRepeatCount(nextValue) {
   pllErrorRepeatCount = Math.max(0, Math.min(10, Number(nextValue) || 0));
   localStorage.setItem(PLL_ERROR_REPEAT_KEY, String(pllErrorRepeatCount));
@@ -3824,6 +3910,12 @@ function nastavPllProTrenink(name, algorithm, { navrat = false, postAuf = "" } =
   renderAlgorithmPreview(selectedAlg);
   resetTrainer(selectedAlg);
   setTrainerPaused(false);
+
+  // Hlasový coach: hlásí pouze automaticky zvolené PLL v Random/Pořadí.
+  // Při návratu do složené navíc řekne „Návrat“, aby nebylo nutné sledovat displej.
+  if (trainingMode === "random" || trainingMode === "sequence") {
+    hlasAlgoritmus(name, { navrat });
+  }
 
   if (navrat && stateMsg) {
     stateMsg.innerText = "NÁVRAT DO SLOŽENÉ";
@@ -5897,6 +5989,7 @@ if (settingsCubeModeBtn) {
 }
 
 updateLowTpsSoundSetting();
+updateAlgorithmVoiceSetting();
 
 if (settingsLowTpsSoundBtn) {
   settingsLowTpsSoundBtn.onclick = e => {
@@ -5906,6 +5999,24 @@ if (settingsLowTpsSoundBtn) {
     lowTpsSoundEnabled = !lowTpsSoundEnabled;
     localStorage.setItem("lowTpsSoundEnabled", lowTpsSoundEnabled ? "1" : "0");
     updateLowTpsSoundSetting();
+  };
+}
+
+if (settingsAlgorithmVoiceBtn) {
+  settingsAlgorithmVoiceBtn.onclick = e => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    algorithmVoiceEnabled = !algorithmVoiceEnabled;
+    localStorage.setItem("algorithmVoiceEnabled", algorithmVoiceEnabled ? "1" : "0");
+    updateAlgorithmVoiceSetting();
+
+    if (algorithmVoiceEnabled) {
+      // Tohle je přímo uživatelský klik, takže zároveň bezpečně aktivuje TTS na mobilu.
+      rekniTrainerText("Hlas zapnutý", { key: "voice-enabled" });
+    } else if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
   };
 }
 
