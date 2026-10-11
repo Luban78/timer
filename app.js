@@ -52,7 +52,7 @@ import {
   checkMove,
   getExpectedMove,
   resetTrainer
-} from "./moveTrainer.js?v=variant-edit-v28";
+} from "./moveTrainer.js?v=wide-f-v29";
 
 import { startSolve } from "./timer.js";
 import { updateCoach } from "./coach.js";
@@ -4029,6 +4029,10 @@ function normalizeMove(move) {
     .replace("’", "'");
 }
 
+function isSmallFWideNotation(move) {
+  return /^(?:f|Fw)(?:2|')?$/.test(normalizeMove(move));
+}
+
 function clearPendingMove() {
   if (pendingTimer) {
     clearTimeout(pendingTimer);
@@ -5134,6 +5138,22 @@ function commitMove(move, now) {
 const expectedBeforeMove = getExpectedMove();
   const tahProKorekcniZrcadlo = normalizeMove(move).replace(/^=/, "");
   const trainerResult = checkMove(move, selectedAlg);
+
+  // Smart Cube může wide f/f' interně doručit přes opačnou vnější stěnu.
+  // V historii/notaci ale chceme vždy uživatelskou notaci algoritmu, ne HW proxy.
+  if (
+    isSmallFWideNotation(expectedBeforeMove) &&
+    (trainerResult === "correct" || trainerResult === "finished")
+  ) {
+    const wideLabel = normalizeMove(expectedBeforeMove);
+    if (currentMoves.length > 0) {
+      currentMoves[currentMoves.length - 1].move = wideLabel;
+    }
+    if (seq.length > 0) {
+      seq[seq.length - 1] = wideLabel;
+      notation.innerText = "Notace:\n" + seq.join(" ");
+    }
+  }
 showMoveDebug({
   expected: expectedBeforeMove,
   actual: move,

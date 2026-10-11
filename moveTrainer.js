@@ -13,7 +13,7 @@ import {
   ollAlgs,
   getActivePllAlg,
   getActiveOllAlg
-} from "./algorithms.js?v=variant-edit-v28";
+} from "./algorithms.js?v=wide-f-v29";
 
 /* =========================================================
    STAV TRAINERU
@@ -60,6 +60,49 @@ function isCubeRotationMove(move) {
     move === "y" || move === "y'" || move === "y2" ||
     move === "z" || move === "z'" || move === "z2"
   );
+}
+
+/* =========================================================
+   SMART CUBE – WIDE FRONT f / f' / f2
+
+   GAN neposílá dvouvrstvý front tah jako doslovné "f".
+   Pro kontrolu ho lze v aktuálním souřadném rámci vyjádřit jako
+   opačnou vnější stěnu B + implicitní rotaci z:
+
+     f  = z  B
+     f' = z' B'
+     f2 = z2 B2
+
+   Samotná notace uživateli zůstává f/f'/f2; proxy B používáme
+   pouze uvnitř porovnání Smart Cube tahu.
+   ========================================================= */
+function getSmallFWideSuffix(move) {
+  const value = String(move || "").trim().replace(/’/g, "'");
+  const match = value.match(/^(?:f|Fw)(2|')?$/);
+  return match ? (match[1] || "") : null;
+}
+
+function isSmallFWideMove(move) {
+  return getSmallFWideSuffix(move) !== null;
+}
+
+function smallFWideToSmartProxy(move) {
+  const suffix = getSmallFWideSuffix(move);
+  if (suffix === null) return move;
+  return "B" + suffix;
+}
+
+function applySmallFWideVirtualRotation(move) {
+  const suffix = getSmallFWideSuffix(move);
+  if (suffix === null) return;
+
+  if (suffix === "2") {
+    applySkippedRotation("z2");
+  } else if (suffix === "'") {
+    applySkippedRotation("z'");
+  } else {
+    applySkippedRotation("z");
+  }
 }
 
 function buildDisplaySteps(moves) {
@@ -1208,9 +1251,14 @@ export function checkMove(move, selectedAlg) {
 
   const rawMoveProOrientaci = move;
 
+  const expectedNotationMove = expected.move;
+  const expectedSmartBase = isSmallFWideMove(expectedNotationMove)
+    ? smallFWideToSmartProxy(expectedNotationMove)
+    : expectedNotationMove;
+
   const expectedMove = applyVirtualYToExpectedMove(
   applyVirtualXToExpectedMove(
-    applyVirtualZToExpectedMove(expected.move)
+    applyVirtualZToExpectedMove(expectedSmartBase)
   )
 );
 
@@ -1219,6 +1267,7 @@ export function checkMove(move, selectedAlg) {
   if (correctionStack.length > 0) {
     if (isTrainerMove(move)) {
       move = stripTrainerMove(move);
+      if (isSmallFWideMove(move)) move = smallFWideToSmartProxy(move);
     } else {
       move = rotateMove(move);
     }
@@ -1233,6 +1282,7 @@ export function checkMove(move, selectedAlg) {
 
   if (isTrainerMove(move)) {
     move = stripTrainerMove(move);
+    if (isSmallFWideMove(move)) move = smallFWideToSmartProxy(move);
   } else {
     move = rotateMove(move);
   }
@@ -1245,6 +1295,13 @@ export function checkMove(move, selectedAlg) {
   }
 
   wrongDisplayIndex = -1;
+
+  // Wide f obsahuje implicitní z rotaci. Smart Cube ji samostatně neposílá,
+  // ale pro následující tahy ji musíme držet ve virtuálním rámci traineru.
+  if (isSmallFWideMove(expectedNotationMove)) {
+    applySmallFWideVirtualRotation(expectedNotationMove);
+  }
+
   checkIndex++;
 
   // Když je na konci algoritmu třeba x', přeskočíme ho a dokončíme algoritmus.
