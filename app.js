@@ -78,7 +78,7 @@ import {
 
 import { getAlgorithmStats } from "./algorithmStats.js";
 import { drawDetailGraph } from "./detailGraph.js?v=v26-solve-detail";
-import { openPLLMenu, openOLLMenu } from "./algMenu.js?v=pll-picker-v14";
+import { openPLLMenu, openOLLMenu } from "./algMenu.js?v=pll-picker-v30-single-return";
 import {
   generateWcaScramble,
   beginWcaScramble,
@@ -340,6 +340,10 @@ let wcaSolvedConfirmations = 0;
 let wcaLivePattern = null;
 let wcaLiveScramble = "";
 let wcaNextScrambleTimer = null;
+
+// V30 – lokální fyzický stav PLL solve. Slouží jako spolehlivý solved fallback
+// i když poslední FACELETS packet přijde pozdě (typicky po wide f/f').
+let pllStartPattern = null;
 
 // V26 – analytika WCA solve. Během solve ukládáme stav po každém tahu
 // a z něj po dokončení odvodíme stabilní hranice Cross / F2L 1–4 / OLL / PLL.
@@ -3521,7 +3525,7 @@ function showAchievement(title) {
 function jeRandomPllNavratDoSlozeneZapnuty() {
   return (
     puzzleMode === "pll" &&
-    (trainingMode === "random" || trainingMode === "sequence") &&
+    ["single", "random", "sequence"].includes(trainingMode) &&
     typeof window.getRandomPllReturnToSolvedEnabled === "function" &&
     window.getRandomPllReturnToSolvedEnabled()
   );
@@ -3952,15 +3956,27 @@ function pripravNavratDoSlozene() {
 }
 
 function prepareNextTrainerRun() {
-  if (trainingMode === "random" || trainingMode === "sequence") {
-    if (jeRandomPllNavratDoSlozeneZapnuty()) {
-      if (!randomPllFazeNavratu) {
-        if (pripravNavratDoSlozene()) return;
-      } else {
-        randomPllFazeNavratu = false;
+  // Návrat do složené je dostupný ve všech PLL režimech, včetně Single.
+  if (jeRandomPllNavratDoSlozeneZapnuty()) {
+    if (!randomPllFazeNavratu) {
+      if (pripravNavratDoSlozene()) return;
+    } else {
+      randomPllFazeNavratu = false;
+
+      // Single se po dokončení návratu musí vrátit k původně zvolenému PLL,
+      // ne zůstat na návratovém algoritmu.
+      if (trainingMode === "single") {
+        const name = primaryPllName || currentAlgorithmName;
+        const algorithm = primaryPllAlg || (name ? getActivePllAlg(name) : "");
+        if (name && algorithm) {
+          nastavPllProTrenink(name, algorithm, { navrat: false });
+          return;
+        }
       }
     }
+  }
 
+  if (trainingMode === "random" || trainingMode === "sequence") {
     pickNextPLL();
     return;
   }
@@ -3987,6 +4003,7 @@ function restartCurrentTrainerRun() {
 }
 
 function prepareNext() {
+  pllStartPattern = null;
   trainerCekaNaPllAuf = false;
   trainerOcekavanyPllAuf = "";
   chybyPostAuf = [];
@@ -4631,7 +4648,6 @@ if (mDebug) {
   if (
     expectedAufMove &&
     puzzleMode === "pll" &&
-    (trainingMode === "random" || trainingMode === "sequence") &&
     cubeMode === "smart"
   ) {
     zpracujSmartAufTah(move, expectedAufMove);
@@ -4854,7 +4870,45 @@ function handleRawMove(move) {
 
 
 
+function pripravPllStartPattern() {
+  pllStartPattern = null;
+  if (puzzleMode !== "pll" || cubeMode !== "smart") return;
+
+  const state = getCurrentCubeState();
+  if (!state) return;
+
+  try {
+    pllStartPattern = createPatternFromGanState(state);
+  } catch (error) {
+    pllStartPattern = null;
+    console.warn("PLL start pattern se nepodařilo vytvořit:", error);
+  }
+}
+
+function jePllLokálněSlozeny() {
+  if (!pllStartPattern || !Array.isArray(currentMoves) || currentMoves.length === 0) {
+    return false;
+  }
+
+  try {
+    let pattern = pllStartPattern;
+
+    for (const item of currentMoves) {
+      const move = normalizeMove(item?.move).replace(/^=/, "");
+      if (!move) continue;
+      pattern = applyAlgorithm(pattern, move);
+    }
+
+    return Boolean(pattern && isPatternSolved(pattern));
+  } catch (error) {
+    console.warn("PLL lokální solved check selhal:", error);
+    return false;
+  }
+}
+
 function runStartSolve(now) {
+  pripravPllStartPattern();
+
   startSolve(now, {
     currentMoves,
     isSolving,
@@ -4908,6 +4962,11 @@ function jePllPoAufSlozeny(facelets = getCurrentFacelets(), cubeState = getCurre
       if (pattern && isPatternSolved(pattern)) return true;
     } catch {}
   }
+
+  // FACELETS/state mohou po posledním tahu přijít pozdě. Lokální pattern vzniká
+  // z cubie stavu na začátku solve + skutečně provedených tahů. U wide f/f'
+  // ukládáme do currentMoves právě logické f/f', takže výsledek odpovídá kostce.
+  if (jePllLokálněSlozeny()) return true;
 
   return false;
 }
@@ -4967,7 +5026,6 @@ function commitMove(move, now) {
   if (
     cekajiciPllNavratPoPredAuf &&
     puzzleMode === "pll" &&
-    (trainingMode === "random" || trainingMode === "sequence") &&
     cubeMode === "smart"
   ) {
     zpracujPredAufNavratu(move);

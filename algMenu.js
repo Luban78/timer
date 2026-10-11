@@ -430,35 +430,38 @@ function otevriPllVyber({
   if (modalTitle) {
     modalTitle.classList.remove("pll-selection-title");
     modalTitle.textContent = "PLL";
+    modalTitle.classList.add("pll-selection-title");
 
-    // „Vybrat všechny“ má smysl jen pro Random, kde lze vybrat více PLL.
+    const titleText = document.createElement("span");
+    titleText.textContent = "PLL";
+
+    const options = document.createElement("span");
+    options.className = "pll-random-options";
+
+    // Návrat do složené je užitečný i v Single režimu.
+    const navratLabel = document.createElement("label");
+    navratLabel.className = "pll-random-option-label";
+    navratLabel.setAttribute(
+      "aria-label",
+      "Po dokončení PLL nabídnout návratový PLL, aby kostka skončila znovu složená"
+    );
+    navratLabel.title = "Návrat do složené";
+
+    navratDoSlozeneCheckbox = document.createElement("input");
+    navratDoSlozeneCheckbox.type = "checkbox";
+    navratDoSlozeneCheckbox.checked = typeof window.getRandomPllReturnToSolvedEnabled === "function"
+      ? window.getRandomPllReturnToSolvedEnabled()
+      : false;
+
+    const navratText = document.createElement("span");
+    navratText.textContent = "Návrat";
+    navratLabel.append(navratDoSlozeneCheckbox, navratText);
+
+    navratLabel.addEventListener("click", event => event.stopPropagation());
+    navratDoSlozeneCheckbox.addEventListener("change", event => event.stopPropagation());
+
+    // Po chybě + Vybrat všechny patří jen do Random/Pořadí multi-výběru.
     if (jeRandom) {
-      modalTitle.classList.add("pll-selection-title");
-
-      const titleText = document.createElement("span");
-      titleText.textContent = "PLL";
-
-      const options = document.createElement("span");
-      options.className = "pll-random-options";
-
-      const navratLabel = document.createElement("label");
-      navratLabel.className = "pll-random-option-label";
-      navratLabel.setAttribute(
-        "aria-label",
-        "Po každém Random PLL nabídnout návratový PLL, aby kostka skončila znovu složená"
-      );
-      navratLabel.title = "Návrat do složené";
-
-      navratDoSlozeneCheckbox = document.createElement("input");
-      navratDoSlozeneCheckbox.type = "checkbox";
-      navratDoSlozeneCheckbox.checked = typeof window.getRandomPllReturnToSolvedEnabled === "function"
-        ? window.getRandomPllReturnToSolvedEnabled()
-        : false;
-
-      const navratText = document.createElement("span");
-      navratText.textContent = "Návrat";
-      navratLabel.append(navratDoSlozeneCheckbox, navratText);
-
       const repeatControl = document.createElement("span");
       repeatControl.className = "pll-error-repeat-option";
       repeatControl.setAttribute("aria-label", "Kolikrát zopakovat stejné PLL po chybě");
@@ -511,23 +514,9 @@ function otevriPllVyber({
 
       const labelText = document.createElement("span");
       labelText.textContent = "Vybrat všechny";
-
       label.append(vybratVseCheckbox, labelText);
-      options.append(repeatControl, navratLabel, label);
-      modalTitle.replaceChildren(titleText, options);
 
-      navratLabel.addEventListener("click", event => {
-        event.stopPropagation();
-      });
-
-      label.addEventListener("click", event => {
-        event.stopPropagation();
-      });
-
-      navratDoSlozeneCheckbox.addEventListener("change", event => {
-        event.stopPropagation();
-      });
-
+      label.addEventListener("click", event => event.stopPropagation());
       vybratVseCheckbox.addEventListener("change", event => {
         event.stopPropagation();
 
@@ -540,7 +529,14 @@ function otevriPllVyber({
         prekresliVyber();
         applyBtn.disabled = rozpracovanyVyber.size === 0;
       });
+
+      // Požadované pořadí: Po chybě → Návrat → Vybrat všechny.
+      options.append(repeatControl, navratLabel, label);
+    } else {
+      options.append(navratLabel);
     }
+
+    modalTitle.replaceChildren(titleText, options);
   }
 
   Object.keys(algorithms).forEach(name => {
@@ -584,9 +580,10 @@ function otevriPllVyber({
 
     if (rozpracovanyVyber.size === 0) return;
 
+    ulozNavratDoSlozene(navratDoSlozeneCheckbox?.checked);
+
     if (jeRandom) {
       ulozVyberRandomPll(rozpracovanyVyber);
-      ulozNavratDoSlozene(navratDoSlozeneCheckbox?.checked);
 
       window.dispatchEvent(
         new CustomEvent("cube-trainer-random-pll-selection-changed", {
