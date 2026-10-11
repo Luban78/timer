@@ -337,8 +337,9 @@ body.screen-timer #status {
 
 body.screen-timer #algorithm-card-wrap {
   order: 4 !important;
+  position: relative !important;
   width: 100% !important;
-  margin: 0 0 9px !important;
+  margin: 0 0 5px !important;
 }
 
 body.screen-timer #selectedAlg {
@@ -352,7 +353,7 @@ body.screen-timer #selectedAlg {
   min-height: 280px !important;
   max-height: 345px !important;
   margin: 0 !important;
-  padding: 22px 26px !important;
+  padding: 22px 26px 54px !important;
   overflow: hidden !important;
   border-radius: 24px !important;
   border: 1.5px solid rgba(255, 235, 59, 0.88) !important;
@@ -499,10 +500,28 @@ body.screen-timer #editAlgVariantBtn {
 body.screen-timer #state-msg {
   order: 5 !important;
   min-height: 34px !important;
-  margin: 0 0 7px !important;
+  margin: 0 !important;
   color: #ffe928 !important;
   font-size: clamp(22px, 1.8vw, 30px) !important;
   line-height: 34px !important;
+}
+
+/* V27: na desktopu je stav fyzicky uvnitř karty algoritmu. */
+body.screen-timer #algorithm-card-wrap > #state-msg.state-msg-in-card {
+  position: absolute !important;
+  left: 22px !important;
+  right: 22px !important;
+  bottom: 10px !important;
+  width: auto !important;
+  min-height: 32px !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  line-height: 1.08 !important;
+  pointer-events: none !important;
+  z-index: 30 !important;
 }
 
 body.screen-timer #tps {
@@ -873,7 +892,7 @@ body:not(.screen-timer) #screen-menu-dropdown {
     height: 250px !important;
     min-height: 250px !important;
     max-height: 250px !important;
-    padding: 17px 22px !important;
+    padding: 17px 22px 46px !important;
   }
 
   body.screen-timer #selectedAlg:has(.alg-empty-marker) {
@@ -892,8 +911,15 @@ body:not(.screen-timer) #screen-menu-dropdown {
 
   body.screen-timer #state-msg {
     min-height: 28px !important;
-    margin-bottom: 4px !important;
+    margin: 0 !important;
     line-height: 28px !important;
+  }
+
+  body.screen-timer #algorithm-card-wrap > #state-msg.state-msg-in-card {
+    left: 18px !important;
+    right: 18px !important;
+    bottom: 7px !important;
+    font-size: clamp(18px, 1.55vw, 24px) !important;
   }
 
   body.screen-timer #tps {

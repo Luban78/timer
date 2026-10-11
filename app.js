@@ -119,6 +119,7 @@ const algList = document.getElementById("algList");
 const closeModal = document.getElementById("closeModal");
 const status = document.getElementById("status");
 const selectedAlg = document.getElementById("selectedAlg");
+const algorithmCardWrap = document.getElementById("algorithm-card-wrap");
 const mDebug = document.getElementById("m-debug");
 const notation = document.getElementById("notation");
 const stateMsg = document.getElementById("state-msg");
@@ -1609,6 +1610,8 @@ function vlozStylyPaneluRelace() {
     }
 
     #legacy-training-stats-panel {
+      order: 32 !important;
+      flex: 0 0 auto !important;
       width: 100% !important;
       grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
       grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
@@ -5713,8 +5716,31 @@ solveDetail.onclick = e => {
   }
 };
 
-window.onresize = () => resizeGraphCanvas(canvas);
+window.onresize = () => {
+  resizeGraphCanvas(canvas);
+  syncStateMessagePlacement();
+};
 resizeGraphCanvas(canvas);
+
+function syncStateMessagePlacement() {
+  if (!stateMsg || !tpsDiv || !algorithmCardWrap) return;
+
+  const desktop = window.matchMedia("(min-width: 900px)").matches;
+
+  if (desktop) {
+    if (stateMsg.parentElement !== algorithmCardWrap) {
+      algorithmCardWrap.appendChild(stateMsg);
+    }
+    stateMsg.classList.add("state-msg-in-card");
+    return;
+  }
+
+  const appRoot = tpsDiv.parentElement;
+  if (appRoot && (stateMsg.parentElement !== appRoot || stateMsg.nextElementSibling !== tpsDiv)) {
+    appRoot.insertBefore(stateMsg, tpsDiv);
+  }
+  stateMsg.classList.remove("state-msg-in-card");
+}
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
@@ -5742,6 +5768,7 @@ function initApp() {
   if (stateMsg) stateMsg.innerText = "Connect the cube";
 
   updateModeLabel();
+  syncStateMessagePlacement();
   vytvorPanelRelace();
   aplikujZobrazeniSessionPanelu();
 

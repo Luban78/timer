@@ -3755,3 +3755,29 @@ body.training-menu-open #trainingModeBtn {
     margin-top: -5px;
   }
 }
+
+
+/* =========================================================
+   CUBE TRAINER V27 – PWA LAYOUT STABILITY
+   Legacy PLL/OLL okénka musí zůstat pod timerem i ve fullscreen PWA.
+   ========================================================= */
+body.screen-timer #legacy-training-stats-panel {
+  order: 32 !important;
+  flex: 0 0 auto !important;
+}
+
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  html, body {
+    width: 100% !important;
+    min-height: 100dvh !important;
+  }
+
+  body.screen-timer #main-layout {
+    min-height: 100dvh !important;
+    padding-top: max(8px, env(safe-area-inset-top)) !important;
+  }
+
+  body.screen-timer #legacy-training-stats-panel {
+    order: 32 !important;
+  }
+}
